@@ -1,0 +1,8 @@
+<RCC>
+    <qresource prefix="/">
+        <file>base/qtbase_zh_CN.qm</file>
+        <file>base/this.svg</file>
+        <file>base/folder.svg</file>
+        <file>base/deepin-launcher.svg</file>
+    </qresource>
+</RCC>

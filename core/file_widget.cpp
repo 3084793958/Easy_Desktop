@@ -1,0 +1,247 @@
+#include "file_widget.h"
+void File_Widget::Set_Base_Icon()
+{
+    movie_size = get_Image_Size(":/base/folder.svg");
+    if (movie_size.isValid())
+    {
+        movie->setFileName(":/base/folder.svg");
+        emit Basic_Widget::size_changed(Carrier->size());
+    }
+}
+File_Widget::File_Widget(QWidget *parent)
+    :Process_Widget(parent)
+{
+    is_file_widget = true;
+    movie_size = get_Image_Size(":/base/folder.svg");
+    if (movie_size.isValid())
+    {
+        movie->setFileName(":/base/folder.svg");
+        emit Basic_Widget::size_changed(Carrier->size());
+    }
+    this->process_name_label->setText("文件");
+    if (set_auto_resize->isChecked())
+    {
+        auto_set_font_size();
+    }
+    menu->insertAction(set_image, open_way);
+    menu->insertAction(set_image, open_path_way);
+    menu->insertSeparator(set_image);
+    set_file_process->addAction(set_file_as_file);
+    set_file_process->addAction(set_file_as_dir);
+    menu->insertMenu(set_process, set_file_process);
+    menu->addSeparator();
+    menu->addAction(show_info);
+    process_string = "dde-file-manager --show-item " + file_path;
+    Extra_Pressed_Do();
+}
+File_Widget::~File_Widget()
+{
+    if (file_widget_list)
+    {
+        file_widget_list->removeOne(this);
+    }
+}
+void File_Widget::Extra_Pressed_Do()
+{
+    update_running_path();
+}
+void File_Widget::contextMenuEvent(QContextMenuEvent *event)
+{
+    QAction *know_what = menu->exec(mapToGlobal(event->pos()));
+    if (know_what == open_way)
+    {
+        if (file_path.isEmpty())
+        {
+            return;
+        }
+        QProcess process;
+        process.setProgram("dde-file-manager");
+        process.setArguments(QStringList() << "-d" << "-o" << file_path);
+        process.setStandardOutputFile("/dev/null");
+        process.setStandardErrorFile("/dev/null");
+        process.startDetached();
+    }
+    else if (know_what == open_path_way)
+    {
+        if (file_path.isEmpty())
+        {
+            return;
+        }
+        QProcess process;
+        process.setProgram("dde-file-manager");
+        process.setArguments(QStringList() << "--show-item" << file_path);
+        process.setStandardOutputFile("/dev/null");
+        process.setStandardErrorFile("/dev/null");
+        process.startDetached();
+    }
+    else if (know_what == set_file_as_file || know_what == set_file_as_dir)
+    {
+        update_running_path();
+        QString filepath;
+        if (know_what == set_file_as_file)
+        {
+            QMessageBox::information(nullptr, "设置文件", "设置文件");
+            filepath = QFileDialog::getOpenFileName(nullptr, "获取文件", running_path);
+        }
+        else
+        {
+            QMessageBox::information(nullptr, "设置文件夹", "设置文件夹");
+            filepath = QFileDialog::getExistingDirectory(nullptr, "获取文件夹", running_path);
+        }
+        X11_Rasie();
+        if (filepath.isEmpty())
+        {
+            return;
+        }
+        file_path = filepath;
+        process_string = get_running_process(file_path);
+        QMessageBox::StandardButton final_ans = QMessageBox::question(nullptr, "确认进程", QString("默认进程:%1\n请确认是否应用").arg(process_string));
+        if (final_ans != QMessageBox::Yes)
+        {
+            bool ok = false;
+            QString final_string = QInputDialog::getText(nullptr, "设置运行进程", "设置运行进程:",QLineEdit::Normal, process_string, &ok);
+            if (!ok || final_string.isEmpty())
+            {
+                process_string = "";
+            }
+            else
+            {
+                process_string = final_string;
+            }
+        }
+    }
+    else if (know_what == show_info)
+    {
+        if (file_path.isEmpty())
+        {
+            return;
+        }
+        QProcess process;
+        process.setProgram("dde-file-manager");
+        process.setArguments(QStringList() << "-p" << file_path);
+        process.setStandardOutputFile("/dev/null");
+        process.setStandardErrorFile("/dev/null");
+        process.startDetached();
+    }
+    else
+    {
+        context_solution(know_what);
+    }
+}
+QString File_Widget::get_running_process(QString m_file_path)
+{
+    QProcess process;
+    process.start("xdg-mime", QStringList() << "query" << "filetype" << m_file_path);
+    QString mime_type = "";
+    if (process.waitForFinished(5000) && process.exitCode() == 0)
+    {
+        mime_type = process.readAllStandardOutput().trimmed();
+    }
+    process.start("xdg-mime", QStringList() << "query" << "default" << mime_type);
+    QString final_process = "";
+    if (process.waitForFinished(5000) && process.exitCode() == 0)
+    {
+        final_process = process.readAllStandardOutput().trimmed();
+    }
+    QString m_running_process = "";
+    if (!final_process.isEmpty())
+    {
+        if (!final_process.endsWith(".desktop"))
+        {
+            final_process += ".desktop";
+        }
+        QStringList searchPaths = {QDir::home().filePath(".local/share/applications"),
+                                  "/usr/local/share/applications",
+                                  "/usr/share/applications"};
+        for (const QString &path : searchPaths)
+        {
+            QString m_filepath = QDir(path).filePath(final_process);
+            if (QFile::exists(m_filepath))
+            {
+                QSettings desktopSettings(m_filepath, QSettings::IniFormat);
+                desktopSettings.beginGroup("Desktop Entry");
+                QString exec = desktopSettings.value("Exec").toString();
+                desktopSettings.endGroup();
+                m_running_process = exec;
+            }
+        }
+    }
+    if (m_running_process.isEmpty())
+    {
+        m_running_process = file_path;
+    }
+    else
+    {
+        m_running_process.replace("%f", QDir::toNativeSeparators(file_path));
+        m_running_process.replace("%F", QDir::toNativeSeparators(file_path));
+        m_running_process.replace("%u", QDir::toNativeSeparators(file_path));
+        m_running_process.replace("%U", QDir::toNativeSeparators(file_path));
+        QRegularExpression placeholderRegex("%[a-zA-Z]");
+        m_running_process.replace(placeholderRegex, "");
+    }
+    return m_running_process;
+}
+void File_Widget::update_running_path()
+{
+
+    QFileInfo fileInfo = QFileInfo(file_path);
+    if (fileInfo.isDir())
+    {
+        QDir file_dir = QDir(file_path);
+        file_dir.cdUp();
+        running_path = file_dir.path();
+    }
+    else
+    {
+        running_path = fileInfo.absolutePath();
+    }
+    QDir file_dir = QDir(file_path);
+    if (!file_dir.exists())
+    {
+        running_path = QDir::homePath();
+    }
+}
+void File_Widget::set_file_or_dir(bool file)
+{
+    update_running_path();
+    QString filepath;
+    if (file)
+    {
+        QMessageBox::information(nullptr, "设置文件", "设置文件");
+        filepath = QFileDialog::getOpenFileName(nullptr, "获取文件", running_path);
+    }
+    else
+    {
+        QMessageBox::information(nullptr, "设置文件夹", "设置文件夹");
+        filepath = QFileDialog::getExistingDirectory(nullptr, "获取文件夹", running_path);
+    }
+    X11_Rasie();
+    if (filepath.isEmpty())
+    {
+        return;
+    }
+    file_path = filepath;
+    process_string = get_running_process(file_path);
+    QMessageBox::StandardButton final_ans = QMessageBox::question(nullptr, "确认进程", QString("默认进程:%1\n请确认是否应用").arg(process_string));
+    if (final_ans != QMessageBox::Yes)
+    {
+        bool ok = false;
+        QString final_string = QInputDialog::getText(nullptr, "设置运行进程", "设置运行进程:",QLineEdit::Normal, process_string, &ok);
+        if (!ok || final_string.isEmpty())
+        {
+            process_string = "";
+        }
+        else
+        {
+            process_string = final_string;
+        }
+    }
+}
+void File_Widget::save(QSettings *settings)
+{
+    Process_Widget::save(settings);
+}
+void File_Widget::load(QSettings *settings)
+{
+    Process_Widget::load(settings);
+}
