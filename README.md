@@ -51,5 +51,8 @@ widget_control.hpp仅为了方便管理,无特殊效果
 ![s1.png](screenshots/s1.png)
 
 ![1.gif](screenshots/Easy_Desktop.gif)
+
+## 演示
+演示视频:[bilibili](https://www.bilibili.com/video/BV1eUpfzPEHf/)
 ## 储存
 储存路径: ~/.local/lib/easy_desktop/config.ini
