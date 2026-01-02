@@ -464,7 +464,7 @@ void PulseAudio_Chart::pa_update()
     {
         axisY->setRange(-1, 1);
         series->setName("左声道RMS");
-        sec_series->setName("左声道RMS");
+        sec_series->setName("右声道RMS");
     }
     else
     {
