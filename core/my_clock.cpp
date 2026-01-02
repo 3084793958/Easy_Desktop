@@ -135,8 +135,8 @@ void My_Clock::load(QSettings *settings)
 {
     Basic_Widget::load(settings);
     settings->value("out_line", time_label->outlineWidth).toInt();
-    time_label->outlineColor = QColor::fromRgba(settings->value("out_line_color", QColor(0, 0, 0, 255)).toUInt());
-    time_label->text_color = QColor::fromRgba(settings->value("color", QColor(255, 255, 255, 255)).toUInt());
+    time_label->outlineColor = QColor::fromRgba(settings->value("out_line_color", QColor(0, 0, 0, 255).rgba()).toUInt());
+    time_label->text_color = QColor::fromRgba(settings->value("color", QColor(255, 255, 255, 255).rgba()).toUInt());
     time_label->setFont(settings->value("font", QFontDatabase::systemFont(QFontDatabase::FixedFont)).value<QFont>());
     auto_set_font_size();
 }

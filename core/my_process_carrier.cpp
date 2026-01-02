@@ -1,4 +1,6 @@
 #include "my_process_carrier.h"
+#include <QX11Info>
+#include <X11/Xlib.h>
 My_Process_Carrier::My_Process_Carrier(QWidget *parent)
     :Basic_Widget(parent)
 {

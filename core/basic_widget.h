@@ -51,6 +51,7 @@ protected:
     QAction *set_background_color = new QAction(tr("设置背景颜色"), this);
     QAction *show_close_button = new QAction(tr("显示关闭窗口键"), this);
     QAction *set_pos_action = new QAction(tr("设置位置"), this);
+    QAction *set_size_action = new QAction(tr("设置大小"), this);
     QAction *close_action = new QAction(tr("关闭窗口"), this);
     void basic_action_func(QAction *action);
     int *now_page;

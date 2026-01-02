@@ -62,8 +62,8 @@ void Desktop_Background::mouse_move_event(int mouse_x, int mouse_y)
     {
         return;
     }
-    int move_x = int(path_list[Path_List_Index].k_mouse_move_width * (mouse_x - (desktop_width / 2)));
-    int move_y = int(path_list[Path_List_Index].k_mouse_move_height * (mouse_y - (desktop_height / 2)));
+    int move_x = int(path_list[Path_List_Index].k_mouse_move_width * (mouse_x - (QApplication::desktop()->width() / 2)) * (static_cast<double>(desktop_width) / QApplication::desktop()->width()));
+    int move_y = int(path_list[Path_List_Index].k_mouse_move_height * (mouse_y - (QApplication::desktop()->height() / 2)) */*我真是天才*/ (static_cast<double>(desktop_height) / QApplication::desktop()->height()));
     if (path_list[Path_List_Index].is_image)
     {
         image_background->move(base_point.x() + move_x, base_point.y() + move_y);//频繁执行占用低
@@ -116,6 +116,40 @@ void Desktop_Background::Update_Widget()
         media_player->setMedia(QUrl::fromLocalFile(path_list[Path_List_Index].path));
         media_player->play();
     }
+}
+void Desktop_Background::geometry_change()
+{
+    if (sending_info)
+    {
+        return;
+    }
+    resize(desktop_width, desktop_height);
+    if (path_list.count() == 0)
+    {
+        return;
+    }
+    if (Path_List_Index < 0 || Path_List_Index >= path_list.count())
+    {
+        return;
+    }
+    if (path_list[Path_List_Index].Empty)
+    {
+        return;
+    }
+    if (path_list[Path_List_Index].path.isEmpty())
+    {
+        return;
+    }
+    if (path_list[Path_List_Index].is_image)
+    {
+        image_movie->setFileName(path_list[Path_List_Index].path);
+    }
+    else
+    {
+        graphicsView->resize(desktop_width, desktop_height);
+        graphicsView->show();//被优化了,必须show才有emit
+    }
+    Desktop_Background::Second_Update_Widget();
 }
 void Desktop_Background::Second_Update_Widget()
 {
@@ -248,8 +282,8 @@ void Desktop_Background::Second_Update_Widget()
     }
     if (path_list[Path_List_Index].mouse_effect)
     {
-        int move_x = static_cast<int>(path_list[Path_List_Index].k_mouse_move_width * (QCursor::pos().x() - (desktop_width / 2)));
-        int move_y = static_cast<int>(path_list[Path_List_Index].k_mouse_move_height * (QCursor::pos().y() - (desktop_height / 2)));
+        int move_x = static_cast<int>(path_list[Path_List_Index].k_mouse_move_width * (QCursor::pos().x() - (QApplication::desktop()->width() / 2)) * (static_cast<double>(desktop_width) / QApplication::desktop()->width()));
+        int move_y = static_cast<int>(path_list[Path_List_Index].k_mouse_move_height * (QCursor::pos().y() - (QApplication::desktop()->height() / 2)) * (static_cast<double>(desktop_height) / QApplication::desktop()->height()));
         if (path_list[Path_List_Index].is_image)
         {
             image_background->move(base_point + QPoint(move_x, move_y));

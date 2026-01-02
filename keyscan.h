@@ -14,6 +14,7 @@ public:
     explicit keyScan(QObject *parent = nullptr);
     virtual ~keyScan();
     void call_move(int mouse_x, int mouse_y);
+    int signal_delta_time = 20;
 signals:
     void mouse_move(int mouse_x, int mouse_y);
 private:

@@ -7,12 +7,13 @@ My_Program_Container::My_Program_Container(QWidget *parent)
     menu->addAction(break_program);
     menu->addAction(focus_action);
     menu->addAction(set_distance_action);
+    menu->addAction(set_delta_action);
     Basic_Widget::basic_context(menu);
     Container_Widget->setStyleSheet("background:rgba(0,0,0,0)");
     Container_Widget->setMouseTracking(true);
     connect(this, &Basic_Widget::size_changed, this, [=] (QSize size)
     {
-        Container_Widget->move(distance_width, distance_height);
+        Container_Widget->move(distance_width + delta_x, distance_height + delta_y);
         Container_Widget->resize(size - QSize(2 * distance_width, 2 * distance_height));
         if (targetWindow == 0)
         {
@@ -173,6 +174,24 @@ void My_Program_Container::contextMenuEvent(QContextMenuEvent *event)
         distance_height = new_height;
         emit Basic_Widget::size_changed(this->get_self()->size());
     }
+    else if (know_what == set_delta_action)
+    {
+        bool ok = false;
+        int new_x = QInputDialog::getInt(nullptr, "获取数值", "X偏移:", delta_x, -2147483647, 2147483647, 1, &ok);
+        if (!ok)
+        {
+            return;
+        }
+        ok = false;
+        int new_y = QInputDialog::getInt(nullptr, "获取数值", "Y偏移:", delta_y, -2147483647, 2147483647, 1, &ok);
+        if (!ok)
+        {
+            return;
+        }
+        delta_x = new_x;
+        delta_y = new_y;
+        emit Basic_Widget::size_changed(this->get_self()->size());
+    }
     else
     {
         basic_action_func(know_what);
@@ -294,6 +313,8 @@ void My_Program_Container::save(QSettings *settings)
     Basic_Widget::save(settings);
     settings->setValue("distance_width", distance_width);
     settings->setValue("distance_height", distance_height);
+    settings->setValue("delta_x", delta_x);
+    settings->setValue("delta_y", delta_y);
 }
 void My_Program_Container::load(QSettings *settings)
 {
@@ -302,5 +323,9 @@ void My_Program_Container::load(QSettings *settings)
     int new_height = settings->value("distance_height", 20).toInt();
     distance_width = new_width;
     distance_height = new_height;
+    int new_delta_x = settings->value("delta_x", 0).toInt();
+    int new_delta_y = settings->value("delta_y", 0).toInt();
+    delta_x = new_delta_x;
+    delta_y = new_delta_y;
     emit Basic_Widget::size_changed(this->get_self()->size());
 }

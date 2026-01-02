@@ -226,6 +226,96 @@ Setting_Widget::Setting_Widget(QWidget *parent)
         Setting_Widget::X11_Rasie();//没办法,要跟dde-desktop争夺[桌面显示权]
         path_box_list[index]->setText(file_name);
     });
+    load_img_button->move(5, 320);
+    load_video_button->move(150, 320);
+    connect(load_img_button, &QPushButton::released, this, [=]
+    {
+        QStringList filenames = QFileDialog::getOpenFileNames(nullptr, "获取文件", QDir::homePath(), "图像文件(*.png *.jpg *.jpeg *.svg *.gif *.bmp);;所有文件(*.*)");
+        X11_Rasie();//将错就错
+        path_list.clear();
+        for (int i = 0; i < id_box_list.count(); i++)
+        {
+            path_list<<Path_Info(
+                           static_cast<uint>(id_box_list[i]->value()),
+                           name_box_list[i]->text(),
+                           !image_box_list[i]->currentIndex(),
+                           path_box_list[i]->text(),
+                           (QList<Scale_Type>()
+                            <<Scale_Type::No
+                            <<Scale_Type::Each
+                            <<Scale_Type::Width
+                            <<Scale_Type::Height
+                            <<Scale_Type::Short
+                            <<Scale_Type::Long
+                            <<Scale_Type::Full
+                            )[scale_box_list[i]->currentIndex()],
+                           !center_box_list[i]->currentIndex(),
+                           !mouse_effect_box_list[i]->currentIndex(),
+                           mouse_width_box_list[i]->value(),
+                           mouse_height_box_list[i]->value(),
+                           delta_x_box_list[i]->value(),
+                           delta_y_box_list[i]->value(),
+                           !on_Antialiasing_box_list[i]->currentIndex()
+                           );
+        }
+        uint max_id = 0;
+        for (int i = 0; i < path_list.count(); i++)
+        {
+            if (max_id <= path_list[i].id)
+            {
+                max_id = path_list[i].id + 1;
+            }
+        }
+        for (int i = 0; i < filenames.count(); i++)
+        {
+            path_list<<Path_Info(max_id + static_cast<unsigned>(i),QFileInfo(filenames[i]).fileName(),true,filenames[i],Scale_Type::Full,true,false,0,0,0,0,true);
+        }
+        Setting_Widget::private_update();
+    });
+    connect(load_video_button, &QPushButton::released, this, [=]
+    {
+        QStringList filenames = QFileDialog::getOpenFileNames(nullptr, "获取文件", QDir::homePath(), "视频文件(*.*);;所有文件(*.*)");
+        X11_Rasie();
+        path_list.clear();
+        for (int i = 0; i < id_box_list.count(); i++)
+        {
+            path_list<<Path_Info(
+                           static_cast<uint>(id_box_list[i]->value()),
+                           name_box_list[i]->text(),
+                           !image_box_list[i]->currentIndex(),
+                           path_box_list[i]->text(),
+                           (QList<Scale_Type>()
+                            <<Scale_Type::No
+                            <<Scale_Type::Each
+                            <<Scale_Type::Width
+                            <<Scale_Type::Height
+                            <<Scale_Type::Short
+                            <<Scale_Type::Long
+                            <<Scale_Type::Full
+                            )[scale_box_list[i]->currentIndex()],
+                           !center_box_list[i]->currentIndex(),
+                           !mouse_effect_box_list[i]->currentIndex(),
+                           mouse_width_box_list[i]->value(),
+                           mouse_height_box_list[i]->value(),
+                           delta_x_box_list[i]->value(),
+                           delta_y_box_list[i]->value(),
+                           !on_Antialiasing_box_list[i]->currentIndex()
+                           );
+        }
+        uint max_id = 0;
+        for (int i = 0; i < path_list.count(); i++)
+        {
+            if (max_id <= path_list[i].id)
+            {
+                max_id = path_list[i].id + 1;
+            }
+        }
+        for (int i = 0; i < filenames.count(); i++)
+        {
+            path_list<<Path_Info(max_id + static_cast<unsigned>(i),QFileInfo(filenames[i]).fileName(),false,filenames[i],Scale_Type::Full,true,false,0,0,0,0,true);
+        }
+        Setting_Widget::private_update();
+    });
     table_widget->viewport()->installEventFilter(this);//eventFilter需要注册
 }
 void Setting_Widget::resizeEvent(QResizeEvent *event)
@@ -237,6 +327,8 @@ void Setting_Widget::resizeEvent(QResizeEvent *event)
     load_button->move(new_size.width() - 180, new_size.height() - 40);
     new_button->move(new_size.width() - 120, new_size.height() - 80);
     delete_button->move(new_size.width() - 60, new_size.height() - 80);
+    load_img_button->move(5, new_size.height() - 80);
+    load_video_button->move(150, new_size.height() - 80);
     choose_id_text->move(0, new_size.height() - 35);
     choose_id_box->move(50, new_size.height() - 40);
     set_file_button->move(200, new_size.height() - 40);

@@ -48,6 +48,7 @@ Basic_Widget::Basic_Widget(QWidget *parent)
     basic_control->addAction(set_background_color);
     basic_control->addAction(show_close_button);
     basic_control->addAction(set_pos_action);
+    basic_control->addAction(set_size_action);
     basic_control->addAction(close_action);
     show_close_button->setCheckable(true);
     show_close_button->setChecked(true);
@@ -460,6 +461,22 @@ void Basic_Widget::basic_action_func(QAction *action)
         }
         move(new_X, new_Y);
     }
+    else if (action == set_size_action)
+    {
+        bool ok = false;
+        int new_X = QInputDialog::getInt(nullptr, "获取数值", "宽度width:", background->width(), 10, 2147483647, 1, &ok);
+        if (!ok)
+        {
+            return;
+        }
+        ok = false;
+        int new_Y = QInputDialog::getInt(nullptr, "获取数值", "高度height:", background->height(), 10, 2147483647, 1, &ok);
+        if (!ok)
+        {
+            return;
+        }
+        resize(new_X, new_Y);
+    }
     else if (action == close_action)
     {
         hide();
@@ -495,7 +512,7 @@ void Basic_Widget::load(QSettings *settings)
     bool show_close_button_bool = settings->value("show_close", true).toBool();
     show_close_button->setChecked(show_close_button_bool);
     close_button->setVisible(show_close_button_bool);
-    background_color = QColor::fromRgba(settings->value("background_color", QColor(0,0,0,50)).toUInt());
+    background_color = QColor::fromRgba(settings->value("background_color", QColor(0,0,0,50).rgba()).toUInt());
     background_radius = settings->value("background_radius", 10).toInt();
     background->setStyleSheet(QString("border-radius: %1px %1px;background:rgba(%2,%3,%4,%5)").arg(background_radius).arg(background_color.red()).arg(background_color.green()).arg(background_color.blue()).arg(background_color.alpha()));
     int res = settings->value("in_page", -1).toInt();

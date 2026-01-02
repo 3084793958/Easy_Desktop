@@ -33,6 +33,7 @@ private:
     bool moved = false;
     WId winId;
     QColor press_color = QColor(255,255,255,75);
+    QColor hover_color = QColor(255,255,255,75);
     QColor basic_color = QColor(255,255,255,50);
     QLabel *image_label = new QLabel(Carrier);
     QPushButton *just_show_image = new QPushButton(image_label);
@@ -56,6 +57,8 @@ private:
     virtual void mousePressEvent(QMouseEvent *event);
     virtual void mouseReleaseEvent(QMouseEvent *event);
     virtual void mouseMoveEvent(QMouseEvent *event);
+    virtual void enterEvent(QEvent *event);
+    virtual void leaveEvent(QEvent *event);
     void contextMenuEvent(QContextMenuEvent *event);
 protected:
     void auto_set_font_size();

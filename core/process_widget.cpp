@@ -192,7 +192,7 @@ void Process_Widget::mouseMoveEvent(QMouseEvent *event)
         }
         else
         {
-            Carrier->setStyleSheet(QString("background:rgba(%1,%2,%3,%4)").arg(basic_color.red()).arg(basic_color.green()).arg(basic_color.blue()).arg(basic_color.alpha()));
+            Carrier->setStyleSheet(QString("background:rgba(%1,%2,%3,%4)").arg(hover_color.red()).arg(hover_color.green()).arg(hover_color.blue()).arg(hover_color.alpha()));
         }
     }
     else
@@ -201,6 +201,16 @@ void Process_Widget::mouseMoveEvent(QMouseEvent *event)
     }
     moved = true;
     Basic_Widget::mouseMoveEvent(event);
+}
+void Process_Widget::enterEvent(QEvent *event)
+{
+    (void)event;
+    Carrier->setStyleSheet(QString("background:rgba(%1,%2,%3,%4)").arg(hover_color.red()).arg(hover_color.green()).arg(hover_color.blue()).arg(hover_color.alpha()));
+}
+void Process_Widget::leaveEvent(QEvent *event)
+{
+    (void)event;
+    Carrier->setStyleSheet(QString("background:rgba(%1,%2,%3,%4)").arg(basic_color.red()).arg(basic_color.green()).arg(basic_color.blue()).arg(basic_color.alpha()));
 }
 void Process_Widget::context_solution(QAction *know_what)
 {
@@ -386,6 +396,13 @@ void Process_Widget::context_solution(QAction *know_what)
         {
             press_color = colorDialog.currentColor();
         }
+        colorDialog.setCurrentColor(hover_color);
+        colorDialog.setWindowTitle("获取悬停(hover)颜色");
+        QMessageBox::information(nullptr, "设置悬停(hover)颜色", "设置悬停(hover)颜色");
+        if (colorDialog.exec() == QDialog::Accepted)
+        {
+            hover_color = colorDialog.currentColor();
+        }
         if (left_mouse_on_press)
         {
             Carrier->setStyleSheet(QString("background:rgba(%1,%2,%3,%4)").arg(press_color.red()).arg(press_color.green()).arg(press_color.blue()).arg(press_color.alpha()));
@@ -490,6 +507,7 @@ void Process_Widget::save(QSettings *settings)
     settings->setValue("label_out_line_width", process_name_label->outlineWidth);
     settings->setValue("press_color", press_color.rgba());
     settings->setValue("basic_color", basic_color.rgba());
+    settings->setValue("hover_color", hover_color.rgba());
 }
 void Process_Widget::load(QSettings *settings)
 {
@@ -524,11 +542,12 @@ void Process_Widget::load(QSettings *settings)
     process_name_label->setFont(settings->value("label_font", QFontDatabase::systemFont(QFontDatabase::FixedFont)).value<QFont>());
     bool auto_resize = settings->value("label_auto_resize", false).toBool();
     set_auto_resize->setChecked(auto_resize);
-    process_name_label->text_color = QColor::fromRgba(settings->value("label_text_color", QColor(255, 255, 255, 255)).toUInt());
-    process_name_label->outlineColor = QColor::fromRgba(settings->value("label_out_line_color", QColor(0, 0, 0, 255)).toUInt());
+    process_name_label->text_color = QColor::fromRgba(settings->value("label_text_color", QColor(255, 255, 255, 255).rgba()).toUInt());
+    process_name_label->outlineColor = QColor::fromRgba(settings->value("label_out_line_color", QColor(0, 0, 0, 255).rgba()).toUInt());
     process_name_label->outlineWidth = settings->value("label_out_line_width", 2).toInt();
-    press_color = QColor::fromRgba(settings->value("press_color", QColor(255,255,255,75)).toUInt());
-    basic_color = QColor::fromRgba(settings->value("basic_color", QColor(255,255,255,50)).toUInt());
+    press_color = QColor::fromRgba(settings->value("press_color", QColor(255,255,255,75).rgba()).toUInt());
+    basic_color = QColor::fromRgba(settings->value("basic_color", QColor(255,255,255,50).rgba()).toUInt());
+    hover_color = QColor::fromRgba(settings->value("hover_color", press_color.rgba()).toUInt());
     if (auto_resize)
     {
         auto_set_font_size();

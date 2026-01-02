@@ -60,6 +60,7 @@ public:
     void Set_Speed(int value);
     void save(QSettings *settings);
     void load(QSettings *settings);
+    void geometry_change();
 signals:
     void send_position(int value, QString text);
 public:
@@ -73,8 +74,9 @@ private:
     QSize get_Image_Size(QString path);
     void Second_Update_Widget();
     void mouse_move_event(int mouse_x, int mouse_y);
-private:
+public:
     keyScan *btnCheck = new keyScan;
+private:
     int desktop_width;
     int desktop_height;
     bool call_video_update = false;

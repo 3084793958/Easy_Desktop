@@ -262,9 +262,9 @@ void My_Label::load(QSettings *settings)
     {
         this->main_label->setText(label_text);
     }
-    main_label->text_color = QColor::fromRgba(settings->value("text_color", QColor(255, 255, 255, 255)).toUInt());
+    main_label->text_color = QColor::fromRgba(settings->value("text_color", QColor(255, 255, 255, 255).rgba()).toUInt());
     main_label->setFont(settings->value("text_font", QFontDatabase::systemFont(QFontDatabase::FixedFont)).value<QFont>());
     main_label->outlineWidth = settings->value("out_line_width", 5).toInt();
-    main_label->outlineColor = QColor::fromRgba(settings->value("out_line_color", QColor(0, 0, 0, 255)).toUInt());
+    main_label->outlineColor = QColor::fromRgba(settings->value("out_line_color", QColor(0, 0, 0, 255).rgba()).toUInt());
     auto_set_font_size();
 }

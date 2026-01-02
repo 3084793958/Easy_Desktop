@@ -78,15 +78,18 @@ void File_Widget::contextMenuEvent(QContextMenuEvent *event)
     {
         update_running_path();
         QString filepath;
+        QString name;
         if (know_what == set_file_as_file)
         {
             QMessageBox::information(nullptr, "设置文件", "设置文件");
             filepath = QFileDialog::getOpenFileName(nullptr, "获取文件", running_path);
+            name = QFileInfo(filepath).fileName();
         }
         else
         {
             QMessageBox::information(nullptr, "设置文件夹", "设置文件夹");
             filepath = QFileDialog::getExistingDirectory(nullptr, "获取文件夹", running_path);
+            name = QDir(filepath).dirName();
         }
         X11_Rasie();
         if (filepath.isEmpty())
@@ -94,6 +97,15 @@ void File_Widget::contextMenuEvent(QContextMenuEvent *event)
             return;
         }
         file_path = filepath;
+        QMessageBox::StandardButton name_ans = QMessageBox::question(nullptr, "确认名称", QString("将设为名称:%1\n请确认是否应用").arg(name));
+        if (name_ans == QMessageBox::Yes)
+        {
+            this->process_name_label->setText(name);
+            if (set_auto_resize->isChecked())
+            {
+                auto_set_font_size();
+            }
+        }
         process_string = get_running_process(file_path);
         QMessageBox::StandardButton final_ans = QMessageBox::question(nullptr, "确认进程", QString("默认进程:%1\n请确认是否应用").arg(process_string));
         if (final_ans != QMessageBox::Yes)

@@ -19,6 +19,8 @@ public:
     QList<My_Program_Container *> *my_program_container_list;
     int distance_width = 20;
     int distance_height = 20;
+    int delta_x = 0;
+    int delta_y = 0;
     virtual void save(QSettings *settings);
     virtual void load(QSettings *settings);
 private:
@@ -27,6 +29,7 @@ private:
     QAction *break_program = new QAction(tr("脱离"), this);
     QAction *focus_action = new QAction(tr("聚焦"), this);
     QAction *set_distance_action = new QAction(tr("设置距离"), this);
+    QAction *set_delta_action = new QAction(tr("设置偏移"), this);
     void update_container();
     QString get_window_class(Display *display, Window window);
     pid_t get_window_pid(Display *display, Window window);

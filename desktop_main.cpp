@@ -185,7 +185,14 @@ void Desktop_Control_Dock::mouseMoveEvent(QMouseEvent *event)
 {
     if (on_press)
     {
-        move(event->globalPos() - press_point);
+        if (basic_pos)
+        {
+            move(event->globalPos() - *basic_pos - press_point);
+        }
+        else
+        {
+            move(event->globalPos() - press_point);
+        }
     }
 }
 void Desktop_Control_Dock::contextMenuEvent(QContextMenuEvent *event)
@@ -218,6 +225,12 @@ Desktop_Main::Desktop_Main(QWidget *parent)
     background_Add_Action->addAction(my_file_action);
     background_Add_Action->addAction(my_process_Carrier_action);
     background_Add_Action->addAction(my_program_INNER_action);
+    my_chart_menu->addAction(cpu_chart_action);
+    my_chart_menu->addAction(ram_chart_action);
+    my_chart_menu->addAction(net_chart_action);
+    my_chart_menu->addAction(disk_chart_action);
+    my_chart_menu->addAction(pulseaudio_chart_action);
+    background_Add_Action->addMenu(my_chart_menu);
     menu->addMenu(background_Add_Action);
     desktop_control_action->addAction(lock_desktop);
     desktop_control_action->addAction(unlock_desktop);
@@ -240,9 +253,11 @@ Desktop_Main::Desktop_Main(QWidget *parent)
     menu->addAction(load_Action);
     menu->addSeparator();
     menu->addAction(background_setting_Action);
+    menu->addAction(debugging_setting_Action);
     menu->addAction(Quit_Action);
     move_Timer->setInterval(30);
     connect(move_Timer, &QTimer::timeout, this, &Desktop_Main::Timer_End);
+    control_Dock->basic_pos = &basic_pos;
 }
 void Desktop_Main::Connection_Update()
 {
@@ -273,6 +288,14 @@ void Desktop_Main::contextMenuEvent(QContextMenuEvent *event)
             setting_widget->activateWindow();
             setting_widget->show();
             setting_widget->Table_Update();
+        }
+    }
+    else if (know_what == debugging_setting_Action)
+    {
+        if (experimental_settings)
+        {
+            experimental_settings->activateWindow();
+            experimental_settings->show();
         }
     }
     else if (know_what == Quit_Action)
@@ -403,7 +426,7 @@ void Desktop_Main::contextMenuEvent(QContextMenuEvent *event)
         my_clock->set_now_page(&now_page);
         my_clock->set_desktop_number(&Desktop_NUmber);
         my_clock->set_basic_list(reinterpret_cast<QList<QWidget *> *>(&desktop_core_dock_list));
-        my_clock->move(event->globalPos());
+        my_clock->move(event->globalPos() - basic_pos);
         my_clock_list.append(my_clock);
         my_clock->my_clock_list = &my_clock_list;
     }
@@ -414,7 +437,7 @@ void Desktop_Main::contextMenuEvent(QContextMenuEvent *event)
         my_lineedit->set_desktop_number(&Desktop_NUmber);
         my_lineedit->set_basic_list(reinterpret_cast<QList<QWidget *> *>(&desktop_core_dock_list));
         my_lineedit->set_WinId(m_WinId);
-        my_lineedit->move(event->globalPos());
+        my_lineedit->move(event->globalPos() - basic_pos);
         my_lineedit_list.append(my_lineedit);
         my_lineedit->my_lineedit_list = &my_lineedit_list;
     }
@@ -425,7 +448,7 @@ void Desktop_Main::contextMenuEvent(QContextMenuEvent *event)
         my_label->set_desktop_number(&Desktop_NUmber);
         my_label->set_basic_list(reinterpret_cast<QList<QWidget *> *>(&desktop_core_dock_list));
         my_label->set_WinId(m_WinId);
-        my_label->move(event->globalPos());
+        my_label->move(event->globalPos() - basic_pos);
         my_label_list.append(my_label);
         my_label->my_label_list = &my_label_list;
     }
@@ -451,7 +474,7 @@ void Desktop_Main::contextMenuEvent(QContextMenuEvent *event)
         my_process->set_desktop_number(&Desktop_NUmber);
         my_process->set_basic_list(reinterpret_cast<QList<QWidget *> *>(&desktop_core_dock_list));
         my_process->set_WinId(m_WinId);
-        my_process->move(event->globalPos());
+        my_process->move(event->globalPos() - basic_pos);
         process_widget_list.append(my_process);
         my_process->process_widget_list = &process_widget_list;
     }
@@ -477,7 +500,7 @@ void Desktop_Main::contextMenuEvent(QContextMenuEvent *event)
         my_file->set_desktop_number(&Desktop_NUmber);
         my_file->set_basic_list(reinterpret_cast<QList<QWidget *> *>(&desktop_core_dock_list));
         my_file->set_WinId(m_WinId);
-        my_file->move(event->globalPos());
+        my_file->move(event->globalPos() - basic_pos);
         file_widget_list.append(my_file);
         my_file->file_widget_list = &file_widget_list;
     }
@@ -489,7 +512,7 @@ void Desktop_Main::contextMenuEvent(QContextMenuEvent *event)
         my_process_Carrier->set_basic_list(reinterpret_cast<QList<QWidget *> *>(&desktop_core_dock_list));
         my_process_Carrier->m_WinId = m_WinId;
         my_process_Carrier->process_widget_p = &process_widget_p;
-        my_process_Carrier->move(event->globalPos());
+        my_process_Carrier->move(event->globalPos() - basic_pos);
         my_process_carrier_list.append(my_process_Carrier);
         my_process_Carrier->my_process_carrier_list = &my_process_carrier_list;
         my_process_Carrier->process_widget_list = &process_widget_list;
@@ -501,9 +524,59 @@ void Desktop_Main::contextMenuEvent(QContextMenuEvent *event)
         my_program_Carrier->set_now_page(&now_page);
         my_program_Carrier->set_desktop_number(&Desktop_NUmber);
         my_program_Carrier->set_basic_list(reinterpret_cast<QList<QWidget *> *>(&desktop_core_dock_list));
-        my_program_Carrier->move(event->globalPos());
+        my_program_Carrier->move(event->globalPos() - basic_pos);
         my_program_container_list.append(my_program_Carrier);
         my_program_Carrier->my_program_container_list = &my_program_container_list;
+    }
+    else if (know_what == cpu_chart_action)
+    {
+        CPU_Chart *cpu_chart = new CPU_Chart(desktop_core_dock_list[now_page]);
+        cpu_chart->set_now_page(&now_page);
+        cpu_chart->set_desktop_number(&Desktop_NUmber);
+        cpu_chart->set_basic_list(reinterpret_cast<QList<QWidget *> *>(&desktop_core_dock_list));
+        cpu_chart->move(event->globalPos() - basic_pos);
+        cpu_chart_list.append(cpu_chart);
+        cpu_chart->cpu_chart_list = &cpu_chart_list;
+    }
+    else if (know_what == ram_chart_action)
+    {
+        RAM_Chart *ram_chart = new RAM_Chart(desktop_core_dock_list[now_page]);
+        ram_chart->set_now_page(&now_page);
+        ram_chart->set_desktop_number(&Desktop_NUmber);
+        ram_chart->set_basic_list(reinterpret_cast<QList<QWidget *> *>(&desktop_core_dock_list));
+        ram_chart->move(event->globalPos() - basic_pos);
+        ram_chart_list.append(ram_chart);
+        ram_chart->ram_chart_list = &ram_chart_list;
+    }
+    else if (know_what == net_chart_action)
+    {
+        NET_Chart *net_chart = new NET_Chart(desktop_core_dock_list[now_page]);
+        net_chart->set_now_page(&now_page);
+        net_chart->set_desktop_number(&Desktop_NUmber);
+        net_chart->set_basic_list(reinterpret_cast<QList<QWidget *> *>(&desktop_core_dock_list));
+        net_chart->move(event->globalPos() - basic_pos);
+        net_chart_list.append(net_chart);
+        net_chart->net_chart_list = &net_chart_list;
+    }
+    else if (know_what == disk_chart_action)
+    {
+        DISK_Chart *disk_chart = new DISK_Chart(desktop_core_dock_list[now_page]);
+        disk_chart->set_now_page(&now_page);
+        disk_chart->set_desktop_number(&Desktop_NUmber);
+        disk_chart->set_basic_list(reinterpret_cast<QList<QWidget *> *>(&desktop_core_dock_list));
+        disk_chart->move(event->globalPos() - basic_pos);
+        disk_chart_list.append(disk_chart);
+        disk_chart->disk_chart_list = &disk_chart_list;
+    }
+    else if (know_what == pulseaudio_chart_action)
+    {
+        PulseAudio_Chart *pulseaudio_chart = new PulseAudio_Chart(desktop_core_dock_list[now_page]);
+        pulseaudio_chart->set_now_page(&now_page);
+        pulseaudio_chart->set_desktop_number(&Desktop_NUmber);
+        pulseaudio_chart->set_basic_list(reinterpret_cast<QList<QWidget *> *>(&desktop_core_dock_list));
+        pulseaudio_chart->move(event->globalPos() - basic_pos);
+        pulseaudio_chart_list.append(pulseaudio_chart);
+        pulseaudio_chart->pulseaudio_chart_list = &pulseaudio_chart_list;
     }
 }
 void Desktop_Main::set_Desktop_Size(int d_width, int d_height)
@@ -525,6 +598,18 @@ void Desktop_Main::Update_Widget()
     control_Dock->Set_Desktop_Number(&Desktop_NUmber);
     control_Dock->Set_Now_page(&now_page);
     control_Dock->First_Set();
+    control_Dock->raise();
+}
+void Desktop_Main::geometry_change()
+{
+    move(0, 0);
+    resize(desktop_width,desktop_height);
+    for (Basic_Desktop *basic_desktop : desktop_core_dock_list)
+    {
+        basic_desktop->resize(desktop_width, desktop_height);
+    }
+    Desktop_Main::Update_Basic_Desktop();
+    control_Dock->set_Desktop_Size(desktop_width ,desktop_height);
     control_Dock->raise();
 }
 void Desktop_Main::wheelEvent(QWheelEvent *event)
@@ -616,7 +701,7 @@ void Desktop_Main::Update_Basic_Desktop()
 }
 void Desktop_Main::save()
 {
-    QSettings settings(QDir::homePath() + "/.local/lib/easy_desktop/config.ini", QSettings::IniFormat);
+    QSettings settings(load_path, QSettings::IniFormat);
     settings.setIniCodec("UTF-8");
     settings.clear();
     desktop_background->save(&settings);
@@ -636,6 +721,14 @@ void Desktop_Main::save()
     settings.setValue("my_process_carrier_list_count", my_process_carrier_list.count());
     settings.setValue("my_program_container_list_count", my_program_container_list.count());
     settings.setValue("process_widget_list_count", process_widget_list.count());
+    settings.setValue("cpu_chart_list_count", cpu_chart_list.count());
+    settings.setValue("ram_chart_list_count", ram_chart_list.count());
+    settings.setValue("net_chart_list_count", net_chart_list.count());
+    settings.setValue("disk_chart_list_count", disk_chart_list.count());
+    settings.setValue("pulseaudio_chart_list_count", pulseaudio_chart_list.count());
+    settings.setValue("stay_on_top", *stay_on_top);
+    settings.setValue("on_top_time", *on_top_time);
+    settings.setValue("keyscan_timer", *keyscan_timer);
     settings.endGroup();
     slider_action->save(&settings);
     //
@@ -689,12 +782,47 @@ void Desktop_Main::save()
         process_widget_list[i]->save(&settings);
         settings.endGroup();
     }
+    count = cpu_chart_list.count();
+    for (int i = 0; i < count; i++)
+    {
+        settings.beginGroup(QString("cpu_chart%1").arg(i));
+        cpu_chart_list[i]->save(&settings);
+        settings.endGroup();
+    }
+    count = ram_chart_list.count();
+    for (int i = 0; i < count; i++)
+    {
+        settings.beginGroup(QString("ram_chart%1").arg(i));
+        ram_chart_list[i]->save(&settings);
+        settings.endGroup();
+    }
+    count = net_chart_list.count();
+    for (int i = 0; i < count; i++)
+    {
+        settings.beginGroup(QString("net_chart%1").arg(i));
+        net_chart_list[i]->save(&settings);
+        settings.endGroup();
+    }
+    count = disk_chart_list.count();
+    for (int i = 0; i < count; i++)
+    {
+        settings.beginGroup(QString("disk_chart%1").arg(i));
+        disk_chart_list[i]->save(&settings);
+        settings.endGroup();
+    }
+    count = pulseaudio_chart_list.count();
+    for (int i = 0; i < count; i++)
+    {
+        settings.beginGroup(QString("pulseaudio_chart%1").arg(i));
+        pulseaudio_chart_list[i]->save(&settings);
+        settings.endGroup();
+    }
     //
     settings.sync();
 }
 void Desktop_Main::load()
 {
-    QSettings settings(QDir::homePath() + "/.local/lib/easy_desktop/config.ini", QSettings::IniFormat);
+    QSettings settings(load_path, QSettings::IniFormat);
     settings.setIniCodec("UTF-8");
     desktop_background->load(&settings);
     setting_widget->Table_Update();
@@ -702,6 +830,10 @@ void Desktop_Main::load()
     locking_desktop = settings.value("locking_desktop", false).toBool();
     allow_dock_show = settings.value("allow_dock_show", true).toBool();
     control_Dock->setVisible(allow_dock_show);
+    *stay_on_top = settings.value("stay_on_top", true).toBool();
+    *on_top_time = settings.value("on_top_time", 5000).toInt();
+    *keyscan_timer = settings.value("keyscan_timer", 20).toInt();
+    emit keyscan_loaded();
     bool background_playing = settings.value("background_playing", true).toBool();
     bool mouse_moving = settings.value("mouse_moving", true).toBool();
     if (background_playing)
@@ -756,6 +888,11 @@ void Desktop_Main::load()
     int my_lineedit_list_count = settings.value("my_lineedit_list_count", 0).toInt();
     int my_process_carrier_list_count = settings.value("my_process_carrier_list_count", 0).toInt();
     int my_program_container_list_count = settings.value("my_program_container_list_count", 0).toInt();
+    int cpu_chart_list_count = settings.value("cpu_chart_list_count", 0).toInt();
+    int ram_chart_list_count = settings.value("ram_chart_list_count", 0).toInt();
+    int net_chart_list_count = settings.value("net_chart_list_count", 0).toInt();
+    int disk_chart_list_count = settings.value("disk_chart_list_count", 0).toInt();
+    int pulseaudio_chart_list_count = settings.value("pulseaudio_chart_list_count", 0).toInt();
     int process_widget_list_count = settings.value("process_widget_list_count", 0).toInt();
     settings.endGroup();
     slider_action->load(&settings);
@@ -936,5 +1073,75 @@ void Desktop_Main::load()
         my_file->load(&settings);
         settings.endGroup();
         my_file->show();
+    }
+    for (int i = 0; i < cpu_chart_list_count; i++)
+    {
+        CPU_Chart *cpu_chart = new CPU_Chart(desktop_core_dock_list[now_page]);
+        cpu_chart->set_now_page(&now_page);
+        cpu_chart->set_desktop_number(&Desktop_NUmber);
+        cpu_chart->set_basic_list(reinterpret_cast<QList<QWidget *> *>(&desktop_core_dock_list));
+        cpu_chart->move(0, 0);
+        cpu_chart_list.append(cpu_chart);
+        cpu_chart->cpu_chart_list = &cpu_chart_list;
+        settings.beginGroup(QString("cpu_chart%1").arg(i));
+        cpu_chart->load(&settings);
+        settings.endGroup();
+        cpu_chart->show();
+    }
+    for (int i = 0; i < ram_chart_list_count; i++)
+    {
+        RAM_Chart *ram_chart = new RAM_Chart(desktop_core_dock_list[now_page]);
+        ram_chart->set_now_page(&now_page);
+        ram_chart->set_desktop_number(&Desktop_NUmber);
+        ram_chart->set_basic_list(reinterpret_cast<QList<QWidget *> *>(&desktop_core_dock_list));
+        ram_chart->move(0, 0);
+        ram_chart_list.append(ram_chart);
+        ram_chart->ram_chart_list = &ram_chart_list;
+        settings.beginGroup(QString("ram_chart%1").arg(i));
+        ram_chart->load(&settings);
+        settings.endGroup();
+        ram_chart->show();
+    }
+    for (int i = 0; i < net_chart_list_count; i++)
+    {
+        NET_Chart *net_chart = new NET_Chart(desktop_core_dock_list[now_page]);
+        net_chart->set_now_page(&now_page);
+        net_chart->set_desktop_number(&Desktop_NUmber);
+        net_chart->set_basic_list(reinterpret_cast<QList<QWidget *> *>(&desktop_core_dock_list));
+        net_chart->move(0, 0);
+        net_chart_list.append(net_chart);
+        net_chart->net_chart_list = &net_chart_list;
+        settings.beginGroup(QString("net_chart%1").arg(i));
+        net_chart->load(&settings);
+        settings.endGroup();
+        net_chart->show();
+    }
+    for (int i = 0; i < disk_chart_list_count; i++)
+    {
+        DISK_Chart *disk_chart = new DISK_Chart(desktop_core_dock_list[now_page]);
+        disk_chart->set_now_page(&now_page);
+        disk_chart->set_desktop_number(&Desktop_NUmber);
+        disk_chart->set_basic_list(reinterpret_cast<QList<QWidget *> *>(&desktop_core_dock_list));
+        disk_chart->move(0, 0);
+        disk_chart_list.append(disk_chart);
+        disk_chart->disk_chart_list = &disk_chart_list;
+        settings.beginGroup(QString("disk_chart%1").arg(i));
+        disk_chart->load(&settings);
+        settings.endGroup();
+        disk_chart->show();
+    }
+    for (int i = 0; i < pulseaudio_chart_list_count; i++)
+    {
+        PulseAudio_Chart *pulseaudio_chart = new PulseAudio_Chart(desktop_core_dock_list[now_page]);
+        pulseaudio_chart->set_now_page(&now_page);
+        pulseaudio_chart->set_desktop_number(&Desktop_NUmber);
+        pulseaudio_chart->set_basic_list(reinterpret_cast<QList<QWidget *> *>(&desktop_core_dock_list));
+        pulseaudio_chart->move(0, 0);
+        pulseaudio_chart_list.append(pulseaudio_chart);
+        pulseaudio_chart->pulseaudio_chart_list = &pulseaudio_chart_list;
+        settings.beginGroup(QString("pulseaudio_chart%1").arg(i));
+        pulseaudio_chart->load(&settings);
+        settings.endGroup();
+        pulseaudio_chart->show();
     }
 }

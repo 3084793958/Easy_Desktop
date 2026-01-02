@@ -41,7 +41,7 @@ void keyScan::call_move(int mouse_x, int mouse_y)
     }
     last_mouse_x = mouse_x;
     last_mouse_y = mouse_y;
-    if (QDateTime::currentMSecsSinceEpoch() - last_time <= 20)
+    if (QDateTime::currentMSecsSinceEpoch() - last_time <= signal_delta_time)
     {
         return;
     }

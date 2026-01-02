@@ -36,6 +36,8 @@ private:
     QPushButton *new_button = new QPushButton(tr("新建"),this);
     QPushButton *delete_button = new QPushButton(tr("删除"),this);
     QPushButton *set_file_button = new QPushButton(tr("为当前索引设置文件"),this);
+    QPushButton *load_img_button = new QPushButton(tr("批量加载图像"),this);
+    QPushButton *load_video_button = new QPushButton(tr("批量加载视频"),this);
     QSpinBox *choose_id_box = new QSpinBox(this);
     QLabel *choose_id_text = new QLabel(tr("选择id:"),this);
 private:
