@@ -42,9 +42,7 @@ public:
 signals:
     void close_signals();
     void size_changed(QSize size);
-protected:
-    void moveToDesktop(int index);
-    void basic_context(QMenu *menu);
+public:
     QMenu *basic_control = new QMenu(tr("基础操作"), this);
     QAction *move_to_page_action = new QAction(tr("移动到页"), this);
     QAction *set_background_radius = new QAction(tr("设置圆角大小"), this);
@@ -53,6 +51,10 @@ protected:
     QAction *set_pos_action = new QAction(tr("设置位置"), this);
     QAction *set_size_action = new QAction(tr("设置大小"), this);
     QAction *close_action = new QAction(tr("关闭窗口"), this);
+    QPushButton *close_button = new QPushButton(tr("×"),this);
+protected:
+    void moveToDesktop(int index);
+    void basic_context(QMenu *menu);
     void basic_action_func(QAction *action);
     int *now_page;
     int *desktop_number;
@@ -61,7 +63,6 @@ protected:
 protected:
     int background_radius = 10;
     QColor background_color = QColor(0,0,0,50);
-    QPushButton *close_button = new QPushButton(tr("×"),this);
 private:
     QWidget *background = new QWidget(this);
     QPoint press_point;

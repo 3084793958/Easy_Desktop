@@ -1,15 +1,27 @@
 #include "my_process_carrier.h"
 #include <QX11Info>
 #include <X11/Xlib.h>
+void My_Process_Carrier::X11_Raise()
+{
+    Window win_Id = static_cast<Window>(m_WinId);
+    Display *display = QX11Info::display();
+    XRaiseWindow(display, win_Id);
+    XFlush(display);
+}
+#undef CursorShape
 My_Process_Carrier::My_Process_Carrier(QWidget *parent)
     :Basic_Widget(parent)
 {
     this->setMouseTracking(true);
+    this->setAcceptDrops(true);
     Basic_Carrier->setMouseTracking(true);
     control_Dock->setMouseTracking(true);
     menu->addAction(create_process_widget_action);
     menu->addAction(create_file_widget_action);
     menu->addAction(get_process_widget_action);
+    load_file_action->addAction(load_files);
+    load_file_action->addAction(load_dir);
+    menu->addMenu(load_file_action);
     menu->addSeparator();
     menu->addAction(create_carrier_action);
     menu->addAction(delete_carrier_action);
@@ -105,6 +117,9 @@ void My_Process_Carrier::context_solution(QAction *know_what, QPoint pos)
         new_process_widget->move(Basic_Carrier->mapFromGlobal(pos));
         file_widget_list->append(new_process_widget);
         new_process_widget->file_widget_list = file_widget_list;
+        new_process_widget->file_open_way_process = file_open_way_process;
+        new_process_widget->file_open_info_process = file_open_info_process;
+        new_process_widget->file_open_path_process = file_open_path_process;
     }
     else if (know_what == get_process_widget_action)
     {
@@ -125,6 +140,104 @@ void My_Process_Carrier::context_solution(QAction *know_what, QPoint pos)
         (*process_widget_p)->move(Basic_Carrier->mapFromGlobal(pos));
         (*process_widget_p)->show();
         (*process_widget_p) = nullptr;
+    }
+    else if (know_what == load_files || know_what == load_dir)
+    {
+        QStringList filenames;
+        if (know_what == load_files)
+        {
+            filenames = QFileDialog::getOpenFileNames(nullptr, "获取文件", QDir::homePath());
+        }
+        else
+        {
+            filenames << QFileDialog::getExistingDirectory(nullptr, "获取文件夹", QDir::homePath());
+        }
+        X11_Raise();
+        int x = pos.x(), y = pos.y(), width = 90, height = 90, delta_x = 5, delta_y = 5;
+        bool ok = false;
+        x = QInputDialog::getInt(nullptr, "获取数值", "位置坐标:(x,y),宽度:width,高度:height,横向间隔:delta_x,纵向间隔:delta_y\n设置x", x, -2147483647, 2147483647, 1, &ok);
+        if (!ok)
+        {
+            return;
+        }
+        ok = false;
+        y = QInputDialog::getInt(nullptr, "获取数值", QString("位置坐标:(%1,y),宽度:width,高度:height,横向间隔:delta_x,纵向间隔:delta_y\n设置y").arg(x), y, -2147483647, 2147483647, 1, &ok);
+        if (!ok)
+        {
+            return;
+        }
+        ok = false;
+        width = QInputDialog::getInt(nullptr, "获取数值", QString("位置坐标:(%1,%2),宽度:width,高度:height,横向间隔:delta_x,纵向间隔:delta_y\n设置width").arg(x).arg(y), width, 0, 2147483647, 1, &ok);
+        if (!ok)
+        {
+            return;
+        }
+        ok = false;
+        height = QInputDialog::getInt(nullptr, "获取数值", QString("位置坐标:(%1,%2),宽度:%3,高度:height,横向间隔:delta_x,纵向间隔:delta_y\n设置height").arg(x).arg(y).arg(width), height, 0, 2147483647, 1, &ok);
+        if (!ok)
+        {
+            return;
+        }
+        ok = false;
+        if (filenames.size() <= 1)
+        {
+            delta_x = QInputDialog::getInt(nullptr, "获取数值", QString("位置坐标:(%1,%2),宽度:%3,高度:%4,横向间隔:delta_x,纵向间隔:delta_y\n设置delta_x").arg(x).arg(y).arg(width).arg(height), delta_x, -2147483647, 2147483647, 1, &ok);
+            if (!ok)
+            {
+                return;
+            }
+            ok = false;
+            delta_y = QInputDialog::getInt(nullptr, "获取数值", QString("位置坐标:(%1,%2),宽度:%3,高度:%4,横向间隔:%5,纵向间隔:delta_y\n设置delta_y").arg(x).arg(y).arg(width).arg(height).arg(delta_x), delta_y, -2147483647, 2147483647, 1, &ok);
+            if (!ok)
+            {
+                return;
+            }
+            ok = false;
+        }
+        int x_num = QInputDialog::getInt(nullptr, "获取数值", "设置列数", 2, 1, 2147483647, 1, &ok);
+        if (!ok)
+        {
+            return;
+        }
+        ok = false;
+        bool show_close_button_bool = QInputDialog::getItem(nullptr, "显示关闭按钮", "显示关闭按钮", QStringList() << "是" << "否", 0, false, &ok) == "是";
+        if (!ok)
+        {
+            show_close_button_bool = true;
+        }
+        for (int i = 0; i < filenames.size(); i++)
+        {
+            File_Widget *new_process_widget = new File_Widget(carrier_widget_list[carrier_now_page]);
+            connect(new_process_widget, &Process_Widget::set_to_Carrier_Sig, this, [=]
+            {
+                (*process_widget_p) = new_process_widget;
+            });
+            connect(new_process_widget, &Process_Widget::move_To_Desktop_Sig, this, [=](QPoint pos_)
+            {
+                new_process_widget->in_carrier = false;
+                new_process_widget->setParent(this->parentWidget());
+                new_process_widget->set_now_page(now_page);
+                new_process_widget->set_desktop_number(desktop_number);
+                new_process_widget->set_basic_list(basic_list);
+                new_process_widget->move(pos_);
+                new_process_widget->show();
+            });
+            new_process_widget->in_carrier = true;
+            new_process_widget->set_now_page(&carrier_now_page);
+            new_process_widget->set_desktop_number(&carrier_page_number);
+            new_process_widget->set_basic_list(&carrier_widget_list);
+            new_process_widget->set_WinId(m_WinId);
+            new_process_widget->Basic_Widget::resize(width, height);
+            new_process_widget->move(x + (width + delta_x) * (i % x_num), y + (height + delta_y) * (i / x_num));
+            file_widget_list->append(new_process_widget);
+            new_process_widget->file_widget_list = file_widget_list;
+            new_process_widget->quickly_set(filenames[i]);
+            new_process_widget->show_close_button->setChecked(show_close_button_bool);
+            new_process_widget->close_button->setVisible(show_close_button_bool);
+            new_process_widget->file_open_way_process = file_open_way_process;
+            new_process_widget->file_open_info_process = file_open_info_process;
+            new_process_widget->file_open_path_process = file_open_path_process;
+        }
     }
     else if (know_what == create_carrier_action)
     {
@@ -198,6 +311,113 @@ void My_Process_Carrier::wheelEvent(QWheelEvent *event)
         control_Dock->Update_Widget();
     }
     event->accept();
+}
+void My_Process_Carrier::dragEnterEvent(QDragEnterEvent *event)
+{
+    if (*m_allow_drop && event->mimeData()->hasUrls())
+    {
+        event->accept();
+    }
+}
+void My_Process_Carrier::dropEvent(QDropEvent *event)
+{
+    if (*m_allow_drop && event->mimeData()->hasUrls())
+    {
+        QStringList filenames;
+        for (QUrl url : event->mimeData()->urls())
+        {
+            if (url.isValid())
+            {
+                filenames << url.path();
+            }
+        }
+        int x = event->pos().x(), y = event->pos().y(), width = 90, height = 90, delta_x = 5, delta_y = 5;
+        bool ok = false;
+        x = QInputDialog::getInt(nullptr, "获取数值", "位置坐标:(x,y),宽度:width,高度:height,横向间隔:delta_x,纵向间隔:delta_y\n设置x", x, -2147483647, 2147483647, 1, &ok);
+        if (!ok)
+        {
+            return;
+        }
+        ok = false;
+        y = QInputDialog::getInt(nullptr, "获取数值", QString("位置坐标:(%1,y),宽度:width,高度:height,横向间隔:delta_x,纵向间隔:delta_y\n设置y").arg(x), y, -2147483647, 2147483647, 1, &ok);
+        if (!ok)
+        {
+            return;
+        }
+        ok = false;
+        width = QInputDialog::getInt(nullptr, "获取数值", QString("位置坐标:(%1,%2),宽度:width,高度:height,横向间隔:delta_x,纵向间隔:delta_y\n设置width").arg(x).arg(y), width, 0, 2147483647, 1, &ok);
+        if (!ok)
+        {
+            return;
+        }
+        ok = false;
+        height = QInputDialog::getInt(nullptr, "获取数值", QString("位置坐标:(%1,%2),宽度:%3,高度:height,横向间隔:delta_x,纵向间隔:delta_y\n设置height").arg(x).arg(y).arg(width), height, 0, 2147483647, 1, &ok);
+        if (!ok)
+        {
+            return;
+        }
+        ok = false;
+        int x_num = 2;
+        if (filenames.size() > 1)
+        {
+            delta_x = QInputDialog::getInt(nullptr, "获取数值", QString("位置坐标:(%1,%2),宽度:%3,高度:%4,横向间隔:delta_x,纵向间隔:delta_y\n设置delta_x").arg(x).arg(y).arg(width).arg(height), delta_x, -2147483647, 2147483647, 1, &ok);
+            if (!ok)
+            {
+                return;
+            }
+            ok = false;
+            delta_y = QInputDialog::getInt(nullptr, "获取数值", QString("位置坐标:(%1,%2),宽度:%3,高度:%4,横向间隔:%5,纵向间隔:delta_y\n设置delta_y").arg(x).arg(y).arg(width).arg(height).arg(delta_x), delta_y, -2147483647, 2147483647, 1, &ok);
+            if (!ok)
+            {
+                return;
+            }
+            ok = false;
+            x_num = QInputDialog::getInt(nullptr, "获取数值", "设置列数", 2, 1, 2147483647, 1, &ok);
+            if (!ok)
+            {
+                return;
+            }
+            ok = false;
+        }
+        bool show_close_button_bool = QInputDialog::getItem(nullptr, "显示关闭按钮", "显示关闭按钮", QStringList() << "是" << "否", 0, false, &ok) == "是";
+        if (!ok)
+        {
+            show_close_button_bool = true;
+        }
+        for (int i = 0; i < filenames.size(); i++)
+        {
+            File_Widget *new_process_widget = new File_Widget(carrier_widget_list[carrier_now_page]);
+            connect(new_process_widget, &Process_Widget::set_to_Carrier_Sig, this, [=]
+            {
+                (*process_widget_p) = new_process_widget;
+            });
+            connect(new_process_widget, &Process_Widget::move_To_Desktop_Sig, this, [=](QPoint pos_)
+            {
+                new_process_widget->in_carrier = false;
+                new_process_widget->setParent(this->parentWidget());
+                new_process_widget->set_now_page(now_page);
+                new_process_widget->set_desktop_number(desktop_number);
+                new_process_widget->set_basic_list(basic_list);
+                new_process_widget->move(pos_);
+                new_process_widget->show();
+            });
+            new_process_widget->in_carrier = true;
+            new_process_widget->set_now_page(&carrier_now_page);
+            new_process_widget->set_desktop_number(&carrier_page_number);
+            new_process_widget->set_basic_list(&carrier_widget_list);
+            new_process_widget->set_WinId(m_WinId);
+            new_process_widget->Basic_Widget::resize(width, height);
+            new_process_widget->move(x + (width + delta_x) * (i % x_num), y + (height + delta_y) * (i / x_num));
+            file_widget_list->append(new_process_widget);
+            new_process_widget->file_widget_list = file_widget_list;
+            new_process_widget->quickly_set(filenames[i]);
+            new_process_widget->show_close_button->setChecked(show_close_button_bool);
+            new_process_widget->close_button->setVisible(show_close_button_bool);
+            new_process_widget->file_open_way_process = file_open_way_process;
+            new_process_widget->file_open_info_process = file_open_info_process;
+            new_process_widget->file_open_path_process = file_open_path_process;
+        }
+    }
 }
 void My_Process_Carrier::desktop_Move_Update(int delta_move)
 {

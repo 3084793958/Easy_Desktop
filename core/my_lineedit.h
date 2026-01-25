@@ -72,6 +72,7 @@ public:
     QList<My_LineEdit *> *my_lineedit_list;
     virtual void save(QSettings *settings);
     virtual void load(QSettings *settings);
+    void update_style(QColor theme_background_color, QColor theme_text_color, QColor theme_color);
 private:
     Basic_TextEdit *textEdit = new Basic_TextEdit(this->get_self());
 private:

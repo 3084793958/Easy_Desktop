@@ -761,6 +761,15 @@ void My_LineEdit::load(QSettings *settings)
     Basic_Widget::load(settings);
     this->textEdit->H_load(settings);
 }
+void My_LineEdit::update_style(QColor theme_background_color, QColor theme_text_color, QColor theme_color)
+{
+    textEdit->setStyleSheet(QString("QWidget{background:rgba(0,0,0,0);color:rgba(0,0,0,255)}"
+                                    "QMenu{border-radius:10px 10px;background:rgba(%1,%2,%3,%4);margin:0px -1px 0px -1px;padding-top:8px;padding-bottom:8px;icon-size:20px;border-radius:10px 10px}"
+                                    "QMenu::item{color:rgba(%5,%6,%7,%8)}"
+                                    "QMenu::item:disabled{color:rgba(131,136,139,255)}"
+                                    "QMenu::item:selected{color:rgba(255,255,255,255);background:rgba(%9,%10,%11,%12)}"
+                                    "QMenu::separator{background:rgba(150,150,150,125)}").arg(theme_background_color.red()).arg(theme_background_color.green()).arg(theme_background_color.blue()).arg(theme_background_color.alpha()).arg(theme_text_color.red()).arg(theme_text_color.green()).arg(theme_text_color.blue()).arg(theme_text_color.alpha()).arg(theme_color.red()).arg(theme_color.green()).arg(theme_color.blue()).arg(theme_color.alpha()));
+}
 void Basic_TextEdit::H_save(QSettings *settings)
 {
     settings->setValue("auto_turn_line", auto_turn_line_action->isIconVisibleInMenu());

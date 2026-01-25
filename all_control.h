@@ -14,11 +14,19 @@ public:
     QString load_path = QDir::homePath() + "/.local/lib/easy_desktop/config.ini";
     bool stay_on_top = true;
     int on_top_time = 5000;
+    bool workspace_donotshow = false;
     int workspace = 0;
     int dbus_id = 0;
     int keyscan_timer = 20;
     bool always_refresh_screen_size = true;
+    bool allow_drop = true;
+    QColor theme_color = QColor(0,129,255,255);
+    QColor theme_background_color = QColor(255,255,255,75);
+    QColor theme_text_color = QColor(0,0,0,255);
     QRect screen_geometry = QApplication::desktop()->geometry();
+    QString file_open_way_process = "dde-file-manager -d -o";
+    QString file_open_path_process = "dde-file-manager --show-item";
+    QString file_open_info_process = "dde-file-manager -p";
     void X11_Rasie();
     void Move_To_Workspace(int human_index);
     void Refresh_geometry(QRect geometry);
@@ -31,6 +39,7 @@ private:
     Experimental_Settings *experimental_settings = new Experimental_Settings;
     QTimer *stay_on_top_timer = new QTimer;
     QTimer *workspace_timer = new QTimer;
+    QTimer *auto_save_timer = new QTimer;
 private slots:
     void dbus_slot(int m_dbus_id, QString m_method, QString m_argument);
 };

@@ -13,6 +13,10 @@ public:
     QList<File_Widget *> *file_widget_list;
     virtual void save(QSettings *settings);
     virtual void load(QSettings *settings);
+    void quickly_set(QString filepath);
+    QString *file_open_way_process;
+    QString *file_open_path_process;
+    QString *file_open_info_process;
 private:
     QAction *open_way = new QAction(tr("打开方式"), this);
     QAction *open_path_way = new QAction(tr("打开所在位置"), this);

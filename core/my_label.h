@@ -1,6 +1,11 @@
 #ifndef MY_LABEL_H
 #define MY_LABEL_H
 #include "basic_widget.h"
+#include <QDBusConnection>
+#include <QDBusMessage>
+#include<QDBusPendingReply>
+#include<QDBusInterface>
+#include<QDBusPendingCallWatcher>
 class My_Label : public Basic_Widget
 {
     Q_OBJECT
@@ -15,6 +20,9 @@ private:
     Out_line_Label *main_label = new Out_line_Label(this->get_self());
     QMovie *movie = new QMovie;
     QMenu *menu = new QMenu(this);
+    QMenu *set_dbus_service = new QMenu(tr("设置dbus服务"), this);
+    QAction *dbus_setup_action = new QAction(tr("启用"), this);
+    QAction *set_dbus_info = new QAction(tr("设置信息"), this);
     QAction *set_image = new QAction(tr("设置图像"), this);
     QAction *set_text = new QAction(tr("设置文字"), this);
     QAction *set_text_color = new QAction(tr("设置文字颜色"), this);
@@ -25,6 +33,14 @@ private:
     QAction *clear_label = new QAction(tr("清空"), this);
     WId winId;
     QSize image_size;
+    QDBusConnection dbus = QDBusConnection::sessionBus();
+    QString dbus_service = "";
+    QString dbus_path = "";
+    QString dbus_interface = "";
+    QString dbus_name = "";
+    bool dbus_setup = false;
+private slots:
+    void DBusMessageReceived(QDBusMessage message);
 private:
     void X11_Rasie();
     void auto_set_font_size();

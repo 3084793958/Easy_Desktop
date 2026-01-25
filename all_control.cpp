@@ -4,9 +4,9 @@
 #include <X11/Xlib.h>
 #include <QDBusConnection>
 #include <QDBusMessage>
-#include<QDBusPendingReply>
-#include<QDBusInterface>
-#include<QDBusPendingCallWatcher>
+#include <QDBusPendingReply>
+#include <QDBusInterface>
+#include <QDBusPendingCallWatcher>
 void All_Control::X11_Rasie()
 {
     Window win_Id = static_cast<Window>(winId());
@@ -31,14 +31,23 @@ void All_Control::Move_To_Workspace(int human_index)
             XFree(data);
         }
     }
+    Window win_Id = static_cast<Window>(winId());
     if (human_index == 0 || human_index - 1 == workspace_count)
     {
-        show();
+        workspace_donotshow = false;
+        this->setGeometry(screen_geometry);
+        this->setEnabled(true);
+        XRaiseWindow(display, win_Id);
     }
     else
     {
-        hide();
+        workspace_donotshow = true;
+        this->setGeometry(QRect(-101,-101,100,100));
+        this->setEnabled(false);
+        XLowerWindow(display, win_Id);
+        //由于没有真正地hide,能耗可能会更高,当然这只是平均的,使用show会使瞬时能耗很高
     }
+    XFlush(display);
 }
 #undef CursorShape
 All_Control::All_Control(QWidget *parent, QString m_load_path, int m_workspace, int m_dbus_id, bool m_always_refresh_screen_size, QRect m_screen_geometry)
@@ -60,17 +69,31 @@ All_Control::All_Control(QWidget *parent, QString m_load_path, int m_workspace, 
     experimental_settings->dbus_id = &dbus_id;
     experimental_settings->load_path = &load_path;
     experimental_settings->stay_on_top = &stay_on_top;
+    experimental_settings->allow_drop = &allow_drop;
     experimental_settings->on_top_time = &on_top_time;
     experimental_settings->keyscan_timer = &keyscan_timer;
     experimental_settings->winId = this->winId();
     experimental_settings->has_been_set = true;
     experimental_settings->geometry = &screen_geometry;
     experimental_settings->always_refresh_geometry = &always_refresh_screen_size;
-    Update_Widget();
+    experimental_settings->file_open_way_process = &file_open_way_process;
+    experimental_settings->file_open_info_process = &file_open_info_process;
+    experimental_settings->file_open_path_process = &file_open_path_process;
+    experimental_settings->theme_color = &theme_color;
+    experimental_settings->theme_background_color = &theme_background_color;
+    experimental_settings->theme_text_color = &theme_text_color;
     main_desktop->load_path = load_path;
     main_desktop->stay_on_top = &stay_on_top;
+    main_desktop->allow_drop = &allow_drop;
     main_desktop->on_top_time = &on_top_time;
     main_desktop->keyscan_timer = &keyscan_timer;
+    main_desktop->file_open_way_process = &file_open_way_process;
+    main_desktop->file_open_info_process = &file_open_info_process;
+    main_desktop->file_open_path_process = &file_open_path_process;
+    main_desktop->theme_color = &theme_color;
+    main_desktop->theme_background_color = &theme_background_color;
+    main_desktop->theme_text_color = &theme_text_color;
+    Update_Widget();
     main_desktop->load();
     setting_widget->Table_Update();
     stay_on_top_timer->setInterval(on_top_time);
@@ -105,6 +128,12 @@ All_Control::All_Control(QWidget *parent, QString m_load_path, int m_workspace, 
         background->btnCheck->signal_delta_time = keyscan_timer;
         Move_To_Workspace(workspace);
         Refresh_geometry(screen_geometry);
+        setStyleSheet(QString("QMenu{border-radius:10px 10px;background:rgba(%1,%2,%3,%4);margin:0px -1px 0px -1px;padding-top:8px;padding-bottom:8px;icon-size:20px;border-radius:10px 10px}"
+                              "QMenu::item{color:rgba(%5,%6,%7,%8)}"
+                              "QMenu::item:disabled{color:rgba(131,136,139,255)}"
+                              "QMenu::item:selected{color:rgba(255,255,255,255);background:rgba(%9,%10,%11,%12)}"
+                              "QMenu::separator{background:rgba(150,150,150,125)}").arg(theme_background_color.red()).arg(theme_background_color.green()).arg(theme_background_color.blue()).arg(theme_background_color.alpha()).arg(theme_text_color.red()).arg(theme_text_color.green()).arg(theme_text_color.blue()).arg(theme_text_color.alpha()).arg(theme_color.red()).arg(theme_color.green()).arg(theme_color.blue()).arg(theme_color.alpha()));
+        main_desktop->update_for_lineedit(theme_background_color, theme_text_color, theme_color);
     });
     connect(main_desktop, &Desktop_Main::keyscan_loaded, this, [=]
     {
@@ -119,6 +148,12 @@ All_Control::All_Control(QWidget *parent, QString m_load_path, int m_workspace, 
         }
         background->btnCheck->signal_delta_time = keyscan_timer;
         experimental_settings->update_data();
+        setStyleSheet(QString("QMenu{border-radius:10px 10px;background:rgba(%1,%2,%3,%4);margin:0px -1px 0px -1px;padding-top:8px;padding-bottom:8px;icon-size:20px;border-radius:10px 10px}"
+                              "QMenu::item{color:rgba(%5,%6,%7,%8)}"
+                              "QMenu::item:disabled{color:rgba(131,136,139,255)}"
+                              "QMenu::item:selected{color:rgba(255,255,255,255);background:rgba(%9,%10,%11,%12)}"
+                              "QMenu::separator{background:rgba(150,150,150,125)}").arg(theme_background_color.red()).arg(theme_background_color.green()).arg(theme_background_color.blue()).arg(theme_background_color.alpha()).arg(theme_text_color.red()).arg(theme_text_color.green()).arg(theme_text_color.blue()).arg(theme_text_color.alpha()).arg(theme_color.red()).arg(theme_color.green()).arg(theme_color.blue()).arg(theme_color.alpha()));
+        main_desktop->update_for_lineedit(theme_background_color, theme_text_color, theme_color);
     });
     workspace_timer->setInterval(1000);
     connect(workspace_timer, &QTimer::timeout, this, [=]
@@ -139,6 +174,18 @@ All_Control::All_Control(QWidget *parent, QString m_load_path, int m_workspace, 
                 "Easy_Desktop",
                 this,
                 SLOT(dbus_slot(int, QString, QString)));//怎么那么奇怪,又能跑了?
+    auto_save_timer->setInterval(30000);
+    connect(auto_save_timer, &QTimer::timeout, this, [=]
+    {
+        main_desktop->save("/tmp/Easy_Desktop/backup_config.ini");
+    });
+    auto_save_timer->start();
+    setStyleSheet(QString("QMenu{border-radius:10px 10px;background:rgba(%1,%2,%3,%4);margin:0px -1px 0px -1px;padding-top:8px;padding-bottom:8px;icon-size:20px;border-radius:10px 10px}"
+                          "QMenu::item{color:rgba(%5,%6,%7,%8)}"
+                          "QMenu::item:disabled{color:rgba(131,136,139,255)}"
+                          "QMenu::item:selected{color:rgba(255,255,255,255);background:rgba(%9,%10,%11,%12)}"
+                          "QMenu::separator{background:rgba(150,150,150,125)}").arg(theme_background_color.red()).arg(theme_background_color.green()).arg(theme_background_color.blue()).arg(theme_background_color.alpha()).arg(theme_text_color.red()).arg(theme_text_color.green()).arg(theme_text_color.blue()).arg(theme_text_color.alpha()).arg(theme_color.red()).arg(theme_color.green()).arg(theme_color.blue()).arg(theme_color.alpha()));
+    main_desktop->update_for_lineedit(theme_background_color, theme_text_color, theme_color);
 }
 void All_Control::dbus_slot(int m_dbus_id, QString m_method, QString m_argument)
 {
@@ -227,6 +274,10 @@ void All_Control::dbus_slot(int m_dbus_id, QString m_method, QString m_argument)
 }
 void All_Control::Refresh_geometry(QRect geometry)
 {
+    if (workspace_donotshow)
+    {
+        return;
+    }
     if (this->geometry() == geometry)
     {
         return;

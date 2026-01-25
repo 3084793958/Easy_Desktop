@@ -1,5 +1,6 @@
 #include "desktop_main.h"
 #include <QMessageBox>
+#include <QtConcurrent/QtConcurrent>
 Basic_Desktop::Basic_Desktop(QWidget *parent, int m_desktop_width, int m_desktop_height)
     :QWidget(parent)
 {
@@ -223,6 +224,7 @@ Desktop_Main::Desktop_Main(QWidget *parent)
     background_Add_Action->addAction(my_label_action);
     background_Add_Action->addAction(my_process_action);
     background_Add_Action->addAction(my_file_action);
+    background_Add_Action->addAction(file_tree_action);
     background_Add_Action->addAction(my_process_Carrier_action);
     background_Add_Action->addAction(my_program_INNER_action);
     my_chart_menu->addAction(cpu_chart_action);
@@ -255,6 +257,7 @@ Desktop_Main::Desktop_Main(QWidget *parent)
     menu->addAction(background_setting_Action);
     menu->addAction(debugging_setting_Action);
     menu->addAction(Quit_Action);
+    this->setAcceptDrops(true);
     move_Timer->setInterval(30);
     connect(move_Timer, &QTimer::timeout, this, &Desktop_Main::Timer_End);
     control_Dock->basic_pos = &basic_pos;
@@ -335,6 +338,36 @@ void Desktop_Main::contextMenuEvent(QContextMenuEvent *event)
         for (int i = 0; i < count; i++)
         {
             process_widget_list[0]->~Process_Widget();
+        }
+        count = file_tree_list.count();
+        for (int i = 0; i < count; i++)
+        {
+            file_tree_list[0]->~File_Tree();
+        }
+        count = cpu_chart_list.count();
+        for (int i = 0; i < count; i++)
+        {
+            cpu_chart_list[0]->~CPU_Chart();
+        }
+        count = ram_chart_list.count();
+        for (int i = 0; i < count; i++)
+        {
+            ram_chart_list[0]->~RAM_Chart();
+        }
+        count = net_chart_list.count();
+        for (int i = 0; i < count; i++)
+        {
+            net_chart_list[0]->~NET_Chart();
+        }
+        count = disk_chart_list.count();
+        for (int i = 0; i < count; i++)
+        {
+            disk_chart_list[0]->~DISK_Chart();
+        }
+        count = pulseaudio_chart_list.count();
+        for (int i = 0; i < count; i++)
+        {
+            pulseaudio_chart_list[0]->~PulseAudio_Chart();
         }
         QApplication::quit();
     }
@@ -503,6 +536,9 @@ void Desktop_Main::contextMenuEvent(QContextMenuEvent *event)
         my_file->move(event->globalPos() - basic_pos);
         file_widget_list.append(my_file);
         my_file->file_widget_list = &file_widget_list;
+        my_file->file_open_way_process = file_open_way_process;
+        my_file->file_open_info_process = file_open_info_process;
+        my_file->file_open_path_process = file_open_path_process;
     }
     else if (know_what == my_process_Carrier_action)
     {
@@ -517,6 +553,10 @@ void Desktop_Main::contextMenuEvent(QContextMenuEvent *event)
         my_process_Carrier->my_process_carrier_list = &my_process_carrier_list;
         my_process_Carrier->process_widget_list = &process_widget_list;
         my_process_Carrier->file_widget_list = &file_widget_list;
+        my_process_Carrier->m_allow_drop = allow_drop;
+        my_process_Carrier->file_open_way_process = file_open_way_process;
+        my_process_Carrier->file_open_info_process = file_open_info_process;
+        my_process_Carrier->file_open_path_process = file_open_path_process;
     }
     else if (know_what == my_program_INNER_action)
     {
@@ -578,6 +618,128 @@ void Desktop_Main::contextMenuEvent(QContextMenuEvent *event)
         pulseaudio_chart_list.append(pulseaudio_chart);
         pulseaudio_chart->pulseaudio_chart_list = &pulseaudio_chart_list;
     }
+    else if (know_what == file_tree_action)
+    {
+        File_Tree *file_tree = new File_Tree(desktop_core_dock_list[now_page]);
+        file_tree->set_now_page(&now_page);
+        file_tree->set_desktop_number(&Desktop_NUmber);
+        file_tree->set_basic_list(reinterpret_cast<QList<QWidget *> *>(&desktop_core_dock_list));
+        file_tree->m_WinId = m_WinId;
+        file_tree->move(event->globalPos() - basic_pos);
+        file_tree_list.append(file_tree);
+        file_tree->file_tree_list = &file_tree_list;
+        file_tree->file_open_way_process = file_open_way_process;
+        file_tree->file_open_info_process = file_open_info_process;
+        file_tree->file_open_path_process = file_open_path_process;
+        file_tree->m_allow_drop = allow_drop;
+    }
+}
+void Desktop_Main::dropEvent(QDropEvent *event)
+{
+    if (*allow_drop && event->mimeData()->hasUrls())
+    {
+        QStringList filenames;
+        for (QUrl url : event->mimeData()->urls())
+        {
+            if (url.isValid())
+            {
+                filenames << url.path();
+            }
+        }
+        int x = event->pos().x(), y = event->pos().y(), width = 90, height = 90, delta_x = 5, delta_y = 5;
+        bool ok = false;
+        x = QInputDialog::getInt(nullptr, "获取数值", "位置坐标:(x,y),宽度:width,高度:height,横向间隔:delta_x,纵向间隔:delta_y\n设置x", x, -2147483647, 2147483647, 1, &ok);
+        if (!ok)
+        {
+            return;
+        }
+        ok = false;
+        y = QInputDialog::getInt(nullptr, "获取数值", QString("位置坐标:(%1,y),宽度:width,高度:height,横向间隔:delta_x,纵向间隔:delta_y\n设置y").arg(x), y, -2147483647, 2147483647, 1, &ok);
+        if (!ok)
+        {
+            return;
+        }
+        ok = false;
+        width = QInputDialog::getInt(nullptr, "获取数值", QString("位置坐标:(%1,%2),宽度:width,高度:height,横向间隔:delta_x,纵向间隔:delta_y\n设置width").arg(x).arg(y), width, 0, 2147483647, 1, &ok);
+        if (!ok)
+        {
+            return;
+        }
+        ok = false;
+        height = QInputDialog::getInt(nullptr, "获取数值", QString("位置坐标:(%1,%2),宽度:%3,高度:height,横向间隔:delta_x,纵向间隔:delta_y\n设置height").arg(x).arg(y).arg(width), height, 0, 2147483647, 1, &ok);
+        if (!ok)
+        {
+            return;
+        }
+        ok = false;
+        int x_num = 2;
+        if (filenames.size() > 1)
+        {
+            delta_x = QInputDialog::getInt(nullptr, "获取数值", QString("位置坐标:(%1,%2),宽度:%3,高度:%4,横向间隔:delta_x,纵向间隔:delta_y\n设置delta_x").arg(x).arg(y).arg(width).arg(height), delta_x, -2147483647, 2147483647, 1, &ok);
+            if (!ok)
+            {
+                return;
+            }
+            ok = false;
+            delta_y = QInputDialog::getInt(nullptr, "获取数值", QString("位置坐标:(%1,%2),宽度:%3,高度:%4,横向间隔:%5,纵向间隔:delta_y\n设置delta_y").arg(x).arg(y).arg(width).arg(height).arg(delta_x), delta_y, -2147483647, 2147483647, 1, &ok);
+            if (!ok)
+            {
+                return;
+            }
+            ok = false;
+            x_num = QInputDialog::getInt(nullptr, "获取数值", "设置列数", 2, 1, 2147483647, 1, &ok);
+            if (!ok)
+            {
+                return;
+            }
+            ok = false;
+        }
+        bool show_close_button_bool = QInputDialog::getItem(nullptr, "显示关闭按钮", "显示关闭按钮", QStringList() << "是" << "否", 0, false, &ok) == "是";
+        if (!ok)
+        {
+            show_close_button_bool = true;
+        }
+        for (int i = 0; i < filenames.size(); i++)
+        {
+            File_Widget *my_file = new File_Widget(desktop_core_dock_list[now_page]);
+            connect(my_file, &Process_Widget::set_to_Carrier_Sig, this, [=]
+            {
+                process_widget_p = my_file;
+            });
+            connect(my_file, &Process_Widget::move_To_Desktop_Sig, this, [=](QPoint pos_)
+            {
+                my_file->in_carrier = false;
+                my_file->setParent(desktop_core_dock_list[now_page]);
+                my_file->set_now_page(&now_page);
+                my_file->set_desktop_number(&Desktop_NUmber);
+                my_file->set_basic_list(reinterpret_cast<QList<QWidget *> *>(&desktop_core_dock_list));
+                my_file->set_WinId(m_WinId);
+                my_file->move(pos_);
+                my_file->show();
+            });
+            my_file->set_now_page(&now_page);
+            my_file->set_desktop_number(&Desktop_NUmber);
+            my_file->set_basic_list(reinterpret_cast<QList<QWidget *> *>(&desktop_core_dock_list));
+            my_file->set_WinId(m_WinId);
+            my_file->Basic_Widget::resize(width, height);
+            my_file->move(x + (width + delta_x) * (i % x_num), y + (height + delta_y) * (i / x_num));
+            file_widget_list.append(my_file);
+            my_file->file_widget_list = &file_widget_list;
+            my_file->quickly_set(filenames[i]);
+            my_file->show_close_button->setChecked(show_close_button_bool);
+            my_file->close_button->setVisible(show_close_button_bool);
+            my_file->file_open_way_process = file_open_way_process;
+            my_file->file_open_info_process = file_open_info_process;
+            my_file->file_open_path_process = file_open_path_process;
+        }
+    }
+}
+void Desktop_Main::dragEnterEvent(QDragEnterEvent *event)
+{
+    if (*allow_drop && event->mimeData()->hasUrls())
+    {
+        event->accept();
+    }
 }
 void Desktop_Main::set_Desktop_Size(int d_width, int d_height)
 {
@@ -611,6 +773,13 @@ void Desktop_Main::geometry_change()
     Desktop_Main::Update_Basic_Desktop();
     control_Dock->set_Desktop_Size(desktop_width ,desktop_height);
     control_Dock->raise();
+}
+void Desktop_Main::update_for_lineedit(QColor theme1, QColor theme2, QColor theme3)
+{
+    for (My_LineEdit *lineedit : my_lineedit_list)
+    {
+        lineedit->update_style(theme1, theme2, theme3);
+    }
 }
 void Desktop_Main::wheelEvent(QWheelEvent *event)
 {
@@ -699,9 +868,9 @@ void Desktop_Main::Update_Basic_Desktop()
         }
     }
 }
-void Desktop_Main::save()
+void Desktop_Main::save(QString path)
 {
-    QSettings settings(load_path, QSettings::IniFormat);
+    QSettings settings(path, QSettings::IniFormat);
     settings.setIniCodec("UTF-8");
     settings.clear();
     desktop_background->save(&settings);
@@ -726,9 +895,17 @@ void Desktop_Main::save()
     settings.setValue("net_chart_list_count", net_chart_list.count());
     settings.setValue("disk_chart_list_count", disk_chart_list.count());
     settings.setValue("pulseaudio_chart_list_count", pulseaudio_chart_list.count());
+    settings.setValue("file_tree_list_count", file_tree_list.count());
     settings.setValue("stay_on_top", *stay_on_top);
     settings.setValue("on_top_time", *on_top_time);
     settings.setValue("keyscan_timer", *keyscan_timer);
+    settings.setValue("allow_drop", *allow_drop);
+    settings.setValue("file_open_way_process", *file_open_way_process);
+    settings.setValue("file_open_path_process", *file_open_path_process);
+    settings.setValue("file_open_info_process", *file_open_info_process);
+    settings.setValue("theme_color", theme_color->rgba());
+    settings.setValue("theme_background_color", theme_background_color->rgba());
+    settings.setValue("theme_text_color", theme_text_color->rgba());
     settings.endGroup();
     slider_action->save(&settings);
     //
@@ -817,8 +994,19 @@ void Desktop_Main::save()
         pulseaudio_chart_list[i]->save(&settings);
         settings.endGroup();
     }
+    count = file_tree_list.count();
+    for (int i = 0; i < count; i++)
+    {
+        settings.beginGroup(QString("file_tree%1").arg(i));
+        file_tree_list[i]->save(&settings);
+        settings.endGroup();
+    }
     //
     settings.sync();
+}
+void Desktop_Main::save()
+{
+    Desktop_Main::save(load_path);
 }
 void Desktop_Main::load()
 {
@@ -833,6 +1021,13 @@ void Desktop_Main::load()
     *stay_on_top = settings.value("stay_on_top", true).toBool();
     *on_top_time = settings.value("on_top_time", 5000).toInt();
     *keyscan_timer = settings.value("keyscan_timer", 20).toInt();
+    *allow_drop = settings.value("allow_drop", true).toBool();
+    *file_open_way_process = settings.value("file_open_way_process", "dde-file-manager -d -o").toString();
+    *file_open_path_process = settings.value("file_open_path_process", "dde-file-manager --show-item").toString();
+    *file_open_info_process = settings.value("file_open_info_process", "dde-file-manager -p").toString();
+    *theme_color = QColor::fromRgba(settings.value("theme_color", QColor(0,129,255,255).rgba()).toUInt());
+    *theme_background_color = QColor::fromRgba(settings.value("theme_background_color", QColor(255,255,255,75).rgba()).toUInt());
+    *theme_text_color = QColor::fromRgba(settings.value("theme_text_color", QColor(0,0,0,255).rgba()).toUInt());
     emit keyscan_loaded();
     bool background_playing = settings.value("background_playing", true).toBool();
     bool mouse_moving = settings.value("mouse_moving", true).toBool();
@@ -894,6 +1089,7 @@ void Desktop_Main::load()
     int disk_chart_list_count = settings.value("disk_chart_list_count", 0).toInt();
     int pulseaudio_chart_list_count = settings.value("pulseaudio_chart_list_count", 0).toInt();
     int process_widget_list_count = settings.value("process_widget_list_count", 0).toInt();
+    int file_tree_list_count = settings.value("file_tree_list_count", 0).toInt();
     settings.endGroup();
     slider_action->load(&settings);
     file_widget_list.clear();
@@ -903,6 +1099,12 @@ void Desktop_Main::load()
     my_process_carrier_list.clear();
     my_program_container_list.clear();
     process_widget_list.clear();
+    file_tree_list.clear();
+    cpu_chart_list.clear();
+    ram_chart_list.clear();
+    net_chart_list.clear();
+    disk_chart_list.clear();
+    pulseaudio_chart_list.clear();
     for (int i = 0; i < my_clock_list_count; i++)
     {
         My_Clock *my_clock = new My_Clock(desktop_core_dock_list[now_page]);
@@ -974,6 +1176,10 @@ void Desktop_Main::load()
         my_process_Carrier->my_process_carrier_list = &my_process_carrier_list;
         my_process_Carrier->process_widget_list = &process_widget_list;
         my_process_Carrier->file_widget_list = &file_widget_list;
+        my_process_Carrier->m_allow_drop = allow_drop;
+        my_process_Carrier->file_open_way_process = file_open_way_process;
+        my_process_Carrier->file_open_info_process = file_open_info_process;
+        my_process_Carrier->file_open_path_process = file_open_path_process;
         settings.beginGroup(QString("my_process_carrier%1").arg(i));
         my_process_Carrier->load(&settings);
         settings.endGroup();
@@ -1069,6 +1275,9 @@ void Desktop_Main::load()
         my_file->move(0, 0);
         file_widget_list.append(my_file);
         my_file->file_widget_list = &file_widget_list;
+        my_file->file_open_way_process = file_open_way_process;
+        my_file->file_open_info_process = file_open_info_process;
+        my_file->file_open_path_process = file_open_path_process;
         settings.beginGroup(QString("file_widget%1").arg(i));
         my_file->load(&settings);
         settings.endGroup();
@@ -1143,5 +1352,24 @@ void Desktop_Main::load()
         pulseaudio_chart->load(&settings);
         settings.endGroup();
         pulseaudio_chart->show();
+    }
+    for (int i = 0; i < file_tree_list_count; i++)
+    {
+        File_Tree *file_tree = new File_Tree(desktop_core_dock_list[now_page]);
+        file_tree->set_now_page(&now_page);
+        file_tree->set_desktop_number(&Desktop_NUmber);
+        file_tree->set_basic_list(reinterpret_cast<QList<QWidget *> *>(&desktop_core_dock_list));
+        file_tree->m_WinId = m_WinId;
+        file_tree->move(0, 0);
+        file_tree_list.append(file_tree);
+        file_tree->file_tree_list = &file_tree_list;
+        file_tree->file_open_way_process = file_open_way_process;
+        file_tree->file_open_info_process = file_open_info_process;
+        file_tree->file_open_path_process = file_open_path_process;
+        file_tree->m_allow_drop = allow_drop;
+        settings.beginGroup(QString("file_tree%1").arg(i));
+        file_tree->load(&settings);
+        settings.endGroup();
+        file_tree->show();
     }
 }

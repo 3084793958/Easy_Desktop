@@ -77,8 +77,10 @@ public:
     void Update_Basic_Desktop();
     void desktop_Move_Update(int delta_move);
     void save();
+    void save(QString path);
     void load();
     void geometry_change();
+    void update_for_lineedit(QColor theme1, QColor theme2, QColor theme3);
 signals:
     void keyscan_loaded();
 public:
@@ -91,6 +93,13 @@ public:
     bool *stay_on_top;
     int *on_top_time;
     int *keyscan_timer;
+    bool *allow_drop;
+    QString *file_open_way_process;
+    QString *file_open_path_process;
+    QString *file_open_info_process;
+    QColor *theme_color;
+    QColor *theme_background_color;
+    QColor *theme_text_color;
     QPoint basic_pos = QPoint(0, 0);
 private:
     int desktop_width;
@@ -102,6 +111,7 @@ private:
     QList<My_Process_Carrier *> my_process_carrier_list;
     QList<My_Program_Container *> my_program_container_list;
     QList<Process_Widget *> process_widget_list;
+    QList<File_Tree *> file_tree_list;
     QList<CPU_Chart *> cpu_chart_list;
     QList<RAM_Chart *> ram_chart_list;
     QList<NET_Chart *> net_chart_list;
@@ -118,6 +128,7 @@ private:
     QAction *my_label_action = new QAction(tr("标签"), this);
     QAction *my_process_action = new QAction(tr("进程按钮"), this);
     QAction *my_file_action = new QAction(tr("文件按钮"), this);
+    QAction *file_tree_action = new QAction(tr("树状文件夹"), this);
     QAction *my_process_Carrier_action = new QAction(tr("进程/文件按钮载体"), this);
     QAction *my_program_INNER_action = new QAction(tr("内嵌窗口"), this);
     QMenu *my_chart_menu = new QMenu(tr("可视化图表"), this);
@@ -159,6 +170,8 @@ private:
     void Timer_End();
     void contextMenuEvent(QContextMenuEvent *event);
     void wheelEvent(QWheelEvent *event);
+    void dropEvent(QDropEvent *event);
+    void dragEnterEvent(QDragEnterEvent *event);
 };
 
 #endif // DESKTOP_MAIN_H

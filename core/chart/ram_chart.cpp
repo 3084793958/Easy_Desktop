@@ -24,44 +24,46 @@ RAM_Chart::RAM_Chart(QWidget *parent)
     menu->addAction(set_line_color);
     basic_context(menu);
     updateTimer->setInterval(update_time);
-    connect(updateTimer, &QTimer::timeout, this, [=]
-    {
-        updateTimer->setInterval(update_time);
-        get_ram_data();
-        if (ram_data_vec.size() > vector_long)
-        {
-            ram_data_vec.erase(ram_data_vec.begin(), ram_data_vec.begin() + ram_data_vec.size() - vector_long);
-        }
-        else if (ram_data_vec.size() < vector_long)
-        {
-            ram_data_vec.insert(ram_data_vec.begin(), vector_long - ram_data_vec.size(), 0.0);
-        }
-        ram_data_vec.erase(ram_data_vec.begin());
-        ram_data_vec.push_back(ram_data);
-        if (swap_data_vec.size() > vector_long)
-        {
-            swap_data_vec.erase(swap_data_vec.begin(), swap_data_vec.begin() + swap_data_vec.size() - vector_long);
-        }
-        else if (swap_data_vec.size() < vector_long)
-        {
-            swap_data_vec.insert(swap_data_vec.begin(), vector_long - swap_data_vec.size(), 0.0);
-        }
-        swap_data_vec.erase(swap_data_vec.begin());
-        swap_data_vec.push_back(swap_data);
-        if (channel == 0)
-        {
-            m_data = ram_data_vec;
-            series->setName(QString("RAM:%1").arg(ram_data_str));
-        }
-        else
-        {
-            m_data = swap_data_vec;
-            series->setName(QString("SWap:%1").arg(swap_data_str));
-        }
-        update_data();
-    });
+    connect(updateTimer, &QTimer::timeout, this, &RAM_Chart::timeout_slot);
     show();
+    timeout_slot();
     updateTimer->start();
+}
+void RAM_Chart::timeout_slot()
+{
+    updateTimer->setInterval(update_time);
+    get_ram_data();
+    if (ram_data_vec.size() > vector_long)
+    {
+        ram_data_vec.erase(ram_data_vec.begin(), ram_data_vec.begin() + ram_data_vec.size() - vector_long);
+    }
+    else if (ram_data_vec.size() < vector_long)
+    {
+        ram_data_vec.insert(ram_data_vec.begin(), vector_long - ram_data_vec.size(), 0.0);
+    }
+    ram_data_vec.erase(ram_data_vec.begin());
+    ram_data_vec.push_back(ram_data);
+    if (swap_data_vec.size() > vector_long)
+    {
+        swap_data_vec.erase(swap_data_vec.begin(), swap_data_vec.begin() + swap_data_vec.size() - vector_long);
+    }
+    else if (swap_data_vec.size() < vector_long)
+    {
+        swap_data_vec.insert(swap_data_vec.begin(), vector_long - swap_data_vec.size(), 0.0);
+    }
+    swap_data_vec.erase(swap_data_vec.begin());
+    swap_data_vec.push_back(swap_data);
+    if (channel == 0)
+    {
+        m_data = ram_data_vec;
+        series->setName(QString("RAM:%1").arg(ram_data_str));
+    }
+    else
+    {
+        m_data = swap_data_vec;
+        series->setName(QString("SWap:%1").arg(swap_data_str));
+    }
+    update_data();
 }
 RAM_Chart::~RAM_Chart()
 {
@@ -151,6 +153,7 @@ void RAM_Chart::load(QSettings *settings)
     series->setColor(line_color);
     axisX->setLabelsFont(font);
     axisY->setLabelsFont(font);
+    timeout_slot();
 }
 void RAM_Chart::contextMenuEvent(QContextMenuEvent *event)
 {
@@ -172,6 +175,7 @@ void RAM_Chart::contextMenuEvent(QContextMenuEvent *event)
             return;
         }
         update_time = time;
+        timeout_slot();
     }
     else if (know_what == set_vector_long)
     {
@@ -182,14 +186,17 @@ void RAM_Chart::contextMenuEvent(QContextMenuEvent *event)
             return;
         }
         vector_long = time;
+        timeout_slot();
     }
     else if (know_what == ram_channel)
     {
         channel = 0;
+        timeout_slot();
     }
     else if (know_what == swap_channel)
     {
         channel = 1;
+        timeout_slot();
     }
     else if (know_what == set_text_font)
     {

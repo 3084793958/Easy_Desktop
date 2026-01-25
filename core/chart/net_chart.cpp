@@ -22,16 +22,22 @@ NET_Chart::NET_Chart(QWidget *parent)
     menu->addAction(set_vector_long);
     set_axis->addAction(same_axis);
     set_axis->addAction(unsame_axis);
-    same_axis->setCheckable(true);
-    same_axis->setChecked(true);
-    unsame_axis->setCheckable(true);
+    same_axis->setIcon(QIcon(":/base/this.svg"));
+    same_axis->setIconVisibleInMenu(true);
+    unsame_axis->setIcon(QIcon(":/base/this.svg"));;
+    unsame_axis->setIconVisibleInMenu(false);
     menu->addMenu(set_axis);
     menu->addSeparator();
     menu->addAction(set_text_font);
     menu->addAction(set_line_color);
     basic_context(menu);
     updateTimer->setInterval(update_time);
-    connect(updateTimer, &QTimer::timeout, this, [=]
+    connect(updateTimer, &QTimer::timeout, this, &NET_Chart::timeout_slot);
+    show();
+    timeout_slot();
+    updateTimer->start();
+}
+void NET_Chart::timeout_slot()
     {
         updateTimer->setInterval(update_time);
         get_net_data();
@@ -153,10 +159,7 @@ NET_Chart::NET_Chart(QWidget *parent)
         series->setName(QString("下行:%1").arg(Rec_str));
         axisY->setRange(-std::round(d_Y_Tra * 100) / 100, std::round(d_Y_Rec * 100) / 100);
         //
-    });
-    show();
-    updateTimer->start();
-}
+    }
 NET_Chart::~NET_Chart()
 {
     if (net_chart_list)
@@ -213,14 +216,15 @@ void NET_Chart::load(QSettings *settings)
     axisY->setLabelsFont(font);
     if (axis_type == 0)
     {
-        same_axis->setChecked(true);
-        unsame_axis->setChecked(false);
+        same_axis->setIconVisibleInMenu(true);
+        unsame_axis->setIconVisibleInMenu(false);
     }
     else
     {
-        same_axis->setChecked(false);
-        unsame_axis->setChecked(true);
+        same_axis->setIconVisibleInMenu(false);
+        unsame_axis->setIconVisibleInMenu(true);
     }
+    timeout_slot();
 }
 void NET_Chart::contextMenuEvent(QContextMenuEvent *event)
 {
@@ -242,6 +246,7 @@ void NET_Chart::contextMenuEvent(QContextMenuEvent *event)
             return;
         }
         update_time = time;
+        timeout_slot();
     }
     else if (know_what == set_vector_long)
     {
@@ -252,6 +257,7 @@ void NET_Chart::contextMenuEvent(QContextMenuEvent *event)
             return;
         }
         vector_long = time;
+        timeout_slot();
     }
     else if (know_what == set_text_font)
     {
@@ -264,7 +270,6 @@ void NET_Chart::contextMenuEvent(QContextMenuEvent *event)
         font = g_font;
         axisX->setLabelsFont(font);
         axisY->setLabelsFont(font);
-
     }
     else if (know_what == set_line_color)
     {
@@ -295,14 +300,16 @@ void NET_Chart::contextMenuEvent(QContextMenuEvent *event)
     else if (know_what == same_axis)
     {
         axis_type = 0;
-        same_axis->setChecked(true);
-        unsame_axis->setChecked(false);
+        same_axis->setIconVisibleInMenu(true);
+        unsame_axis->setIconVisibleInMenu(false);
+        timeout_slot();
     }
     else if (know_what == unsame_axis)
     {
         axis_type = 1;
-        same_axis->setChecked(false);
-        unsame_axis->setChecked(true);
+        same_axis->setIconVisibleInMenu(false);
+        unsame_axis->setIconVisibleInMenu(true);
+        timeout_slot();
     }
     else
     {

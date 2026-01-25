@@ -71,21 +71,22 @@ Process_Widget::Process_Widget(QWidget *parent)
     process_name_label->outlineWidth = 2;
     process_name_label->outlineColor = QColor(255, 255, 255, 255);
     menu->addAction(run_action);
-    menu->addAction(set_image);
-    menu->addAction(reset_image);
-    menu->addAction(set_name);
-    menu->addAction(set_font);
-    menu->addAction(set_auto_resize);
-    set_auto_resize->setCheckable(true);
-    set_auto_resize->setChecked(false);
-    menu->addAction(set_text_color);
+    setting_menu->addAction(set_image);
+    setting_menu->addAction(reset_image);
+    setting_menu->addAction(set_name);
+    setting_menu->addAction(set_font);
+    setting_menu->addAction(set_auto_resize);
+    set_auto_resize->setIcon(QIcon(":/base/this.svg"));
+    set_auto_resize->setIconVisibleInMenu(false);
+    setting_menu->addAction(set_text_color);
     name_out_line_menu->addAction(set_out_line_width);
     name_out_line_menu->addAction(set_out_line_color);
-    menu->addMenu(name_out_line_menu);
-    menu->addSeparator();
-    menu->addAction(set_process);
-    menu->addAction(set_by_desktop);
+    setting_menu->addMenu(name_out_line_menu);
+    setting_menu->addSeparator();
+    setting_menu->addAction(set_process);
+    setting_menu->addAction(set_by_desktop);
     menu->addAction(break_out);
+    menu->addMenu(setting_menu);
     Basic_Widget::basic_context(menu);
     process_string = "ls";
     running_path = QDir::homePath();
@@ -126,11 +127,14 @@ Process_Widget::Process_Widget(QWidget *parent)
                 image_label->setMovie(movie);
             }
             just_show_image->lower();
-            movie->jumpToNextFrame();//刷新+配平
-            movie->setPaused(true);
-            movie->setPaused(false);
+            if (movie->fileName() != nullptr)
+            {
+                movie->jumpToNextFrame();//刷新+配平
+                movie->setPaused(true);
+                movie->setPaused(false);
+            }
         }
-        if (set_auto_resize->isChecked())
+        if (set_auto_resize->isIconVisibleInMenu())
         {
             auto_set_font_size();
         }
@@ -251,7 +255,7 @@ void Process_Widget::context_solution(QAction *know_what)
             return;
         }
         this->process_name_label->setText(dialog.textValue());
-        if (set_auto_resize->isChecked())
+        if (set_auto_resize->isIconVisibleInMenu())
         {
             auto_set_font_size();
         }
@@ -414,7 +418,8 @@ void Process_Widget::context_solution(QAction *know_what)
     }
     else if (know_what == set_auto_resize)
     {
-        if (set_auto_resize->isChecked())
+        set_auto_resize->setIconVisibleInMenu(!set_auto_resize->isIconVisibleInMenu());
+        if (set_auto_resize->isIconVisibleInMenu())
         {
             auto_set_font_size();
         }
@@ -501,7 +506,7 @@ void Process_Widget::save(QSettings *settings)
     }
     settings->setValue("label_name", process_name_label->text());
     settings->setValue("label_font", process_name_label->font());
-    settings->setValue("label_auto_resize", set_auto_resize->isChecked());
+    settings->setValue("label_auto_resize", set_auto_resize->isIconVisibleInMenu());
     settings->setValue("label_text_color", process_name_label->text_color.rgba());
     settings->setValue("label_out_line_color", process_name_label->outlineColor.rgba());
     settings->setValue("label_out_line_width", process_name_label->outlineWidth);
@@ -541,7 +546,7 @@ void Process_Widget::load(QSettings *settings)
     process_name_label->setText(settings->value("label_name", "").toString());
     process_name_label->setFont(settings->value("label_font", QFontDatabase::systemFont(QFontDatabase::FixedFont)).value<QFont>());
     bool auto_resize = settings->value("label_auto_resize", false).toBool();
-    set_auto_resize->setChecked(auto_resize);
+    set_auto_resize->setIconVisibleInMenu(auto_resize);
     process_name_label->text_color = QColor::fromRgba(settings->value("label_text_color", QColor(255, 255, 255, 255).rgba()).toUInt());
     process_name_label->outlineColor = QColor::fromRgba(settings->value("label_out_line_color", QColor(0, 0, 0, 255).rgba()).toUInt());
     process_name_label->outlineWidth = settings->value("label_out_line_width", 2).toInt();

@@ -15,6 +15,10 @@ void My_Label::set_WinId(WId m_winId)
 }
 QSize My_Label::get_Image_Size(QString path)
 {
+    if (path.isEmpty())
+    {
+        return QSize(0,0);
+    }
     QImageReader reader(path);
     if (!reader.canRead())
     {
@@ -44,6 +48,11 @@ My_Label::My_Label(QWidget *parent)
     set_out_line_menu->addAction(set_out_line_color);
     menu->addMenu(set_out_line_menu);
     menu->addAction(clear_label);
+    set_dbus_service->addAction(dbus_setup_action);
+    dbus_setup_action->setIcon(QIcon(":/base/this.svg"));
+    dbus_setup_action->setIconVisibleInMenu(false);
+    set_dbus_service->addAction(set_dbus_info);
+    menu->addMenu(set_dbus_service);
     Basic_Widget::basic_context(menu);
     main_label->setMouseTracking(true);
     main_label->setAlignment(Qt::AlignCenter);
@@ -69,17 +78,22 @@ My_Label::My_Label(QWidget *parent)
                 movie->setScaledSize(QSize(int(image_size.width() * k_height), size.height()));
             }
             this->main_label->setMovie(movie);
-            movie->setPaused(true);
-            movie->jumpToNextFrame();//刷新+配平
-            movie->setPaused(false);
+            if (movie->fileName() != nullptr)
+            {
+                movie->setPaused(true);
+                movie->jumpToNextFrame();//刷新+配平
+                movie->setPaused(false);
+            }
         }
     });
     resize(200, 100);
     show();
+    dbus.disconnect("", "", "", "", this, nullptr);
 }
 
 My_Label::~My_Label()
 {
+    dbus.disconnect("", "", "", "", this, nullptr);
     if (my_label_list)
     {
         my_label_list->removeOne(this);
@@ -192,9 +206,68 @@ void My_Label::contextMenuEvent(QContextMenuEvent *event)
         this->main_label->setMovie(nullptr);
         this->main_label->setText("");
     }
+    else if (know_what == dbus_setup_action)
+    {
+        dbus_setup_action->setIconVisibleInMenu(!dbus_setup_action->isIconVisibleInMenu());
+        dbus_setup = dbus_setup_action->isIconVisibleInMenu();
+    }
+    else if (know_what == set_dbus_info)
+    {
+        QString m_dbus_service = "";
+        QString m_dbus_path = "";
+        QString m_dbus_interface = "";
+        QString m_dbus_name = "";
+        bool ok = false;
+        m_dbus_service = QInputDialog::getText(nullptr, "获取service", "获取service(dbus服务名)", QLineEdit::Normal, dbus_service, &ok);
+        if (!ok)
+        {
+            return;
+        }
+        ok = false;
+        m_dbus_path = QInputDialog::getText(nullptr, "获取path", "获取path(dbus路径)", QLineEdit::Normal, dbus_path, &ok);
+        if (!ok)
+        {
+            return;
+        }
+        ok = false;
+        m_dbus_interface = QInputDialog::getText(nullptr, "获取interface", "获取interface(dbus接口)", QLineEdit::Normal, dbus_interface, &ok);
+        if (!ok)
+        {
+            return;
+        }
+        ok = false;
+        m_dbus_name = QInputDialog::getText(nullptr, "获取name", "获取name(dbus信号名)", QLineEdit::Normal, dbus_name, &ok);
+        if (!ok)
+        {
+            return;
+        }
+        dbus_service = m_dbus_service;
+        dbus_path = m_dbus_path;
+        dbus_interface = m_dbus_interface;
+        dbus_name = m_dbus_name;
+        dbus.disconnect("", "", "", "", this, nullptr);
+        dbus.connect(dbus_service, dbus_path, dbus_interface, dbus_name, this, SLOT(DBusMessageReceived(QDBusMessage)));
+    }
     else
     {
         Basic_Widget::basic_action_func(know_what);
+    }
+}
+void My_Label::DBusMessageReceived(QDBusMessage message)
+{
+    if (!dbus_setup)
+    {
+        return;
+    }
+    QList<QVariant> args = message.arguments();
+    for (QVariant arg : args)
+    {
+        if (arg.canConvert<QString>())
+        {
+            this->main_label->setText(arg.toString());
+            auto_set_font_size();
+            break;
+        }
     }
 }
 void My_Label::auto_set_font_size()
@@ -234,6 +307,11 @@ void My_Label::save(QSettings *settings)
     settings->setValue("text_font", main_label->font());
     settings->setValue("out_line_width", main_label->outlineWidth);
     settings->setValue("out_line_color", main_label->outlineColor.rgba());
+    settings->setValue("dbus_service", dbus_service);
+    settings->setValue("dbus_path", dbus_path);
+    settings->setValue("dbus_interface", dbus_interface);
+    settings->setValue("dbus_name", dbus_name);
+    settings->setValue("dbus_setup", dbus_setup);
 }
 void My_Label::load(QSettings *settings)
 {
@@ -256,7 +334,10 @@ void My_Label::load(QSettings *settings)
         }
         this->main_label->setText("");
         this->main_label->setMovie(movie);
-        movie->start();
+        if (movie->fileName() != nullptr)
+        {
+            movie->start();
+        }
     }
     else
     {
@@ -266,5 +347,13 @@ void My_Label::load(QSettings *settings)
     main_label->setFont(settings->value("text_font", QFontDatabase::systemFont(QFontDatabase::FixedFont)).value<QFont>());
     main_label->outlineWidth = settings->value("out_line_width", 5).toInt();
     main_label->outlineColor = QColor::fromRgba(settings->value("out_line_color", QColor(0, 0, 0, 255).rgba()).toUInt());
+    dbus_service = settings->value("dbus_service", "").toString();
+    dbus_path = settings->value("dbus_path", "").toString();
+    dbus_interface = settings->value("dbus_interface", "").toString();
+    dbus_name = settings->value("dbus_name", "").toString();
+    dbus_setup = settings->value("dbus_setup", false).toBool();
+    dbus_setup_action->setIconVisibleInMenu(dbus_setup);
+    dbus.disconnect("", "", "", "", this, nullptr);
+    dbus.connect(dbus_service, dbus_path, dbus_interface, dbus_name, this, SLOT(DBusMessageReceived(QDBusMessage)));
     auto_set_font_size();
 }

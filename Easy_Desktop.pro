@@ -25,7 +25,8 @@ SOURCES += \
     core/chart/ram_chart.cpp \
     core/chart/net_chart.cpp \
     core/chart/disk_chart.cpp \
-    core/chart/pulseaudio_chart.cpp
+    core/chart/pulseaudio_chart.cpp \
+    core/file_tree.cpp
 
 HEADERS += \
     desktop_background.h \
@@ -49,7 +50,8 @@ HEADERS += \
     core/chart/ram_chart.h \
     core/chart/net_chart.h \
     core/chart/disk_chart.h \
-    core/chart/pulseaudio_chart.h
+    core/chart/pulseaudio_chart.h \
+    core/file_tree.h
 
 RESOURCES += \
     base.qrc

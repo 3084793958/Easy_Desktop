@@ -22,58 +22,60 @@ CPU_Chart::CPU_Chart(QWidget *parent)
     menu->addAction(set_line_color);
     basic_context(menu);
     updateTimer->setInterval(update_time);
-    connect(updateTimer, &QTimer::timeout, this, [=]
-    {
-        updateTimer->setInterval(update_time);
-        get_cpu_data();
-        int delta_num = send_cpu_data_list.count() - static_cast<int>(each_cpu_data.size());
-        if (delta_num < 0)
-        {
-            for (int i = 0; i < -delta_num; i++)
-            {
-                send_cpu_data_list << new QVector<double>;
-            }
-        }
-        else if (delta_num > 0)
-        {
-            for (int i = 0; i < delta_num; i++)
-            {
-                auto data_ptr = send_cpu_data_list.back();
-                delete data_ptr;
-                send_cpu_data_list.removeLast();
-            }
-        }
-        for (int i = 0; i < send_cpu_data_list.count(); i++)
-        {
-            auto data_ptr = send_cpu_data_list[i];
-            if (data_ptr->size() > vector_long)
-            {
-                data_ptr->erase(data_ptr->begin(), data_ptr->begin() + data_ptr->size() - vector_long);
-            }
-            else if (data_ptr->size() < vector_long)
-            {
-                data_ptr->insert(data_ptr->begin(), vector_long - data_ptr->size(), 0.0);
-            }
-            data_ptr->erase(data_ptr->begin());
-            data_ptr->push_back(each_cpu_data.at(i));
-        }
-        if (channel < send_cpu_data_list.count() && channel >= 0)
-        {
-            m_data = *(send_cpu_data_list[channel]);
-            double res = std::round(m_data.back() * 100) / 100;
-            if (channel != 0)
-            {
-                series->setName(QString("CPU%1:%2%").arg(channel - 1).arg(res));
-            }
-            else
-            {
-                series->setName(QString("CPU:%1%").arg(res));
-            }
-        }
-        update_data();
-    });
+    connect(updateTimer, &QTimer::timeout, this, &CPU_Chart::timeout_slot);
     show();
+    timeout_slot();
     updateTimer->start();
+}
+void CPU_Chart::timeout_slot()
+{
+    updateTimer->setInterval(update_time);
+    get_cpu_data();
+    int delta_num = send_cpu_data_list.count() - static_cast<int>(each_cpu_data.size());
+    if (delta_num < 0)
+    {
+        for (int i = 0; i < -delta_num; i++)
+        {
+            send_cpu_data_list << new QVector<double>;
+        }
+    }
+    else if (delta_num > 0)
+    {
+        for (int i = 0; i < delta_num; i++)
+        {
+            auto data_ptr = send_cpu_data_list.back();
+            delete data_ptr;
+            send_cpu_data_list.removeLast();
+        }
+    }
+    for (int i = 0; i < send_cpu_data_list.count(); i++)
+    {
+        auto data_ptr = send_cpu_data_list[i];
+        if (data_ptr->size() > vector_long)
+        {
+            data_ptr->erase(data_ptr->begin(), data_ptr->begin() + data_ptr->size() - vector_long);
+        }
+        else if (data_ptr->size() < vector_long)
+        {
+            data_ptr->insert(data_ptr->begin(), vector_long - data_ptr->size(), 0.0);
+        }
+        data_ptr->erase(data_ptr->begin());
+        data_ptr->push_back(each_cpu_data.at(i));
+    }
+    if (channel < send_cpu_data_list.count() && channel >= 0)
+    {
+        m_data = *(send_cpu_data_list[channel]);
+        double res = std::round(m_data.back() * 100) / 100;
+        if (channel != 0)
+        {
+            series->setName(QString("CPU%1:%2%").arg(channel - 1).arg(res));
+        }
+        else
+        {
+            series->setName(QString("CPU:%1%").arg(res));
+        }
+    }
+    update_data();
 }
 CPU_Chart::~CPU_Chart()
 {
@@ -102,6 +104,7 @@ void CPU_Chart::load(QSettings *settings)
     series->setColor(line_color);
     axisX->setLabelsFont(font);
     axisY->setLabelsFont(font);
+    timeout_slot();
 }
 void CPU_Chart::get_cpu_data()
 {
@@ -175,6 +178,7 @@ void CPU_Chart::contextMenuEvent(QContextMenuEvent *event)
             return;
         }
         update_time = time;
+        timeout_slot();
     }
     else if (know_what == set_vector_long)
     {
@@ -185,6 +189,7 @@ void CPU_Chart::contextMenuEvent(QContextMenuEvent *event)
             return;
         }
         vector_long = time;
+        timeout_slot();
     }
     else if (know_what == set_channel)
     {
@@ -195,6 +200,7 @@ void CPU_Chart::contextMenuEvent(QContextMenuEvent *event)
             return;
         }
         channel = time;
+        timeout_slot();
     }
     else if (know_what == set_text_font)
     {

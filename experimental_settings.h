@@ -17,11 +17,19 @@ public:
     QSpinBox *stay_on_top_timer_edit = new QSpinBox(this);
     QLabel *keyscan_label = new QLabel(tr("鼠标侦测(ms):"), this);
     QSpinBox *keyscan_timer_edit = new QSpinBox(this);
+    QCheckBox *allow_drop_box = new QCheckBox(tr("允许拖入"), this);
     QLabel *dbus_id_label = new QLabel(tr("dbus-id:"), this);
     QSpinBox *dbus_id_edit = new QSpinBox(this);
     QLabel *geometry_label = new QLabel(tr("空间结构:"), this);
     QCheckBox *always_refresh = new QCheckBox(tr("持续刷新"), this);
     QLineEdit *geometry_edit = new QLineEdit(this);
+    QLabel *file_open_way_label = new QLabel(tr("[打开方式]进程:"), this);
+    QLineEdit *file_open_way_edit = new QLineEdit(this);
+    QLabel *file_path_way_label = new QLabel(tr("[打开文件位置]进程:"), this);
+    QLineEdit *file_path_way_edit = new QLineEdit(this);
+    QLabel *file_info_way_label = new QLabel(tr("[属性]进程:"), this);
+    QLineEdit *file_info_way_edit = new QLineEdit(this);
+    QPushButton *set_theme_color_button = new QPushButton(tr("设置主题色"), this);
     QPushButton *update_button = new QPushButton(tr("更新"), this);
     void update_data();
     void send_data();
@@ -38,6 +46,16 @@ public:
     int *keyscan_timer;
     QRect *geometry;
     bool *always_refresh_geometry;
+    bool *allow_drop;
+    QString *file_open_way_process;
+    QString *file_open_path_process;
+    QString *file_open_info_process;
+    QColor *theme_color;
+    QColor *theme_background_color;
+    QColor *theme_text_color;
+    QColor m_theme_color;
+    QColor m_theme_background_color;
+    QColor m_theme_text_color;
 private:
     virtual void resizeEvent(QResizeEvent *event);
     void X11_Raise();

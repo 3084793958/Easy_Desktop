@@ -27,6 +27,8 @@ protected:
     Out_line_Label *process_name_label = new Out_line_Label(Carrier);
     bool is_file_widget = false;
     bool theme_image = false;
+    QLabel *image_label = new QLabel(Carrier);
+    QPushButton *just_show_image = new QPushButton(image_label);//注意private变量
     QString theme_name;
 private:
     bool left_mouse_on_press = false;
@@ -35,11 +37,10 @@ private:
     QColor press_color = QColor(255,255,255,75);
     QColor hover_color = QColor(255,255,255,75);
     QColor basic_color = QColor(255,255,255,50);
-    QLabel *image_label = new QLabel(Carrier);
-    QPushButton *just_show_image = new QPushButton(image_label);
 protected:
     QMenu *menu = new QMenu(this);
     QAction *run_action = new QAction(tr("运行"), this);
+    QMenu *setting_menu = new QMenu(tr("设置"), this);
     QAction *set_image = new QAction(tr("设置图像"), this);
     QAction *reset_image = new QAction(tr("还原图像"), this);
     QAction *set_name = new QAction(tr("设置名称"), this);

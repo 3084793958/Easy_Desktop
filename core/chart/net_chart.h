@@ -38,6 +38,7 @@ private:
     QAction *set_line_color = new QAction(tr("设置折线颜色"), this);
     QMenu *menu = new QMenu(this);
     void contextMenuEvent(QContextMenuEvent *event);
+    void timeout_slot();
 };
 
 #endif // NET_CHART_H

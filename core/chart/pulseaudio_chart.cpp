@@ -26,16 +26,18 @@ PulseAudio_Chart::PulseAudio_Chart(QWidget *parent)
     menu->addAction(set_update_time);
     menu->addAction(set_vector_long);
     menu->addSeparator();
-    use_rms_action->setCheckable(true);
-    use_rms_action->setChecked(true);
+    use_rms_action->setIcon(QIcon(":/base/this.svg"));
+    use_rms_action->setIconVisibleInMenu(true);
     set_use_rms->addAction(use_rms_action);
-    use_dB_action->setCheckable(true);
+    use_dB_action->setIcon(QIcon(":/base/this.svg"));
+    use_dB_action->setIconVisibleInMenu(false);
     set_use_rms->addAction(use_dB_action);
     menu->addMenu(set_use_rms);
-    output_action->setCheckable(true);
-    output_action->setChecked(true);
+    output_action->setIcon(QIcon(":/base/this.svg"));
+    output_action->setIconVisibleInMenu(true);
     set_monitor_type->addAction(output_action);
-    input_action->setCheckable(true);
+    input_action->setIcon(QIcon(":/base/this.svg"));
+    input_action->setIconVisibleInMenu(false);
     set_monitor_type->addAction(input_action);
     menu->addMenu(set_monitor_type);
     menu->addAction(set_max_can_process);
@@ -545,23 +547,23 @@ void PulseAudio_Chart::load(QSettings *settings)
     update_data_size();
     if (use_rms)
     {
-        use_rms_action->setChecked(true);
-        use_dB_action->setChecked(false);
+        use_rms_action->setIconVisibleInMenu(true);
+        use_dB_action->setIconVisibleInMenu(false);
     }
     else
     {
-        use_rms_action->setChecked(false);
-        use_dB_action->setChecked(true);
+        use_rms_action->setIconVisibleInMenu(false);
+        use_dB_action->setIconVisibleInMenu(true);
     }
     if (get_input)
     {
-        input_action->setChecked(true);
-        output_action->setChecked(false);
+        input_action->setIconVisibleInMenu(true);
+        output_action->setIconVisibleInMenu(false);
     }
     else
     {
-        input_action->setChecked(false);
-        output_action->setChecked(true);
+        input_action->setIconVisibleInMenu(false);
+        output_action->setIconVisibleInMenu(true);
     }
 }
 void PulseAudio_Chart::contextMenuEvent(QContextMenuEvent *event)
@@ -598,26 +600,26 @@ void PulseAudio_Chart::contextMenuEvent(QContextMenuEvent *event)
     else if (know_what == use_rms_action)
     {
         use_rms = true;
-        use_rms_action->setChecked(true);
-        use_dB_action->setChecked(false);
+        use_rms_action->setIconVisibleInMenu(true);
+        use_dB_action->setIconVisibleInMenu(false);
     }
     else if (know_what == use_dB_action)
     {
         use_rms = false;
-        use_rms_action->setChecked(false);
-        use_dB_action->setChecked(true);
+        use_rms_action->setIconVisibleInMenu(false);
+        use_dB_action->setIconVisibleInMenu(true);
     }
     else if (know_what == output_action)
     {
         get_input = false;
-        input_action->setChecked(false);
-        output_action->setChecked(true);
+        input_action->setIconVisibleInMenu(false);
+        output_action->setIconVisibleInMenu(true);
     }
     else if (know_what == input_action)
     {
         get_input = true;
-        input_action->setChecked(true);
-        output_action->setChecked(false);
+        input_action->setIconVisibleInMenu(true);
+        output_action->setIconVisibleInMenu(false);
     }
     else if (know_what == set_max_can_process)
     {

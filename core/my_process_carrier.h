@@ -44,6 +44,10 @@ public:
     virtual void save(QSettings *settings);
     virtual void load(QSettings *settings);
     int save_index_number = 0;
+    bool *m_allow_drop;
+    QString *file_open_way_process;
+    QString *file_open_path_process;
+    QString *file_open_info_process;
 private:
     QWidget *Basic_Carrier = new QWidget(this);
 public:
@@ -61,14 +65,20 @@ protected:
     QAction *create_process_widget_action = new QAction(tr("新建进程按钮"), this);
     QAction *create_file_widget_action = new QAction(tr("新建文件按钮"), this);
     QAction *get_process_widget_action = new QAction(tr("载入按钮"), this);
+    QMenu *load_file_action = new QMenu(tr("载入文件(夹)"), this);
+    QAction *load_files = new QAction(tr("载入文件"), this);
+    QAction *load_dir = new QAction(tr("载入文件夹"), this);
     QAction *create_carrier_action = new QAction(tr("新建页"), this);
     QAction *delete_carrier_action = new QAction(tr("删除页"), this);
     void context_solution(QAction *know_what, QPoint pos);
+    void X11_Raise();
 private:
     void Call_Timer_Move();
     void Timer_End();
     void contextMenuEvent(QContextMenuEvent *event);
     void wheelEvent(QWheelEvent *event);
+    void dropEvent(QDropEvent *event);
+    void dragEnterEvent(QDragEnterEvent *event);
 };
 
 #endif // MY_PROCESS_CARRIER_H

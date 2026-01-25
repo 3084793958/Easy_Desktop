@@ -50,8 +50,8 @@ Basic_Widget::Basic_Widget(QWidget *parent)
     basic_control->addAction(set_pos_action);
     basic_control->addAction(set_size_action);
     basic_control->addAction(close_action);
-    show_close_button->setCheckable(true);
-    show_close_button->setChecked(true);
+    show_close_button->setIconVisibleInMenu(true);
+    show_close_button->setIcon(QIcon(":/base/this.svg"));
     close_button->resize(24, 24);
     close_button->setFocusPolicy(Qt::NoFocus);
     close_button->setStyleSheet("QPushButton{border-radius:12px 12px;background:rgba(255,255,255,150)}"
@@ -84,6 +84,7 @@ void Basic_Widget::resize(int w, int h)
     background->move(5, 10);
     background->resize(w, h);
     close_button->move(w - 9, 0);
+    close_button->raise();
     QWidget::resize(w + 15 ,h + 15);
     emit size_changed(background->size());
 }
@@ -101,6 +102,7 @@ void Basic_Widget::setGeometry(QRect rect)
 void Basic_Widget::mousePressEvent(QMouseEvent *event)
 {
     raise();
+    close_button->raise();
     if (close_button->isVisible() && close_button->geometry().contains(event->pos()))
     {
         on_press = false;
@@ -442,8 +444,8 @@ void Basic_Widget::basic_action_func(QAction *action)
     }
     else if (action == show_close_button)
     {
-        //show_close_button->setChecked(!show_close_button->isChecked());//NM的怎么是自动化
-        close_button->setVisible(show_close_button->isChecked());
+        show_close_button->setIconVisibleInMenu(!show_close_button->isIconVisibleInMenu());
+        close_button->setVisible(show_close_button->isIconVisibleInMenu());
     }
     else if (action == set_pos_action)
     {
@@ -491,7 +493,7 @@ void Basic_Widget::save(QSettings *settings)
 {
     settings->setValue("pos", this->pos());
     settings->setValue("size", this->get_self()->size());
-    settings->setValue("show_close", show_close_button->isChecked());
+    settings->setValue("show_close", show_close_button->isIconVisibleInMenu());
     settings->setValue("background_color", background_color.rgba());
     settings->setValue("background_radius", background_radius);
     int res = -1;
@@ -510,7 +512,7 @@ void Basic_Widget::load(QSettings *settings)
     this->move(settings->value("pos", QPoint(0, 0)).toPoint());
     this->resize(settings->value("size", QSize(200, 100)).toSize());
     bool show_close_button_bool = settings->value("show_close", true).toBool();
-    show_close_button->setChecked(show_close_button_bool);
+    show_close_button->setIconVisibleInMenu(show_close_button_bool);
     close_button->setVisible(show_close_button_bool);
     background_color = QColor::fromRgba(settings->value("background_color", QColor(0,0,0,50).rgba()).toUInt());
     background_radius = settings->value("background_radius", 10).toInt();

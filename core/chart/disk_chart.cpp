@@ -22,139 +22,142 @@ DISK_Chart::DISK_Chart(QWidget *parent)
     menu->addAction(set_vector_long);
     set_axis->addAction(same_axis);
     set_axis->addAction(unsame_axis);
-    same_axis->setCheckable(true);
-    same_axis->setChecked(true);
-    unsame_axis->setCheckable(true);
+    same_axis->setIcon(QIcon(":/base/this.svg"));
+    same_axis->setIconVisibleInMenu(true);
+    unsame_axis->setIcon(QIcon(":/base/this.svg"));;
+    unsame_axis->setIconVisibleInMenu(false);
     menu->addMenu(set_axis);
     menu->addSeparator();
     menu->addAction(set_text_font);
     menu->addAction(set_line_color);
     basic_context(menu);
     updateTimer->setInterval(update_time);
-    connect(updateTimer, &QTimer::timeout, this, [=]
-    {
-        updateTimer->setInterval(update_time);
-        get_disk_data();
-        if (last_Tra == 0)
-        {
-            return;
-        }
-        if (Tra_data_vec.size() > vector_long)
-        {
-            Tra_data_vec.erase(Tra_data_vec.begin(), Tra_data_vec.begin() + Tra_data_vec.size() - vector_long);
-        }
-        else if (Tra_data_vec.size() < vector_long)
-        {
-            Tra_data_vec.insert(Tra_data_vec.begin(), vector_long - Tra_data_vec.size(), 0.0);
-        }
-        if (Rec_data_vec.size() > vector_long)
-        {
-            Rec_data_vec.erase(Rec_data_vec.begin(), Rec_data_vec.begin() + Rec_data_vec.size() - vector_long);
-        }
-        else if (Rec_data_vec.size() < vector_long)
-        {
-            Rec_data_vec.insert(Rec_data_vec.begin(), vector_long - Rec_data_vec.size(), 0.0);
-        }
-        Tra_data_vec.erase(Tra_data_vec.begin());
-        Rec_data_vec.erase(Rec_data_vec.begin());
-        Tra_data_vec.push_back(static_cast<double>(new_Tra - last_Tra) * 512/*扇区*/ / update_time * 1000);//B/s
-        Rec_data_vec.push_back(static_cast<double>(new_Rec - last_Rec) * 512 / update_time * 1000);//B/s
-        if (Tra_data_vec.size() == 0 || Rec_data_vec.size() == 0)
-        {
-            return;
-        }
-        series->clear();
-        sec_series->clear();
-        axisX->setRange(0, Tra_data_vec.size());
-        double d_Y_Tra = 0.0;
-        double d_Y_Rec = 0.0;
-        for (int i = 0; i < Tra_data_vec.size(); i++)
-        {
-            if (d_Y_Tra < Tra_data_vec.at(i))
-            {
-                d_Y_Tra = Tra_data_vec.at(i);
-            }
-        }
-        for (int i = 0; i < Rec_data_vec.size(); i++)
-        {
-            if (d_Y_Rec < Rec_data_vec.at(i))
-            {
-                d_Y_Rec = Rec_data_vec.at(i);
-            }
-        }
-        int Tra_count_time = 0, Rec_count_time = 0;
-        if (d_Y_Tra > 2048.0)
-        {
-            d_Y_Tra /= 1024;//KiB
-            Tra_count_time++;
-        }
-        if (d_Y_Tra > 2048.0)
-        {
-            d_Y_Tra /= 1024;//MiB
-            Tra_count_time++;
-        }
-        if (d_Y_Rec > 2048.0)
-        {
-            d_Y_Rec /= 1024;//KiB
-            Rec_count_time++;
-        }
-        if (d_Y_Rec > 2048.0)
-        {
-            d_Y_Rec /= 1024;//MiB
-            Rec_count_time++;
-        }
-        if (axis_type == 0)
-        {
-            if (Tra_count_time > Rec_count_time)
-            {
-                d_Y_Rec /= std::pow(1024, Tra_count_time - Rec_count_time);
-                Rec_count_time = Tra_count_time;
-            }
-            else
-            {
-                d_Y_Tra /= std::pow(1024, Rec_count_time - Tra_count_time);
-                Tra_count_time = Rec_count_time;
-            }
-        }
-        for (int i = 0; i < Tra_data_vec.size(); i++)
-        {
-            sec_series->append(i, -Tra_data_vec.at(i) / std::pow(1024, Tra_count_time));
-        }
-        for (int i = 0; i < Rec_data_vec.size(); i++)
-        {
-            series->append(i, Rec_data_vec.at(i) / std::pow(1024, Rec_count_time));
-        }
-        if (Tra_count_time == 0)
-        {
-            Tra_str = QString("%1B/s").arg(std::round(Tra_data_vec.last() / std::pow(1024, Tra_count_time) * 100) / 100);
-        }
-        else if (Tra_count_time == 1)
-        {
-            Tra_str = QString("%1KiB/s").arg(std::round(Tra_data_vec.last() / std::pow(1024, Tra_count_time) * 100) / 100);
-        }
-        else
-        {
-            Tra_str = QString("%1MiB/s").arg(std::round(Tra_data_vec.last() / std::pow(1024, Tra_count_time) * 100) / 100);
-        }
-        if (Rec_count_time == 0)
-        {
-            Rec_str = QString("%1B/s").arg(std::round(Rec_data_vec.last() / std::pow(1024, Rec_count_time) * 100) / 100);
-        }
-        else if (Rec_count_time == 1)
-        {
-            Rec_str = QString("%1KiB/s").arg(std::round(Rec_data_vec.last() / std::pow(1024, Rec_count_time) * 100) / 100);
-        }
-        else
-        {
-            Rec_str = QString("%1MiB/s").arg(std::round(Rec_data_vec.last() / std::pow(1024, Rec_count_time) * 100) / 100);
-        }
-        sec_series->setName(QString("读取:%1").arg(Tra_str));
-        series->setName(QString("写入:%1").arg(Rec_str));
-        axisY->setRange(-std::round(d_Y_Tra * 100) / 100, std::round(d_Y_Rec * 100) / 100);
-        //
-    });
+    connect(updateTimer, &QTimer::timeout, this, &DISK_Chart::timeout_slot);
     show();
+    timeout_slot();
     updateTimer->start();
+}
+void DISK_Chart::timeout_slot()
+{
+    updateTimer->setInterval(update_time);
+    get_disk_data();
+    if (last_Tra == 0)
+    {
+        return;
+    }
+    if (Tra_data_vec.size() > vector_long)
+    {
+        Tra_data_vec.erase(Tra_data_vec.begin(), Tra_data_vec.begin() + Tra_data_vec.size() - vector_long);
+    }
+    else if (Tra_data_vec.size() < vector_long)
+    {
+        Tra_data_vec.insert(Tra_data_vec.begin(), vector_long - Tra_data_vec.size(), 0.0);
+    }
+    if (Rec_data_vec.size() > vector_long)
+    {
+        Rec_data_vec.erase(Rec_data_vec.begin(), Rec_data_vec.begin() + Rec_data_vec.size() - vector_long);
+    }
+    else if (Rec_data_vec.size() < vector_long)
+    {
+        Rec_data_vec.insert(Rec_data_vec.begin(), vector_long - Rec_data_vec.size(), 0.0);
+    }
+    Tra_data_vec.erase(Tra_data_vec.begin());
+    Rec_data_vec.erase(Rec_data_vec.begin());
+    Tra_data_vec.push_back(static_cast<double>(new_Tra - last_Tra) * 512/*扇区*/ / update_time * 1000);//B/s
+    Rec_data_vec.push_back(static_cast<double>(new_Rec - last_Rec) * 512 / update_time * 1000);//B/s
+    if (Tra_data_vec.size() == 0 || Rec_data_vec.size() == 0)
+    {
+        return;
+    }
+    series->clear();
+    sec_series->clear();
+    axisX->setRange(0, Tra_data_vec.size());
+    double d_Y_Tra = 0.0;
+    double d_Y_Rec = 0.0;
+    for (int i = 0; i < Tra_data_vec.size(); i++)
+    {
+        if (d_Y_Tra < Tra_data_vec.at(i))
+        {
+            d_Y_Tra = Tra_data_vec.at(i);
+        }
+    }
+    for (int i = 0; i < Rec_data_vec.size(); i++)
+    {
+        if (d_Y_Rec < Rec_data_vec.at(i))
+        {
+            d_Y_Rec = Rec_data_vec.at(i);
+        }
+    }
+    int Tra_count_time = 0, Rec_count_time = 0;
+    if (d_Y_Tra > 2048.0)
+    {
+        d_Y_Tra /= 1024;//KiB
+        Tra_count_time++;
+    }
+    if (d_Y_Tra > 2048.0)
+    {
+        d_Y_Tra /= 1024;//MiB
+        Tra_count_time++;
+    }
+    if (d_Y_Rec > 2048.0)
+    {
+        d_Y_Rec /= 1024;//KiB
+        Rec_count_time++;
+    }
+    if (d_Y_Rec > 2048.0)
+    {
+        d_Y_Rec /= 1024;//MiB
+        Rec_count_time++;
+    }
+    if (axis_type == 0)
+    {
+        if (Tra_count_time > Rec_count_time)
+        {
+            d_Y_Rec /= std::pow(1024, Tra_count_time - Rec_count_time);
+            Rec_count_time = Tra_count_time;
+        }
+        else
+        {
+            d_Y_Tra /= std::pow(1024, Rec_count_time - Tra_count_time);
+            Tra_count_time = Rec_count_time;
+        }
+    }
+    for (int i = 0; i < Tra_data_vec.size(); i++)
+    {
+        sec_series->append(i, -Tra_data_vec.at(i) / std::pow(1024, Tra_count_time));
+    }
+    for (int i = 0; i < Rec_data_vec.size(); i++)
+    {
+        series->append(i, Rec_data_vec.at(i) / std::pow(1024, Rec_count_time));
+    }
+    if (Tra_count_time == 0)
+    {
+        Tra_str = QString("%1B/s").arg(std::round(Tra_data_vec.last() / std::pow(1024, Tra_count_time) * 100) / 100);
+    }
+    else if (Tra_count_time == 1)
+    {
+        Tra_str = QString("%1KiB/s").arg(std::round(Tra_data_vec.last() / std::pow(1024, Tra_count_time) * 100) / 100);
+    }
+    else
+    {
+        Tra_str = QString("%1MiB/s").arg(std::round(Tra_data_vec.last() / std::pow(1024, Tra_count_time) * 100) / 100);
+    }
+    if (Rec_count_time == 0)
+    {
+        Rec_str = QString("%1B/s").arg(std::round(Rec_data_vec.last() / std::pow(1024, Rec_count_time) * 100) / 100);
+    }
+    else if (Rec_count_time == 1)
+    {
+        Rec_str = QString("%1KiB/s").arg(std::round(Rec_data_vec.last() / std::pow(1024, Rec_count_time) * 100) / 100);
+    }
+    else
+    {
+        Rec_str = QString("%1MiB/s").arg(std::round(Rec_data_vec.last() / std::pow(1024, Rec_count_time) * 100) / 100);
+    }
+    sec_series->setName(QString("读取:%1").arg(Tra_str));
+    series->setName(QString("写入:%1").arg(Rec_str));
+    axisY->setRange(-std::round(d_Y_Tra * 100) / 100, std::round(d_Y_Rec * 100) / 100);
+    //
 }
 DISK_Chart::~DISK_Chart()
 {
@@ -216,14 +219,15 @@ void DISK_Chart::load(QSettings *settings)
     axisY->setLabelsFont(font);
     if (axis_type == 0)
     {
-        same_axis->setChecked(true);
-        unsame_axis->setChecked(false);
+        same_axis->setIconVisibleInMenu(true);
+        unsame_axis->setIconVisibleInMenu(false);
     }
     else
     {
-        same_axis->setChecked(false);
-        unsame_axis->setChecked(true);
+        same_axis->setIconVisibleInMenu(false);
+        unsame_axis->setIconVisibleInMenu(true);
     }
+    timeout_slot();
 }
 void DISK_Chart::contextMenuEvent(QContextMenuEvent *event)
 {
@@ -245,6 +249,7 @@ void DISK_Chart::contextMenuEvent(QContextMenuEvent *event)
             return;
         }
         update_time = time;
+        timeout_slot();
     }
     else if (know_what == set_vector_long)
     {
@@ -255,6 +260,7 @@ void DISK_Chart::contextMenuEvent(QContextMenuEvent *event)
             return;
         }
         vector_long = time;
+        timeout_slot();
     }
     else if (know_what == set_text_font)
     {
@@ -267,7 +273,6 @@ void DISK_Chart::contextMenuEvent(QContextMenuEvent *event)
         font = g_font;
         axisX->setLabelsFont(font);
         axisY->setLabelsFont(font);
-
     }
     else if (know_what == set_line_color)
     {
@@ -298,14 +303,16 @@ void DISK_Chart::contextMenuEvent(QContextMenuEvent *event)
     else if (know_what == same_axis)
     {
         axis_type = 0;
-        same_axis->setChecked(true);
-        unsame_axis->setChecked(false);
+        same_axis->setIconVisibleInMenu(true);
+        unsame_axis->setIconVisibleInMenu(false);
+        timeout_slot();
     }
     else if (know_what == unsame_axis)
     {
         axis_type = 1;
-        same_axis->setChecked(false);
-        unsame_axis->setChecked(true);
+        same_axis->setIconVisibleInMenu(false);
+        unsame_axis->setIconVisibleInMenu(true);
+        timeout_slot();
     }
     else
     {

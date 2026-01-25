@@ -23,12 +23,12 @@ File_Widget::File_Widget(QWidget *parent)
     {
         auto_set_font_size();
     }
-    menu->insertAction(set_image, open_way);
-    menu->insertAction(set_image, open_path_way);
-    menu->insertSeparator(set_image);
+    menu->insertAction(break_out, open_way);
+    menu->insertAction(break_out, open_path_way);
+    menu->insertSeparator(break_out);
     set_file_process->addAction(set_file_as_file);
     set_file_process->addAction(set_file_as_dir);
-    menu->insertMenu(set_process, set_file_process);
+    setting_menu->insertMenu(set_process, set_file_process);
     menu->addSeparator();
     menu->addAction(show_info);
     process_string = "dde-file-manager --show-item " + file_path;
@@ -55,8 +55,16 @@ void File_Widget::contextMenuEvent(QContextMenuEvent *event)
             return;
         }
         QProcess process;
-        process.setProgram("dde-file-manager");
-        process.setArguments(QStringList() << "-d" << "-o" << file_path);
+        process.setProgram("/bin/bash");
+        process.setWorkingDirectory(running_path);
+        QString m_process_str = "dde-file-manager -d -o";
+        if (file_open_way_process)
+        {
+            m_process_str = *file_open_way_process;
+        }
+        m_process_str += " ";
+        m_process_str += file_path;
+        process.setArguments(QStringList() << "-c" << m_process_str);
         process.setStandardOutputFile("/dev/null");
         process.setStandardErrorFile("/dev/null");
         process.startDetached();
@@ -68,8 +76,16 @@ void File_Widget::contextMenuEvent(QContextMenuEvent *event)
             return;
         }
         QProcess process;
-        process.setProgram("dde-file-manager");
-        process.setArguments(QStringList() << "--show-item" << file_path);
+        process.setProgram("/bin/bash");
+        process.setWorkingDirectory(running_path);
+        QString m_process_str = "dde-file-manager --show-item";
+        if (file_open_path_process)
+        {
+            m_process_str = *file_open_path_process;
+        }
+        m_process_str += " ";
+        m_process_str += file_path;
+        process.setArguments(QStringList() << "-c" << m_process_str);
         process.setStandardOutputFile("/dev/null");
         process.setStandardErrorFile("/dev/null");
         process.startDetached();
@@ -81,13 +97,11 @@ void File_Widget::contextMenuEvent(QContextMenuEvent *event)
         QString name;
         if (know_what == set_file_as_file)
         {
-            QMessageBox::information(nullptr, "设置文件", "设置文件");
             filepath = QFileDialog::getOpenFileName(nullptr, "获取文件", running_path);
             name = QFileInfo(filepath).fileName();
         }
         else
         {
-            QMessageBox::information(nullptr, "设置文件夹", "设置文件夹");
             filepath = QFileDialog::getExistingDirectory(nullptr, "获取文件夹", running_path);
             name = QDir(filepath).dirName();
         }
@@ -104,6 +118,60 @@ void File_Widget::contextMenuEvent(QContextMenuEvent *event)
             if (set_auto_resize->isChecked())
             {
                 auto_set_font_size();
+            }
+        }
+        QMessageBox::StandardButton image_ans = QMessageBox::question(nullptr, "确认图像", QString("是否使用推测图像"));
+        if (image_ans == QMessageBox::Yes)
+        {
+            if (know_what == set_file_as_file)
+            {
+                QFileInfo fileInfo(filepath);
+                QMimeDatabase mimeDb;
+                QMimeType mimeType;
+                mimeType = mimeDb.mimeTypeForFile(fileInfo);
+                QString mimeName = mimeType.name();
+                if (mimeName.startsWith("image/"))
+                {
+                    movie_size = get_Image_Size(file_path);
+                    if (movie_size.isValid())
+                    {
+                        theme_image = false;
+                        movie->setFileName(file_path);
+                        emit Basic_Widget::size_changed(Carrier->size());
+                    }
+                }
+                else
+                {
+                    theme_image = true;
+                    QIcon icon = QIcon::fromTheme(mimeType.iconName());
+                    theme_name = mimeType.iconName();
+                    if (icon.isNull())
+                    {
+                        icon = QIcon::fromTheme(mimeType.genericIconName());
+                        theme_name = mimeType.genericIconName();
+                    }
+                    if (icon.isNull())
+                    {
+                        theme_name = "unknown";
+                    }
+                    just_show_image->setIcon(QIcon::fromTheme(theme_name));
+                    just_show_image->setIconSize(QSize(128, 128));
+                    just_show_image->show();
+                    movie->setFileName("");
+                    movie_size = QSize(128, 128);
+                    emit Basic_Widget::size_changed(Carrier->size());
+                }
+            }
+            else
+            {
+                theme_image = true;
+                theme_name = "folder";
+                just_show_image->setIcon(QIcon::fromTheme(theme_name));
+                just_show_image->setIconSize(QSize(128, 128));
+                just_show_image->show();
+                movie->setFileName("");
+                movie_size = QSize(128, 128);
+                emit Basic_Widget::size_changed(Carrier->size());
             }
         }
         process_string = get_running_process(file_path);
@@ -129,8 +197,16 @@ void File_Widget::contextMenuEvent(QContextMenuEvent *event)
             return;
         }
         QProcess process;
-        process.setProgram("dde-file-manager");
-        process.setArguments(QStringList() << "-p" << file_path);
+        process.setProgram("/bin/bash");
+        process.setWorkingDirectory(running_path);
+        QString m_process_str = "dde-file-manager -p";
+        if (file_open_info_process)
+        {
+            m_process_str = *file_open_info_process;
+        }
+        m_process_str += " ";
+        m_process_str += file_path;
+        process.setArguments(QStringList() << "-c" << m_process_str);
         process.setStandardOutputFile("/dev/null");
         process.setStandardErrorFile("/dev/null");
         process.startDetached();
@@ -139,6 +215,70 @@ void File_Widget::contextMenuEvent(QContextMenuEvent *event)
     {
         context_solution(know_what);
     }
+}
+void File_Widget::quickly_set(QString filepath)
+{
+    if (filepath.isEmpty())
+    {
+        return;
+    }
+    if (!QUrl(filepath).isValid())
+    {
+        return;
+    }
+    QFileInfo fileInfo(filepath);
+    this->process_name_label->setText(fileInfo.fileName());
+    file_path = filepath;
+    if (!fileInfo.isDir())
+    {
+        QMimeDatabase mimeDb;
+        QMimeType mimeType;
+        mimeType = mimeDb.mimeTypeForFile(fileInfo);
+        QString mimeName = mimeType.name();
+        if (mimeName.startsWith("image/"))
+        {
+            movie_size = get_Image_Size(file_path);
+            if (movie_size.isValid())
+            {
+                theme_image = false;
+                movie->setFileName(file_path);
+                emit Basic_Widget::size_changed(Carrier->size());
+            }
+        }
+        else
+        {
+            theme_image = true;
+            QIcon icon = QIcon::fromTheme(mimeType.iconName());
+            theme_name = mimeType.iconName();
+            if (icon.isNull())
+            {
+                icon = QIcon::fromTheme(mimeType.genericIconName());
+                theme_name = mimeType.genericIconName();
+            }
+            if (icon.isNull())
+            {
+                theme_name = "unknown";
+            }
+            just_show_image->setIcon(QIcon::fromTheme(theme_name));
+            just_show_image->setIconSize(QSize(128, 128));
+            just_show_image->show();
+            movie->setFileName("");
+            movie_size = QSize(128, 128);
+            emit Basic_Widget::size_changed(Carrier->size());
+        }
+    }
+    else
+    {
+        theme_image = true;
+        theme_name = "folder";
+        just_show_image->setIcon(QIcon::fromTheme(theme_name));
+        just_show_image->setIconSize(QSize(128, 128));
+        just_show_image->show();
+        movie->setFileName("");
+        movie_size = QSize(128, 128);
+        emit Basic_Widget::size_changed(Carrier->size());
+    }
+    process_string = get_running_process(file_path);
 }
 QString File_Widget::get_running_process(QString m_file_path)
 {
@@ -219,12 +359,10 @@ void File_Widget::set_file_or_dir(bool file)
     QString filepath;
     if (file)
     {
-        QMessageBox::information(nullptr, "设置文件", "设置文件");
         filepath = QFileDialog::getOpenFileName(nullptr, "获取文件", running_path);
     }
     else
     {
-        QMessageBox::information(nullptr, "设置文件夹", "设置文件夹");
         filepath = QFileDialog::getExistingDirectory(nullptr, "获取文件夹", running_path);
     }
     X11_Rasie();
