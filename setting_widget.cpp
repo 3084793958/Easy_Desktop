@@ -13,6 +13,7 @@ void Setting_Widget::X11_Rasie()
 Setting_Widget::Setting_Widget(QWidget *parent)
     :QWidget(parent)
 {
+    this->setAcceptDrops(true);
     this->setMinimumSize(600, 300);
     setWindowTitle("壁纸设置");
     resize(600,400);
@@ -655,6 +656,90 @@ void Setting_Widget::List_Update()
     background_path->sending_info = false;
     background_path->Update_Widget();
 }
+void Setting_Widget::set_wallpaper(int wallpaper_id)
+{
+    choose_id_box->setValue(wallpaper_id);
+    List_Update();
+}
+void Setting_Widget::remove_wallpaper(int wallpaper_id)
+{
+    path_list.clear();
+    for (int i = 0; i < id_box_list.count(); i++)
+    {
+        path_list<<Path_Info(
+                       static_cast<uint>(id_box_list[i]->value()),
+                       name_box_list[i]->text(),
+                       !image_box_list[i]->currentIndex(),
+                       path_box_list[i]->text(),
+                       (QList<Scale_Type>()
+                        <<Scale_Type::No
+                        <<Scale_Type::Each
+                        <<Scale_Type::Width
+                        <<Scale_Type::Height
+                        <<Scale_Type::Short
+                        <<Scale_Type::Long
+                        <<Scale_Type::Full
+                        )[scale_box_list[i]->currentIndex()],
+                       !center_box_list[i]->currentIndex(),
+                       !mouse_effect_box_list[i]->currentIndex(),
+                       mouse_width_box_list[i]->value(),
+                       mouse_height_box_list[i]->value(),
+                       delta_x_box_list[i]->value(),
+                       delta_y_box_list[i]->value(),
+                       !on_Antialiasing_box_list[i]->currentIndex()
+                       );
+    }
+    bool get_ok = false;
+    uint delete_id = static_cast<uint>(wallpaper_id);
+    if (!get_ok)
+    {
+        return;
+    }
+    for (int i = 0; i <path_list.count(); i++)
+    {
+        if (path_list[i].id == delete_id)
+        {
+            path_list.removeAt(i);
+            break;
+        }
+    }
+    Setting_Widget::private_update();
+}
+void Setting_Widget::add_wallpaper(uint m_id, QString m_name, bool m_is_image, QString m_path, Scale_Type m_scale_type, bool m_center, bool m_mouse_effect,
+                                   qreal m_k_mouse_move_width, qreal m_k_mouse_move_height, int m_delta_x, int m_delta_y,
+                                   bool m_on_Antialiasing)
+{
+    path_list.clear();
+    for (int i = 0; i < id_box_list.count(); i++)
+    {
+        path_list<<Path_Info(
+                       static_cast<uint>(id_box_list[i]->value()),
+                       name_box_list[i]->text(),
+                       !image_box_list[i]->currentIndex(),
+                       path_box_list[i]->text(),
+                       (QList<Scale_Type>()
+                        <<Scale_Type::No
+                        <<Scale_Type::Each
+                        <<Scale_Type::Width
+                        <<Scale_Type::Height
+                        <<Scale_Type::Short
+                        <<Scale_Type::Long
+                        <<Scale_Type::Full
+                        )[scale_box_list[i]->currentIndex()],
+                       !center_box_list[i]->currentIndex(),
+                       !mouse_effect_box_list[i]->currentIndex(),
+                       mouse_width_box_list[i]->value(),
+                       mouse_height_box_list[i]->value(),
+                       delta_x_box_list[i]->value(),
+                       delta_y_box_list[i]->value(),
+                       !on_Antialiasing_box_list[i]->currentIndex()
+                       );
+    }
+    path_list<<Path_Info(m_id, m_name, m_is_image, m_path, m_scale_type, m_center, m_mouse_effect,
+                         m_k_mouse_move_width, m_k_mouse_move_height, m_delta_x, m_delta_y,
+                         m_on_Antialiasing);
+    Setting_Widget::private_update();
+}
 int Setting_Widget::Get_id_to_Index(int id)
 {
     int result = 0;
@@ -682,4 +767,75 @@ bool Setting_Widget::eventFilter(QObject *watched, QEvent *event)
         }
     }
     return QObject::eventFilter(watched, event);
+}
+void Setting_Widget::dragEnterEvent(QDragEnterEvent *event)
+{
+    if (event->mimeData()->hasUrls())
+    {
+        QMimeDatabase mimeDb;
+        QMimeType mimeType;
+        for (QUrl url : event->mimeData()->urls())
+        {
+            mimeType = mimeDb.mimeTypeForUrl(url);
+            QString mimeName = mimeType.name();
+            if (mimeName.startsWith("image/") || mimeName.startsWith("video/"))
+            {
+                event->accept();
+                return;
+            }
+        }
+    }
+}
+void Setting_Widget::dropEvent(QDropEvent *event)
+{
+    if (event->mimeData()->hasUrls())
+    {
+        path_list.clear();
+        for (int i = 0; i < id_box_list.count(); i++)
+        {
+            path_list<<Path_Info(
+                           static_cast<uint>(id_box_list[i]->value()),
+                           name_box_list[i]->text(),
+                           !image_box_list[i]->currentIndex(),
+                           path_box_list[i]->text(),
+                           (QList<Scale_Type>()
+                            <<Scale_Type::No
+                            <<Scale_Type::Each
+                            <<Scale_Type::Width
+                            <<Scale_Type::Height
+                            <<Scale_Type::Short
+                            <<Scale_Type::Long
+                            <<Scale_Type::Full
+                            )[scale_box_list[i]->currentIndex()],
+                           !center_box_list[i]->currentIndex(),
+                           !mouse_effect_box_list[i]->currentIndex(),
+                           mouse_width_box_list[i]->value(),
+                           mouse_height_box_list[i]->value(),
+                           delta_x_box_list[i]->value(),
+                           delta_y_box_list[i]->value(),
+                           !on_Antialiasing_box_list[i]->currentIndex()
+                           );
+        }
+        uint max_id = 0;
+        for (int i = 0; i < path_list.count(); i++)
+        {
+            if (max_id <= path_list[i].id)
+            {
+                max_id = path_list[i].id + 1;
+            }
+        }
+        QMimeDatabase mimeDb;
+        QMimeType mimeType;
+        for (QUrl url : event->mimeData()->urls())
+        {
+            mimeType = mimeDb.mimeTypeForUrl(url);
+            QString mimeName = mimeType.name();
+            if (mimeName.startsWith("image/") || mimeName.startsWith("video/"))
+            {
+                path_list<<Path_Info(max_id,url.fileName(),true,url.path(),Scale_Type::Full,true,false,0,0,0,0,true);
+                max_id++;
+            }
+        }
+        Setting_Widget::private_update();
+    }
 }

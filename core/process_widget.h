@@ -11,6 +11,7 @@ public:
     QList<Process_Widget *> *process_widget_list;
     virtual void save(QSettings *settings);
     virtual void load(QSettings *settings);
+    virtual void set_icon(QString checked_icon_path);
 signals:
     void Pressed();
     void move_To_Desktop_Sig(QPoint pos_);

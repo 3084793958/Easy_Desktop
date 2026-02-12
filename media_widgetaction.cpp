@@ -1,5 +1,8 @@
 #include "media_widgetaction.h"
-
+void Media_WidgetAction::set_color(QColor color)
+{
+    seat_widget->setStyleSheet(QString("color:rgba(%1,%2,%3,%4)").arg(color.red()).arg(color.green()).arg(color.blue()).arg(color.alpha()));
+}
 Media_WidgetAction::Media_WidgetAction(QWidget *parent)
     :QWidgetAction(parent)
 {
@@ -110,4 +113,22 @@ void Media_WidgetAction::load(QSettings *settings)
     emit change_signals_V(volume_value);
     emit change_signals_P(set_music_time_main->value());
     emit change_signals_S(music_speed_value);
+}
+void Media_WidgetAction::slider_set_volume(int value)
+{
+    set_volume_main->setValue(value);
+    emit change_signals_V(set_volume_main->value());
+    qslider_doing(value);
+}
+void Media_WidgetAction::slider_set_position(int value)
+{
+    set_music_time_main->setValue(value);
+    emit change_signals_P(set_music_time_main->value());
+    set_second(set_music_time_main->value(), QString("%1%").arg(set_music_time_main->value()));
+}
+void Media_WidgetAction::slider_set_speed(int value)
+{
+    set_music_speed_main->setValue(value);
+    emit change_signals_S(set_music_speed_main->value());
+    music_value_speed(value);
 }

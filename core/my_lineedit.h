@@ -10,6 +10,7 @@ public:
     void set_WinId(WId m_winId);
     virtual void H_save(QSettings *settings);
     virtual void H_load(QSettings *settings);
+    void set_icon(QString checked_icon_path);
 signals:
     void window_contextmenu(QPoint pos);
 private:
@@ -72,7 +73,8 @@ public:
     QList<My_LineEdit *> *my_lineedit_list;
     virtual void save(QSettings *settings);
     virtual void load(QSettings *settings);
-    void update_style(QColor theme_background_color, QColor theme_text_color, QColor theme_color);
+    virtual void set_icon(QString checked_icon_path);
+    void update_style(QColor theme_color, QColor theme_background_color, QColor theme_text_color, QColor select_text_color, QColor disabled_text_color, QString checked_icon_path);
 private:
     Basic_TextEdit *textEdit = new Basic_TextEdit(this->get_self());
 private:

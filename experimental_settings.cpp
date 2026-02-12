@@ -16,6 +16,7 @@ void Experimental_Settings::X11_Raise()
 Experimental_Settings::Experimental_Settings(QWidget *parent)
     :QWidget(parent)
 {
+    set_theme_dialog->hide();
     this->setMinimumSize(450, 235);
     this->setWindowTitle("实验设置");
     load_path_label->move(5, 5);
@@ -88,32 +89,10 @@ Experimental_Settings::Experimental_Settings(QWidget *parent)
     });
     connect(set_theme_color_button, &QPushButton::clicked, this, [=]
     {
-        QMessageBox::information(nullptr, "设置主题颜色", "设置主题颜色");
-        QColorDialog colorDialog;
-        colorDialog.setOption(QColorDialog::ShowAlphaChannel);
-        colorDialog.setCurrentColor(m_theme_color);
-        colorDialog.setParent(nullptr);
-        colorDialog.setWindowTitle("获取颜色");
-        if (colorDialog.exec() != QDialog::Accepted)
-        {
-            return;
-        }
-        m_theme_color = colorDialog.currentColor();
-        QMessageBox::information(nullptr, "设置背景颜色", "设置背景颜色");
-        colorDialog.setCurrentColor(m_theme_background_color);
-        if (colorDialog.exec() != QDialog::Accepted)
-        {
-            return;
-        }
-        m_theme_background_color = colorDialog.currentColor();
-        QMessageBox::information(nullptr, "设置字体颜色", "设置字体颜色");
-        colorDialog.setCurrentColor(m_theme_text_color);
-        if (colorDialog.exec() != QDialog::Accepted)
-        {
-            return;
-        }
-        m_theme_text_color = colorDialog.currentColor();
+        set_theme_dialog->activateWindow();
+        set_theme_dialog->show();
     });
+    connect(set_theme_dialog, &Theme_Set_Dialog::Call_X11_Raise, this, &Experimental_Settings::X11_Raise);
 }
 void Experimental_Settings::resizeEvent(QResizeEvent *event)
 {
@@ -150,6 +129,10 @@ void Experimental_Settings::update_data()
     m_theme_color = *theme_color;
     m_theme_background_color = *theme_background_color;
     m_theme_text_color = *theme_text_color;
+    m_select_text_color = *select_text_color;
+    m_disabled_text_color = *disabled_text_color;
+    m_checked_icon_path = *checked_icon_path;
+    set_theme_dialog->update_data();
 }
 void Experimental_Settings::send_data()
 {
@@ -193,5 +176,99 @@ void Experimental_Settings::send_data()
     *theme_color = m_theme_color;
     *theme_background_color = m_theme_background_color;
     *theme_text_color = m_theme_text_color;
+    *select_text_color = m_select_text_color;
+    *disabled_text_color = m_disabled_text_color;
+    *checked_icon_path = m_checked_icon_path;
     emit has_sended();
+}
+Theme_Set_Dialog::Theme_Set_Dialog(QWidget *parent, QColor *m_theme_color, QColor *m_theme_background_color, QColor *m_theme_text_color, QColor *m_select_text_color, QColor *m_disabled_text_color, QString *m_checked_icon_path)
+    :QWidget(parent)
+    ,theme_color(m_theme_color)
+    ,theme_background_color(m_theme_background_color)
+    ,theme_text_color(m_theme_text_color)
+    ,select_text_color(m_select_text_color)
+    ,disabled_text_color(m_disabled_text_color)
+    ,checked_icon_path(m_checked_icon_path)
+{
+    hide();
+    checked_icon_path_box->setEditable(true);
+    checked_icon_path_box->addItems(QStringList() << ":/base/this.svg" << ":/base/this_white.svg" << ":/base/empty.svg" << ":/base/select.svg");
+    connect(checked_icon_path_box, &QComboBox::currentTextChanged, this, [=]{*checked_icon_path = checked_icon_path_box->currentText();});
+    connect(theme_color_button, &QPushButton::clicked, this, [=]{set_color(theme_color);});
+    connect(theme_background_color_button, &QPushButton::clicked, this, [=]{set_color(theme_background_color);});
+    connect(theme_text_color_button, &QPushButton::clicked, this, [=]{set_color(theme_text_color);});
+    connect(select_text_color_button, &QPushButton::clicked, this, [=]{set_color(select_text_color);});
+    connect(disabled_text_color_button, &QPushButton::clicked, this, [=]{set_color(disabled_text_color);});
+    theme_color_label->move(5, 5);
+    theme_color_label->resize(50, 40);
+    theme_color_button->move(60, 5);
+    theme_color_button->resize(40, 40);
+    theme_background_color_label->move(120, 5);
+    theme_background_color_label->resize(50, 40);
+    theme_background_color_button->move(175, 5);
+    theme_background_color_button->resize(40, 40);
+    theme_text_color_label->move(235, 5);
+    theme_text_color_label->resize(50, 40);
+    theme_text_color_button->move(290, 5);
+    theme_text_color_button->resize(40, 40);
+    select_text_color_label->move(5, 50);
+    select_text_color_label->resize(75, 40);
+    select_text_color_button->move(80, 50);
+    select_text_color_button->resize(40, 40);
+    disabled_text_color_label->move(140, 50);
+    disabled_text_color_label->resize(75, 40);
+    disabled_text_color_button->move(215, 50);
+    disabled_text_color_button->resize(40, 40);
+    checked_icon_path_label->move(5, 95);
+    checked_icon_path_label->resize(50, 40);
+    checked_icon_path_box->move(60, 95);
+    checked_icon_path_box->resize(180, 40);
+    checked_icon_path_load_button->move(245, 95);
+    checked_icon_path_load_button->resize(85, 40);
+    connect(checked_icon_path_load_button, &QPushButton::clicked, this, [=]
+    {
+        QString filename = QFileDialog::getOpenFileName(nullptr, "获取图像", QDir::homePath(), "图像文件(*.png *.jpg *.jpeg *.svg *.gif *.bmp);;所有文件(*.*)");
+        emit Call_X11_Raise();
+        if (!filename.isEmpty())
+        {
+            *checked_icon_path = filename;
+            update_data();
+        }
+    });
+    this->setFocusProxy(checked_icon_path_box);
+    resize(335, 150);
+}
+void Theme_Set_Dialog::update_data()
+{
+    if (theme_color)
+    theme_color_button->setStyleSheet(QString("background-color:rgba(%1,%2,%3,%4)")
+                                      .arg(theme_color->red()).arg(theme_color->green()).arg(theme_color->blue()).arg(theme_color->alpha()));
+    if (theme_background_color)
+    theme_background_color_button->setStyleSheet(QString("background-color:rgba(%1,%2,%3,%4)")
+                                                 .arg(theme_background_color->red()).arg(theme_background_color->green()).arg(theme_background_color->blue()).arg(theme_background_color->alpha()));
+    if (theme_text_color)
+    theme_text_color_button->setStyleSheet(QString("background-color:rgba(%1,%2,%3,%4)")
+                                           .arg(theme_text_color->red()).arg(theme_text_color->green()).arg(theme_text_color->blue()).arg(theme_text_color->alpha()));
+    if (select_text_color)
+    select_text_color_button->setStyleSheet(QString("background-color:rgba(%1,%2,%3,%4)")
+                                            .arg(select_text_color->red()).arg(select_text_color->green()).arg(select_text_color->blue()).arg(select_text_color->alpha()));
+    if (disabled_text_color)
+    disabled_text_color_button->setStyleSheet(QString("background-color:rgba(%1,%2,%3,%4)")
+                                              .arg(disabled_text_color->red()).arg(disabled_text_color->green()).arg(disabled_text_color->blue()).arg(disabled_text_color->alpha()));
+    if (checked_icon_path)
+    checked_icon_path_box->setCurrentText(*checked_icon_path);
+}
+void Theme_Set_Dialog::set_color(QColor *ptr)
+{
+    QColorDialog colorDialog;
+    colorDialog.setOption(QColorDialog::ShowAlphaChannel);
+    colorDialog.setCurrentColor(*ptr);
+    colorDialog.setParent(nullptr);
+    colorDialog.setWindowTitle("获取颜色");
+    if (colorDialog.exec() != QDialog::Accepted)
+    {
+        return;
+    }
+    *ptr = colorDialog.currentColor();
+    update_data();
 }

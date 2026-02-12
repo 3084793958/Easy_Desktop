@@ -140,6 +140,21 @@ void File_Widget::contextMenuEvent(QContextMenuEvent *event)
                         emit Basic_Widget::size_changed(Carrier->size());
                     }
                 }
+                else if (mimeName == "application/x-desktop")
+                {
+                    theme_image = true;
+                    QSettings desktopSettings(file_path, QSettings::IniFormat);
+                    desktopSettings.setIniCodec("UTF-8");
+                    desktopSettings.beginGroup("Desktop Entry");
+                    theme_name = desktopSettings.value("Icon", "application").toString();
+                    desktopSettings.endGroup();
+                    just_show_image->setIcon(QIcon::fromTheme(theme_name));
+                    just_show_image->setIconSize(QSize(128, 128));
+                    just_show_image->show();
+                    movie->setFileName("");
+                    movie_size = QSize(128, 128);
+                    emit Basic_Widget::size_changed(Carrier->size());
+                }
                 else
                 {
                     theme_image = true;
@@ -244,6 +259,21 @@ void File_Widget::quickly_set(QString filepath)
                 movie->setFileName(file_path);
                 emit Basic_Widget::size_changed(Carrier->size());
             }
+        }
+        else if (mimeName == "application/x-desktop")
+        {
+            theme_image = true;
+            QSettings desktopSettings(file_path, QSettings::IniFormat);
+            desktopSettings.setIniCodec("UTF-8");
+            desktopSettings.beginGroup("Desktop Entry");
+            theme_name = desktopSettings.value("Icon", "application").toString();
+            desktopSettings.endGroup();
+            just_show_image->setIcon(QIcon::fromTheme(theme_name));
+            just_show_image->setIconSize(QSize(128, 128));
+            just_show_image->show();
+            movie->setFileName("");
+            movie_size = QSize(128, 128);
+            emit Basic_Widget::size_changed(Carrier->size());
         }
         else
         {
@@ -390,8 +420,16 @@ void File_Widget::set_file_or_dir(bool file)
 void File_Widget::save(QSettings *settings)
 {
     Process_Widget::save(settings);
+    settings->setValue("file_path", file_path);
 }
 void File_Widget::load(QSettings *settings)
 {
     Process_Widget::load(settings);
+    QStringList process_string_list = process_string.split(" ");
+    file_path = process_string_list.last();
+    if (file_path.isEmpty())
+    {
+        file_path = QDir::homePath();
+    }
+    file_path = settings->value("file_path", file_path).toString();
 }

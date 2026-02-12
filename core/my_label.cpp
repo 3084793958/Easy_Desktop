@@ -35,6 +35,11 @@ QSize My_Label::get_Image_Size(QString path)
     }
     return size;
 }
+void My_Label::set_icon(QString checked_icon_path)
+{
+    dbus_setup_action->setIcon(QIcon(checked_icon_path));
+    Basic_Widget::set_icon(checked_icon_path);
+}
 My_Label::My_Label(QWidget *parent)
     :Basic_Widget(parent)
 {

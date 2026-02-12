@@ -527,3 +527,7 @@ void Basic_Widget::load(QSettings *settings)
         this->setParent(basic_list->at(res));
     }
 }
+void Basic_Widget::set_icon(QString checked_icon_path)
+{
+    show_close_button->setIcon(QIcon(checked_icon_path));
+}

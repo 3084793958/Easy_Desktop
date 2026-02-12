@@ -80,7 +80,10 @@ public:
     void save(QString path);
     void load();
     void geometry_change();
-    void update_for_lineedit(QColor theme1, QColor theme2, QColor theme3);
+    void update_for_lineedit(QColor m_theme_color, QColor m_theme_background_color, QColor m_theme_text_color, QColor m_select_text_color, QColor m_disabled_text_color, QString m_checked_icon_path);
+    void slider_set_volume(int value);
+    void slider_set_position(int value);
+    void slider_set_speed(int value);
 signals:
     void keyscan_loaded();
 public:
@@ -100,6 +103,9 @@ public:
     QColor *theme_color;
     QColor *theme_background_color;
     QColor *theme_text_color;
+    QColor *select_text_color;
+    QColor *disabled_text_color;
+    QString *checked_icon_path;
     QPoint basic_pos = QPoint(0, 0);
 private:
     int desktop_width;
@@ -117,6 +123,7 @@ private:
     QList<NET_Chart *> net_chart_list;
     QList<DISK_Chart *> disk_chart_list;
     QList<PulseAudio_Chart *> pulseaudio_chart_list;
+    QList<Plugin_Root *> plugin_root_list;
     //ACTION
     QMenu *menu=new QMenu(this);
     QMenu *play_menu=new QMenu(tr("播放菜单"),this);
@@ -131,6 +138,7 @@ private:
     QAction *file_tree_action = new QAction(tr("树状文件夹"), this);
     QAction *my_process_Carrier_action = new QAction(tr("进程/文件按钮载体"), this);
     QAction *my_program_INNER_action = new QAction(tr("内嵌窗口"), this);
+    QAction *plugin_widget_action = new QAction(tr("插件窗口"), this);
     QMenu *my_chart_menu = new QMenu(tr("可视化图表"), this);
     QAction *cpu_chart_action = new QAction(tr("CPU"), this);
     QAction *ram_chart_action = new QAction(tr("内存"), this);

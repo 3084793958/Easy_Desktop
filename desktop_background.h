@@ -67,6 +67,8 @@ public:
     Path_List path_list;
     int Path_List_Index = 0;
     bool sending_info = false;
+    QPoint Desktop_point = QPoint(0, 0);
+    QSize final_size_backup = QApplication::desktop()->size();
 public:
     int volume;
     qreal rate;
@@ -88,5 +90,9 @@ private:
     QGraphicsView *graphicsView = new QGraphicsView(scene, this);
     QMediaPlayer *media_player = new QMediaPlayer(this);
     QGraphicsVideoItem *video_item = new QGraphicsVideoItem;
+    QTimer *holding_pos_timer = new QTimer;
+    int holding_time = 0;
+    int holding_value = 0;
+    int holding_max_time = 10;
 };
 #endif // DESKTOP_BACKGROUND_H

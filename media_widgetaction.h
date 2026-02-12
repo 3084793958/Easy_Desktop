@@ -11,6 +11,10 @@ public:
     void set_second(int value, QString text);
     void save(QSettings *settings);
     void load(QSettings *settings);
+    void slider_set_volume(int value);
+    void slider_set_position(int value);
+    void slider_set_speed(int value);
+    void set_color(QColor color);
 signals:
     void change_signals_V(int m_volume);
     void change_signals_P(int m_Position);

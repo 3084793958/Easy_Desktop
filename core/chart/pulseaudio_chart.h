@@ -18,6 +18,7 @@ public:
     QList<PulseAudio_Chart *> *pulseaudio_chart_list;
     virtual void save(QSettings *settings);
     virtual void load(QSettings *settings);
+    virtual void set_icon(QString checked_icon_path);
 private:
     QTimer *pa_timer = new QTimer;
     QLineSeries *sec_series = new QLineSeries;

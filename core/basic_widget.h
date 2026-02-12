@@ -39,6 +39,7 @@ public:
     void Update_Background();
     virtual void save(QSettings *settings);
     virtual void load(QSettings *settings);
+    virtual void set_icon(QString checked_icon_path);
 signals:
     void close_signals();
     void size_changed(QSize size);

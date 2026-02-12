@@ -42,6 +42,11 @@ void Process_Widget::Set_Base_Icon()
         emit Basic_Widget::size_changed(Carrier->size());
     }
 }
+void Process_Widget::set_icon(QString checked_icon_path)
+{
+    set_auto_resize->setIcon(QIcon(checked_icon_path));
+    Basic_Widget::set_icon(checked_icon_path);
+}
 Process_Widget::Process_Widget(QWidget *parent)
     :Basic_Widget(parent)
 {

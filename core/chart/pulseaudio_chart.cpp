@@ -1,5 +1,12 @@
 #include "pulseaudio_chart.h"
-
+void PulseAudio_Chart::set_icon(QString checked_icon_path)
+{
+    use_rms_action->setIcon(QIcon(checked_icon_path));
+    use_dB_action->setIcon(QIcon(checked_icon_path));
+    output_action->setIcon(QIcon(checked_icon_path));
+    input_action->setIcon(QIcon(checked_icon_path));
+    Basic_Widget::set_icon(checked_icon_path);
+}
 PulseAudio_Chart::PulseAudio_Chart(QWidget *parent)
     :Basic_Chart(parent)
 {

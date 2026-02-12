@@ -10,6 +10,11 @@ public:
     void Table_Update();
     void private_update();
     void List_Update();
+    void set_wallpaper(int wallpaper_id);
+    void remove_wallpaper(int wallpaper_id);
+    void add_wallpaper(uint m_id, QString m_name, bool m_is_image, QString m_path, Scale_Type m_scale_type, bool m_center, bool m_mouse_effect,
+                       qreal m_k_mouse_move_width, qreal m_k_mouse_move_height, int m_delta_x, int m_delta_y,
+                       bool m_on_Antialiasing);
 public:
     Desktop_Background *background_path;
     WId winId;
@@ -45,6 +50,8 @@ private:
     virtual bool eventFilter(QObject *watched, QEvent *event);
     void X11_Rasie();
     virtual void resizeEvent(QResizeEvent *event);
+    void dropEvent(QDropEvent *event);
+    void dragEnterEvent(QDragEnterEvent *event);
 };
 
 #endif // SETTING_WIDGET_H

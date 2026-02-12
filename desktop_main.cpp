@@ -227,6 +227,7 @@ Desktop_Main::Desktop_Main(QWidget *parent)
     background_Add_Action->addAction(file_tree_action);
     background_Add_Action->addAction(my_process_Carrier_action);
     background_Add_Action->addAction(my_program_INNER_action);
+    background_Add_Action->addAction(plugin_widget_action);
     my_chart_menu->addAction(cpu_chart_action);
     my_chart_menu->addAction(ram_chart_action);
     my_chart_menu->addAction(net_chart_action);
@@ -339,11 +340,6 @@ void Desktop_Main::contextMenuEvent(QContextMenuEvent *event)
         {
             process_widget_list[0]->~Process_Widget();
         }
-        count = file_tree_list.count();
-        for (int i = 0; i < count; i++)
-        {
-            file_tree_list[0]->~File_Tree();
-        }
         count = cpu_chart_list.count();
         for (int i = 0; i < count; i++)
         {
@@ -368,6 +364,16 @@ void Desktop_Main::contextMenuEvent(QContextMenuEvent *event)
         for (int i = 0; i < count; i++)
         {
             pulseaudio_chart_list[0]->~PulseAudio_Chart();
+        }
+        count = file_tree_list.count();
+        for (int i = 0; i < count; i++)
+        {
+            file_tree_list[0]->~File_Tree();
+        }
+        count = plugin_root_list.count();
+        for (int i = 0; i < count; i++)
+        {
+            plugin_root_list[0]->~Plugin_Root();//删除方法不一致
         }
         QApplication::quit();
     }
@@ -473,6 +479,7 @@ void Desktop_Main::contextMenuEvent(QContextMenuEvent *event)
         my_lineedit->move(event->globalPos() - basic_pos);
         my_lineedit_list.append(my_lineedit);
         my_lineedit->my_lineedit_list = &my_lineedit_list;
+        my_lineedit->update_style(*theme_color, *theme_background_color, *theme_text_color, *select_text_color, *disabled_text_color, *checked_icon_path);
     }
     else if (know_what == my_label_action)
     {
@@ -633,6 +640,19 @@ void Desktop_Main::contextMenuEvent(QContextMenuEvent *event)
         file_tree->file_open_path_process = file_open_path_process;
         file_tree->m_allow_drop = allow_drop;
     }
+    else if (know_what == plugin_widget_action)
+    {
+        Plugin_Root *plugin_widget = new Plugin_Root(desktop_core_dock_list[now_page]);
+        plugin_widget->set_now_page(&now_page);
+        plugin_widget->set_desktop_number(&Desktop_NUmber);
+        plugin_widget->set_basic_list(reinterpret_cast<QList<QWidget *> *>(&desktop_core_dock_list));
+        plugin_widget->set_root_pos(event->globalPos() - basic_pos);
+        plugin_widget->call_update_plugin_carrier();
+        plugin_widget->WinId = m_WinId;
+        plugin_root_list.append(plugin_widget);
+        plugin_widget->plugin_root_list = &plugin_root_list;
+    }
+    update_for_lineedit(*theme_color, *theme_background_color, *theme_text_color, *select_text_color, *disabled_text_color, *checked_icon_path);
 }
 void Desktop_Main::dropEvent(QDropEvent *event)
 {
@@ -774,11 +794,66 @@ void Desktop_Main::geometry_change()
     control_Dock->set_Desktop_Size(desktop_width ,desktop_height);
     control_Dock->raise();
 }
-void Desktop_Main::update_for_lineedit(QColor theme1, QColor theme2, QColor theme3)
+void Desktop_Main::update_for_lineedit(QColor m_theme_color, QColor m_theme_background_color, QColor m_theme_text_color, QColor m_select_text_color, QColor m_disabled_text_color, QString m_checked_icon_path)
 {
-    for (My_LineEdit *lineedit : my_lineedit_list)
+    this->slider_action->set_color(m_theme_text_color);
+    for (auto *item : file_widget_list)
     {
-        lineedit->update_style(theme1, theme2, theme3);
+        item->set_icon(m_checked_icon_path);
+    }
+    for (auto *item : my_clock_list)
+    {
+        item->set_icon(m_checked_icon_path);
+    }
+    for (auto *item : my_label_list)
+    {
+        item->set_icon(m_checked_icon_path);
+    }
+    for (auto *item : my_lineedit_list)
+    {
+        item->set_icon(m_checked_icon_path);
+        item->update_style(m_theme_color, m_theme_background_color, m_theme_text_color, m_select_text_color, m_disabled_text_color, m_checked_icon_path);
+    }
+    for (auto *item : my_process_carrier_list)
+    {
+        item->set_icon(m_checked_icon_path);
+    }
+    for (auto *item : my_program_container_list)
+    {
+        item->set_icon(m_checked_icon_path);
+    }
+    for (auto *item : process_widget_list)
+    {
+        item->set_icon(m_checked_icon_path);
+    }
+    for (auto *item : file_tree_list)
+    {
+        item->set_icon(m_checked_icon_path);
+    }
+    for (auto *item : cpu_chart_list)
+    {
+        item->set_icon(m_checked_icon_path);
+    }
+    for (auto *item : ram_chart_list)
+    {
+        item->set_icon(m_checked_icon_path);
+    }
+    for (auto *item : net_chart_list)
+    {
+        item->set_icon(m_checked_icon_path);
+    }
+    for (auto *item : disk_chart_list)
+    {
+        item->set_icon(m_checked_icon_path);
+    }
+    for (auto *item : pulseaudio_chart_list)
+    {
+        item->set_icon(m_checked_icon_path);
+    }
+    for (auto *item : plugin_root_list)
+    {
+        item->set_icon(m_checked_icon_path);
+        item->update_style(m_theme_color, m_theme_background_color, m_theme_text_color, m_select_text_color, m_disabled_text_color, m_checked_icon_path);
     }
 }
 void Desktop_Main::wheelEvent(QWheelEvent *event)
@@ -868,6 +943,18 @@ void Desktop_Main::Update_Basic_Desktop()
         }
     }
 }
+void Desktop_Main::slider_set_volume(int value)
+{
+    slider_action->slider_set_volume(value);
+}
+void Desktop_Main::slider_set_position(int value)
+{
+    slider_action->slider_set_position(value);
+}
+void Desktop_Main::slider_set_speed(int value)
+{
+    slider_action->slider_set_speed(value);
+}
 void Desktop_Main::save(QString path)
 {
     QSettings settings(path, QSettings::IniFormat);
@@ -896,6 +983,7 @@ void Desktop_Main::save(QString path)
     settings.setValue("disk_chart_list_count", disk_chart_list.count());
     settings.setValue("pulseaudio_chart_list_count", pulseaudio_chart_list.count());
     settings.setValue("file_tree_list_count", file_tree_list.count());
+    settings.setValue("plugin_root_list_count", plugin_root_list.count());
     settings.setValue("stay_on_top", *stay_on_top);
     settings.setValue("on_top_time", *on_top_time);
     settings.setValue("keyscan_timer", *keyscan_timer);
@@ -906,6 +994,9 @@ void Desktop_Main::save(QString path)
     settings.setValue("theme_color", theme_color->rgba());
     settings.setValue("theme_background_color", theme_background_color->rgba());
     settings.setValue("theme_text_color", theme_text_color->rgba());
+    settings.setValue("select_text_color", select_text_color->rgba());
+    settings.setValue("disabled_text_color", disabled_text_color->rgba());
+    settings.setValue("checked_icon_path", *checked_icon_path);
     settings.endGroup();
     slider_action->save(&settings);
     //
@@ -1001,6 +1092,13 @@ void Desktop_Main::save(QString path)
         file_tree_list[i]->save(&settings);
         settings.endGroup();
     }
+    count = plugin_root_list.count();
+    for (int i = 0; i < count; i++)
+    {
+        settings.beginGroup(QString("plugin_root%1").arg(i));
+        plugin_root_list[i]->save(&settings);
+        settings.endGroup();
+    }
     //
     settings.sync();
 }
@@ -1028,6 +1126,9 @@ void Desktop_Main::load()
     *theme_color = QColor::fromRgba(settings.value("theme_color", QColor(0,129,255,255).rgba()).toUInt());
     *theme_background_color = QColor::fromRgba(settings.value("theme_background_color", QColor(255,255,255,75).rgba()).toUInt());
     *theme_text_color = QColor::fromRgba(settings.value("theme_text_color", QColor(0,0,0,255).rgba()).toUInt());
+    *select_text_color = QColor::fromRgba(settings.value("select_text_color", QColor(255,255,255,255).rgba()).toUInt());
+    *disabled_text_color = QColor::fromRgba(settings.value("disabled_text_color", QColor(131,136,139,255).rgba()).toUInt());
+    *checked_icon_path = settings.value("checked_icon_path", ":/base/this.svg").toString();
     emit keyscan_loaded();
     bool background_playing = settings.value("background_playing", true).toBool();
     bool mouse_moving = settings.value("mouse_moving", true).toBool();
@@ -1090,6 +1191,7 @@ void Desktop_Main::load()
     int pulseaudio_chart_list_count = settings.value("pulseaudio_chart_list_count", 0).toInt();
     int process_widget_list_count = settings.value("process_widget_list_count", 0).toInt();
     int file_tree_list_count = settings.value("file_tree_list_count", 0).toInt();
+    int plugin_root_list_count = settings.value("plugin_root_list_count", 0).toInt();
     settings.endGroup();
     slider_action->load(&settings);
     file_widget_list.clear();
@@ -1105,6 +1207,7 @@ void Desktop_Main::load()
     net_chart_list.clear();
     disk_chart_list.clear();
     pulseaudio_chart_list.clear();
+    plugin_root_list.clear();
     for (int i = 0; i < my_clock_list_count; i++)
     {
         My_Clock *my_clock = new My_Clock(desktop_core_dock_list[now_page]);
@@ -1372,4 +1475,20 @@ void Desktop_Main::load()
         settings.endGroup();
         file_tree->show();
     }
+    for (int i = 0; i < plugin_root_list_count; i++)
+    {
+        Plugin_Root *plugin_widget = new Plugin_Root(desktop_core_dock_list[now_page]);
+        plugin_widget->set_now_page(&now_page);
+        plugin_widget->set_desktop_number(&Desktop_NUmber);
+        plugin_widget->set_basic_list(reinterpret_cast<QList<QWidget *> *>(&desktop_core_dock_list));
+        plugin_widget->set_root_pos(QPoint(0, 0));
+        plugin_widget->call_update_plugin_carrier();
+        plugin_widget->WinId = m_WinId;
+        plugin_root_list.append(plugin_widget);
+        plugin_widget->plugin_root_list = &plugin_root_list;
+        settings.beginGroup(QString("plugin_root%1").arg(i));
+        plugin_widget->load(&settings);
+        settings.endGroup();
+    }
+    update_for_lineedit(*theme_color, *theme_background_color, *theme_text_color, *select_text_color, *disabled_text_color, *checked_icon_path);
 }

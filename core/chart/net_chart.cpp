@@ -24,7 +24,7 @@ NET_Chart::NET_Chart(QWidget *parent)
     set_axis->addAction(unsame_axis);
     same_axis->setIcon(QIcon(":/base/this.svg"));
     same_axis->setIconVisibleInMenu(true);
-    unsame_axis->setIcon(QIcon(":/base/this.svg"));;
+    unsame_axis->setIcon(QIcon(":/base/this.svg"));
     unsame_axis->setIconVisibleInMenu(false);
     menu->addMenu(set_axis);
     menu->addSeparator();
@@ -225,6 +225,12 @@ void NET_Chart::load(QSettings *settings)
         unsame_axis->setIconVisibleInMenu(true);
     }
     timeout_slot();
+}
+void NET_Chart::set_icon(QString checked_icon_path)
+{
+    same_axis->setIcon(QIcon(checked_icon_path));
+    unsame_axis->setIcon(QIcon(checked_icon_path));
+    Basic_Widget::set_icon(checked_icon_path);
 }
 void NET_Chart::contextMenuEvent(QContextMenuEvent *event)
 {

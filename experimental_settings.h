@@ -2,6 +2,37 @@
 #define EXPERIMENTAL_SETTINGS_H
 #include <QtWidgets>
 #include <QX11Info>
+class Theme_Set_Dialog : public QWidget
+{
+    Q_OBJECT
+public:
+    explicit Theme_Set_Dialog(QWidget *parent = nullptr, QColor *m_theme_color = nullptr, QColor *m_theme_background_color = nullptr, QColor *m_theme_text_color = nullptr, QColor *m_select_text_color = nullptr, QColor *m_disabled_text_color = nullptr, QString *m_checked_icon_path = nullptr);
+    void update_data();
+signals:
+    void Call_X11_Raise();
+private:
+    QLabel *theme_color_label = new QLabel(tr("主题色:"), this);
+    QPushButton *theme_color_button = new QPushButton(this);
+    QLabel *theme_background_color_label = new QLabel(tr("背景色:"), this);
+    QPushButton *theme_background_color_button = new QPushButton(this);
+    QLabel *theme_text_color_label = new QLabel(tr("字体色:"), this);
+    QPushButton *theme_text_color_button = new QPushButton(this);
+    QLabel *select_text_color_label = new QLabel(tr("选择字体色:"), this);
+    QPushButton *select_text_color_button = new QPushButton(this);
+    QLabel *disabled_text_color_label = new QLabel(tr("禁用字体色:"), this);
+    QPushButton *disabled_text_color_button = new QPushButton(this);
+    QLabel *checked_icon_path_label = new QLabel(tr("选中图标:"), this);
+    QComboBox *checked_icon_path_box = new QComboBox(this);
+    QPushButton *checked_icon_path_load_button = new QPushButton(tr("导入图像"), this);
+    void set_color(QColor *ptr);
+private:
+    QColor *theme_color;
+    QColor *theme_background_color;
+    QColor *theme_text_color;
+    QColor *select_text_color;
+    QColor *disabled_text_color;
+    QString *checked_icon_path;
+};
 class Experimental_Settings : public QWidget
 {
     Q_OBJECT
@@ -29,7 +60,7 @@ public:
     QLineEdit *file_path_way_edit = new QLineEdit(this);
     QLabel *file_info_way_label = new QLabel(tr("[属性]进程:"), this);
     QLineEdit *file_info_way_edit = new QLineEdit(this);
-    QPushButton *set_theme_color_button = new QPushButton(tr("设置主题色"), this);
+    QPushButton *set_theme_color_button = new QPushButton(tr("颜色设置"), this);
     QPushButton *update_button = new QPushButton(tr("更新"), this);
     void update_data();
     void send_data();
@@ -53,9 +84,16 @@ public:
     QColor *theme_color;
     QColor *theme_background_color;
     QColor *theme_text_color;
+    QColor *select_text_color;
+    QColor *disabled_text_color;
+    QString *checked_icon_path;
     QColor m_theme_color;
     QColor m_theme_background_color;
     QColor m_theme_text_color;
+    QColor m_select_text_color;
+    QColor m_disabled_text_color;
+    QString m_checked_icon_path;
+    Theme_Set_Dialog *set_theme_dialog = new Theme_Set_Dialog(nullptr, &m_theme_color, &m_theme_background_color, &m_theme_text_color, &m_select_text_color, &m_disabled_text_color, &m_checked_icon_path);
 private:
     virtual void resizeEvent(QResizeEvent *event);
     void X11_Raise();

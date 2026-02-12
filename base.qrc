@@ -6,5 +6,8 @@
         <file>base/deepin-launcher.svg</file>
         <file>base/del.svg</file>
         <file>base/search.svg</file>
+        <file>base/this_white.svg</file>
+        <file>base/empty.svg</file>
+        <file>base/select.svg</file>
     </qresource>
 </RCC>

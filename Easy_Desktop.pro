@@ -26,7 +26,8 @@ SOURCES += \
     core/chart/net_chart.cpp \
     core/chart/disk_chart.cpp \
     core/chart/pulseaudio_chart.cpp \
-    core/file_tree.cpp
+    core/file_tree.cpp \
+    core/plugin_widget.cpp
 
 HEADERS += \
     desktop_background.h \
@@ -51,7 +52,11 @@ HEADERS += \
     core/chart/net_chart.h \
     core/chart/disk_chart.h \
     core/chart/pulseaudio_chart.h \
-    core/file_tree.h
+    core/file_tree.h \
+    core/plugin_widget.h \
+    interfaces/constants.h \
+    interfaces/pluginproxyinterface.h \
+    interfaces/pluginsiteminterface.h
 
 RESOURCES += \
     base.qrc

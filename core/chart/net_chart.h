@@ -11,6 +11,7 @@ public:
     QList<NET_Chart *> *net_chart_list;
     virtual void save(QSettings *settings);
     virtual void load(QSettings *settings);
+    virtual void set_icon(QString checked_icon_path);
 private:
     QLineSeries *sec_series = new QLineSeries;
     void get_net_data();

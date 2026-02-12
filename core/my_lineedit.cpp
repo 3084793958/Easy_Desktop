@@ -692,9 +692,11 @@ My_LineEdit::My_LineEdit(QWidget *parent)
 {
     textEdit->setStyleSheet("QWidget{background:rgba(0,0,0,0);color:rgba(0,0,0,255)}"
                             "QMenu{border-radius:10px 10px;background:rgba(255,255,255,75);margin:0px -1px 0px -1px;padding-top:8px;padding-bottom:8px;icon-size:20px;border-radius:10px 10px}"
-                            "QMenu::item{color:rgba(0,0,0,255)}"
+                            "QMenu::item{color:rgba(0,0,0,255);background:rgba(0,0,0,0)}"
                             "QMenu::item:disabled{color:rgba(131,136,139,255)}"
                             "QMenu::item:selected{color:rgba(255,255,255,255);background:rgba(0,129,255,255)}"
+                            "QMenu::indicator{width: 20px; height 20px; background: transparent;}"
+                            "QMenu::indicator:checked{image: url(:/base/this.svg);}"
                             "QMenu::separator{background:rgba(150,150,150,125)}");
     textEdit->verticalScrollBar()->setStyleSheet("QScrollBar:vertical{border:none;background:rgba(0,0,0,0);width:8px;margin:0px0px0px0px;}"
                                                  "QScrollBar::handle:vertical{background:rgba(0,0,0,75);border-radius:4px;min-height:20px;}"
@@ -761,14 +763,40 @@ void My_LineEdit::load(QSettings *settings)
     Basic_Widget::load(settings);
     this->textEdit->H_load(settings);
 }
-void My_LineEdit::update_style(QColor theme_background_color, QColor theme_text_color, QColor theme_color)
+void My_LineEdit::update_style(QColor theme_color, QColor theme_background_color, QColor theme_text_color, QColor select_text_color, QColor disabled_text_color, QString checked_icon_path)
 {
     textEdit->setStyleSheet(QString("QWidget{background:rgba(0,0,0,0);color:rgba(0,0,0,255)}"
                                     "QMenu{border-radius:10px 10px;background:rgba(%1,%2,%3,%4);margin:0px -1px 0px -1px;padding-top:8px;padding-bottom:8px;icon-size:20px;border-radius:10px 10px}"
-                                    "QMenu::item{color:rgba(%5,%6,%7,%8)}"
-                                    "QMenu::item:disabled{color:rgba(131,136,139,255)}"
-                                    "QMenu::item:selected{color:rgba(255,255,255,255);background:rgba(%9,%10,%11,%12)}"
-                                    "QMenu::separator{background:rgba(150,150,150,125)}").arg(theme_background_color.red()).arg(theme_background_color.green()).arg(theme_background_color.blue()).arg(theme_background_color.alpha()).arg(theme_text_color.red()).arg(theme_text_color.green()).arg(theme_text_color.blue()).arg(theme_text_color.alpha()).arg(theme_color.red()).arg(theme_color.green()).arg(theme_color.blue()).arg(theme_color.alpha()));
+                                    "QMenu::item{color:rgba(%5,%6,%7,%8);background:rgba(0,0,0,0);}"
+                                    "QMenu::item:disabled{color:rgba(%9,%10,%11,%12)}"
+                                    "QMenu::item:selected{color:rgba(%13,%14,%15,%16);background:rgba(%17,%18,%19,%20)}"
+                                    "QMenu::indicator{width: 20px; height 20px; background: transparent;}"
+                                    "QMenu::indicator:checked{image: url(%21);}"
+                                    "QMenu::separator{background:rgba(150,150,150,125)}")
+                            .arg(theme_background_color.red()).arg(theme_background_color.green()).arg(theme_background_color.blue()).arg(theme_background_color.alpha())
+                            .arg(theme_text_color.red()).arg(theme_text_color.green()).arg(theme_text_color.blue()).arg(theme_text_color.alpha())
+                            .arg(disabled_text_color.red()).arg(disabled_text_color.green()).arg(disabled_text_color.blue()).arg(disabled_text_color.alpha())
+                            .arg(select_text_color.red()).arg(select_text_color.green()).arg(select_text_color.blue()).arg(select_text_color.alpha())
+                            .arg(theme_color.red()).arg(theme_color.green()).arg(theme_color.blue()).arg(theme_color.alpha())
+                            .arg(checked_icon_path));
+}
+void My_LineEdit::set_icon(QString checked_icon_path)
+{
+    textEdit->set_icon(checked_icon_path);
+    Basic_Widget::set_icon(checked_icon_path);
+}
+void Basic_TextEdit::set_icon(QString checked_icon_path)
+{
+    auto_turn_line_action->setIcon(QIcon(checked_icon_path));
+    read_only_action->setIcon(QIcon(checked_icon_path));
+    center_paste_action->setIcon(QIcon(checked_icon_path));
+    insert_image_action->setIcon(QIcon(checked_icon_path));
+    set_image_size_action->setIcon(QIcon(checked_icon_path));
+    set_table_size_action->setIcon(QIcon(checked_icon_path));
+    clear_style_action->setIcon(QIcon(checked_icon_path));
+    set_Top_A_action->setIcon(QIcon(checked_icon_path));
+    set_font_B->setIcon(QIcon(checked_icon_path));
+    set_font_I->setIcon(QIcon(checked_icon_path));
 }
 void Basic_TextEdit::H_save(QSettings *settings)
 {

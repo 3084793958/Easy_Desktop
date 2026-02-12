@@ -388,6 +388,25 @@ Desktop_Background::Desktop_Background(QWidget *parent)
     scene->addItem(video_item);
     image_movie->setCacheMode(QMovie::CacheAll);
     graphicsView->setCacheMode(QGraphicsView::CacheBackground);
+    holding_pos_timer->setInterval(50);
+    connect(holding_pos_timer, &QTimer::timeout, this, [=]
+    {
+        if (holding_time < holding_max_time)
+        {
+            holding_time++;//可能不优雅,但想不到更好的方法.positionChanged(qint64 position)并不稳定,load时无效
+            if (media_player->duration() != 0)
+            {
+                media_player->setPosition(media_player->duration() * holding_value / 100);
+                holding_pos_timer->stop();
+                holding_time = 0;
+            }
+        }
+        else
+        {
+            holding_pos_timer->stop();
+            holding_time = 0;
+        }
+    });
     connect(media_player, &QMediaPlayer::stateChanged,this,[=](QMediaPlayer::State new_state)
     {
         if (sending_info)
@@ -479,7 +498,9 @@ void Desktop_Background::Set_Volume(int value)
 }
 void Desktop_Background::Set_Position(int value)
 {
-    media_player->setPosition(media_player->duration() * value / 100);
+    holding_value = value;
+    holding_time = 0;
+    holding_pos_timer->start();
     image_movie->jumpToFrame(image_movie->frameCount() * value / 100);
 }
 static bool sort_data(Path_Info list1, Path_Info list2)

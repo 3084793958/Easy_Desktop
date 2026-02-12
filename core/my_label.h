@@ -16,6 +16,7 @@ public:
     QList<My_Label *> *my_label_list;
     virtual void save(QSettings *settings);
     virtual void load(QSettings *settings);
+    virtual void set_icon(QString checked_icon_path);
 private:
     Out_line_Label *main_label = new Out_line_Label(this->get_self());
     QMovie *movie = new QMovie;

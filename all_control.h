@@ -23,6 +23,9 @@ public:
     QColor theme_color = QColor(0,129,255,255);
     QColor theme_background_color = QColor(255,255,255,75);
     QColor theme_text_color = QColor(0,0,0,255);
+    QColor select_text_color = QColor(255,255,255,255);
+    QColor disabled_text_color = QColor(131,136,139,255);
+    QString checked_icon_path = ":/base/this.svg";
     QRect screen_geometry = QApplication::desktop()->geometry();
     QString file_open_way_process = "dde-file-manager -d -o";
     QString file_open_path_process = "dde-file-manager --show-item";
@@ -41,7 +44,7 @@ private:
     QTimer *workspace_timer = new QTimer;
     QTimer *auto_save_timer = new QTimer;
 private slots:
-    void dbus_slot(int m_dbus_id, QString m_method, QString m_argument);
+    void dbus_slot(QDBusMessage message);
 };
 
 #endif // ALL_CONTROL_H

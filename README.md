@@ -1,151 +1,64 @@
 # Easy_Desktop
 一个非常规桌面
 
-![1.png](screenshots/p1.png)
+## 软件截图
 
-## 开发环境
-qt5.15.8
+![p1.png](screenshots/p1.png)
 
-该软件依赖X11环境(窗口抬升,嵌入窗口,壁纸鼠标效果需要调用X11的函数)
-## 结构
-desktop_background.h/.cpp : 壁纸显示(图片为QLabel,视频为QGraphicsView)
+![p2.png](screenshots/p2.png)
 
-setting_widget.h/.cpp : 壁纸设置
+![table.png](screenshots/table.png)
 
-desktop_main.h/.cpp : 控件显示与总控制
+## 安装方法
 
-keyscan.h/.cpp : 实现鼠标效果
+1.安装依赖
 
-media_widgetaction.h/.cpp : 控制壁纸声音,速率
+tips:Easy_Desktop运行依赖libqt5charts5
 
-all_control.h/.cpp : 统一窗口
+安装依赖指令:
 
-core文件夹 : 控件类
+```
+sudo apt install libqt5charts5
+```
 
-控件类继承 core/basic_widget.h/.cpp
+2.安装本体
 
-widget_control.hpp仅为了方便管理,无特殊效果
+[https://github.com/3084793958/Easy_Desktop/releases/download/26.2.12/Easy_Desktop](https://github.com/3084793958/Easy_Desktop/releases/download/26.2.12/Easy_Desktop)
 
-"储存"与"读取"是手动的,不是自动的
-## 控件
-1.时钟
+记得储存,Easy_Desktop不会帮你储存(/tmp那个是用来备份的)
 
-2.文本框(以html格式储存)
+## 命令行控制服务
 
-3.标签
+| 选项/方法 | 描述 |
+|-----------|------|
+| **命令行选项** | |
+| `-config, -C <路径>` | 指定配置文件路径 |
+| `-workspace, -WS <索引号>` | 设置工作空间索引 (0 表示任意空间) |
+| `-dbus_id, -D_I <ID>` | 设置 dbus_id 号 |
+| `-always_refresh, -A_R <布尔值>` | 是否持续刷新空间结构 (true/false) |
+| `-Geometry, -G <x y width height>` | 设置空间结构 (设置后 `-always_refresh` 自动为 false) |
+| `-send_dbus, -S_D <dbus_id> <方法> [参数]` | 发送 DBus 消息 |
+| | |
+| **DBus 方法** | |
+| `save` | 储存 |
+| `load` | 读取 |
+| `exit` | 退出 |
+| `config <路径>` | 设置配置文件路径 (不自动加载) |
+| `workspace <索引>` | 切换工作空间 |
+| `geometry <值>` | 设置空间结构或刷新模式|
+| | 格式1: `x y width height` (禁用自动刷新) |
+| | 格式2: `true/false` (设置自动刷新开关) |
+| `volume_slider <数值>` | 设置音量进度条 (取值范围: 0-100 的整数) |
+| `position_slider <数值>` | 设置位置进度条 (取值范围: 0-100 的整数) |
+| `speed_slider <数值>` | 设置速度进度条 (取值范围: 10-300 的整数) |
+| `set_wallpaper <wallpaper_id>` | 设置壁纸 |
+| `remove_wallpaper <wallpaper_id>` | 移除壁纸 |
+| `add_wallpaper [参数]` | 添加壁纸，参数如下: ID(UInt32) 名称(String) 显示方式(String) [图像:true/视频:false] 路径(String) 缩放方式(String) [Scale_Type::No/Each/Width/Height/Short/Long/Full] 居中(String) [true/false] 鼠标效果(String) [true/false] 鼠标效果宽度系数(Double) 鼠标效果高度系数(Double) X轴偏移量(Int32) Y轴偏移量(Int32) 抗锯齿(String) [true/false] |
+| | |
+| **使用示例** | |
+| `./Easy_Desktop -G 0 0 1440 900` | 设置空间结构示例 |
+| `./Easy_Desktop -S_D 0 add_wallpaper 0 deepin true /usr/share/wallpapers/deepin/Deepin-Technology-Brand-Logo.jpg Scale_Type::Full true true 0.1 0.1 0 0 true` | DBus 消息发送示例 |
 
-4.进程按钮
+## 开发版本
 
-5.文件按钮
-
-6.进程/文件按钮载体
-
-7.内嵌窗口(仍有很多缺陷,但我无法解决)
-## 截图
-![2.png](screenshots/p2.png)
-
-![3.png](screenshots/p3.png)
-
-![4.png](screenshots/p4.png)
-
-![s1.png](screenshots/s1.png)
-
-![1.gif](screenshots/Easy_Desktop.gif)
-
-## 演示
-演示视频:[bilibili](https://www.bilibili.com/video/BV1eUpfzPEHf/)
-## 储存
-储存路径: ~/.local/lib/easy_desktop/config.ini
-
-# 26.1.3更新
-## 新控件
-CPU,内存,网络,磁盘,声音服务对应的可视化图标 //(要对 空指针,爆列表 敏锐点)
-
-![2p1.png](screenshots/2p1.png)
-
-"内存"中RAM和SWap是分开的
-
-若在"网络" "磁盘"中使用非等差轴,请注意单位
-
-由于"声音服务"需要连续密集侦测,故耗能较高
-## 窗口
-新增"实验设置"窗口
-
-注:除"置顶" "置顶侦测" "鼠标侦测"之外的数据不会存储到config中,可用运行参数对其设置
-
-![2p2.png](screenshots/2p2.png)
-## 运行参数
-可以使用终端控制Easy_Desktop
-
-如: ./Easy_Desktop -C ./config.ini 可使./config.ini作为./Easy_Desktop的配置文件
-
-![2p3.png](screenshots/2p3.png)
-
-## 其他
-1.对进程按钮增加hover效果
-
-2.允许批量导入图像,视频作为壁纸
-
-3.对于多屏幕可以通过修改空间结构(geometry)的方式得到如下效果
-
-![2p4.png](screenshots/2p4.png)
-
-![2p5.png](screenshots/2p5.png)
-
-4.通过设置工作区可使得Easy_Desktop仅在某工作区显示(0为所有工作区)
-
-5.依靠dbus,只要知道某个Easy_Desktop的dbus_id,便可以控制他
-## 依赖
-运行需要依赖 libqt5charts5
-
-安装: sudo apt install libqt5charts5
-## 未解决的问题
-不知道什么原因,当运行参数(argv[i])为"-geometry"时,会判定该参数与下一参数结合(如 -geometry 0 0 0 0被分解成-geometry 0, 0, 0, 0)
-
-这会导致跳转到最后一个else分支,但用"-Geometry"能正常工作
-
-但用纯C++写两个都能过(编译命令:g++ app.cpp)
-## 链接
-项目地址:[https://github.com/3084793958/Easy_Desktop](https://github.com/3084793958/Easy_Desktop)
-
-前传: [https://bbs.deepin.org/post/291712](https://bbs.deepin.org/post/291712)
-# 26.1.25更新
-## 新控件
-树状文件视图
-
-![3p1.png](screenshots/3p1.png)
-
-## dbus接收
-
-My_Label新增dbus接收服务
-
-![3p5.png](screenshots/3p5.png)
-
-![3p2.png](screenshots/3p2.png)
-
-歌词是[music-island(插件)](https://github.com/3084793958/music-island-B-QT-P)的dbus服务,上周已更新
-
-## 外观
-
-允许修改菜单的颜色(这里是将alpha调低)(看起来好像比正常的小一点)
-
-![3p4.png](screenshots/3p4.png)
-
-## 实验设置
-
-允许拖入文件创建file_widget
-
-顺便在my_process_carrier做了批量导入
-
-允许修改"打开文件所在位置"所调用的程序(之前一直是dde-file-manager)
-
-![3p3.png](screenshots/3p3.png)
-
-## 备份机制
-
-每30s会在/tmp/Easy_Desktop/backup_config.ini中备份
-
-## 链接
-项目地址:[https://github.com/3084793958/Easy_Desktop](https://github.com/3084793958/Easy_Desktop)
-
-前传: [https://bbs.deepin.org/post/294712](https://bbs.deepin.org/post/294712)
+QT5.15.8 , C++11
