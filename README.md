@@ -23,7 +23,7 @@ sudo apt install libqt5charts5
 
 2.安装本体
 
-[https://github.com/3084793958/Easy_Desktop/releases/download/26.2.12/Easy_Desktop](https://github.com/3084793958/Easy_Desktop/releases/download/26.2.12/Easy_Desktop)
+[https://github.com/3084793958/Easy_Desktop/releases/download/26.2.16/Easy_Desktop](https://github.com/3084793958/Easy_Desktop/releases/download/26.2.16/Easy_Desktop)
 
 记得储存,Easy_Desktop不会帮你储存(/tmp那个是用来备份的)
 
