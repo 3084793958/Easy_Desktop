@@ -62,6 +62,7 @@ public:
     void set_extra_menu(QString data);
     void parseMenuItemsArray(QMenu *parentMenu, const QJsonArray &itemsArray, bool checkableMenu, bool singleCheck);
     void parseMenuItemsArray(const QJsonArray &itemsArray, bool checkableMenu, bool singleCheck);
+    void plugin_position_gui_update();
 signals:
     void Released();
     void Hover();
@@ -78,6 +79,11 @@ private:
     QAction *follow_plugin_show_action = new QAction(tr("插件指导窗口大小"), this);
     QAction *update_plugin_action = new QAction(tr("强制更新插件"), this);
     QAction *only_hide_widget_action = new QAction(tr("移除插件"), this);
+    QMenu *set_plugin_position = new QMenu(tr("设置插件位置"), this);
+    QAction *set_top_position = new QAction(tr("Top"), this);
+    QAction *set_right_position = new QAction(tr("Right"), this);
+    QAction *set_bottom_position = new QAction(tr("Bottom"), this);
+    QAction *set_left_position = new QAction(tr("Left"), this);
     QMenu *plugin_extra_context_menu = new QMenu(this);
     QTimer *hover_timer = new QTimer;
     QPoint press_event_point = QPoint(0, 0);
@@ -111,6 +117,7 @@ public:
     void disable_plugin_update();
     void click_call();
     void update_plugin();
+    void update_plugin_position();
     WId WinId;
     void X11_Raise();
     QList<Plugin_Root *> *plugin_root_list;
@@ -123,6 +130,7 @@ public:
     QString style_sheet = "";
     QString plugin_itemKey= "";
     bool has_been_closed = false;
+    Dock::Position plugin_position = Dock::Position::Top;
 private:
     QWidget *desktop_parent = nullptr;
     int *now_page;

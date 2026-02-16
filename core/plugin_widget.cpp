@@ -174,7 +174,6 @@ Plugin_Root::Plugin_Root(QWidget *parent)
 {
     desktop_parent = parent;
     item_carrier->is_item = true;
-    //load_plugin("/home/deepin/Desktop/QT/music-island-B-QT-P-main/build-music-island-unknown-Debug/libMusic-Island.so");
     connect(item_carrier, &Plugin_Item_Widget::real_close_event, this, [=]
     {
         unload_plugin();
@@ -270,6 +269,19 @@ void Plugin_Root::update_plugin()
         if (plugin_interface)
         {
             plugin_controller->itemUpdate(plugin_interface, plugin_itemKey);
+            plugin_interface->positionChanged(plugin_position);
+        }
+    }
+}
+void Plugin_Root::update_plugin_position()
+{
+    QObject *pluginInstance = plugin_loader->instance();
+    if (pluginInstance)
+    {
+        PluginsItemInterface *plugin_interface = qobject_cast<PluginsItemInterface *>(pluginInstance);
+        if (plugin_interface)
+        {
+            plugin_interface->positionChanged(plugin_position);
         }
     }
 }
@@ -385,6 +397,7 @@ void Plugin_Root::load_plugin(QString filepath)
     {
         plugin_interface->init(plugin_controller);
         plugin_controller->itemUpdate(plugin_interface, "");
+        plugin_interface->positionChanged(plugin_position);
     }
 }
 void Plugin_Root::unload_plugin()
@@ -421,6 +434,7 @@ void Plugin_Root::save(QSettings *settings)
     settings->setValue("plugin_path", plugin_path);
     settings->setValue("tips_always_show", tips_always_show);
     settings->setValue("plugin_disabled", plugin_disabled);
+    settings->setValue("plugin_position", plugin_position);
     item_carrier->P_save(settings, "item_");
     tips_carrier->P_save(settings, "tips_");
     popup_carrier->P_save(settings, "popup_");
@@ -431,10 +445,39 @@ void Plugin_Root::load(QSettings *settings)
     plugin_path = settings->value("plugin_path", "").toString();
     tips_always_show = settings->value("tips_always_show", false).toBool();
     plugin_disabled = settings->value("plugin_disabled", false).toBool();
+    int position_num = settings->value("plugin_position", 0).toInt();
+    switch (position_num)
+    {
+    case 0:
+    {
+        plugin_position = Dock::Position::Top;
+        break;
+    }
+    case 1:
+    {
+        plugin_position = Dock::Position::Right;
+        break;
+    }
+    case 2:
+    {
+        plugin_position = Dock::Position::Bottom;
+        break;
+    }
+    case 3:
+    {
+        plugin_position = Dock::Position::Left;
+        break;
+    }
+    default:
+    {
+        break;
+    }
+    }
     item_carrier->p_load(settings, "item_");
     tips_carrier->p_load(settings, "tips_");
     popup_carrier->p_load(settings, "popup_");
     load_plugin(plugin_path);
+    item_carrier->plugin_position_gui_update();
     update_plugin();
     emit item_carrier->size_changed(item_carrier->get_self()->size());
     emit tips_carrier->size_changed(tips_carrier->get_self()->size());
@@ -699,6 +742,18 @@ Plugin_Item_Widget::Plugin_Item_Widget(QWidget *parent, Plugin_Root *plugin_root
     popup_always_show_action->setIcon(QIcon(":/base/this.svg"));
     disable_plugin_action->setIconVisibleInMenu(false);
     disable_plugin_action->setIcon(QIcon(":/base/this.svg"));
+    set_top_position->setIconVisibleInMenu(true);
+    set_top_position->setIcon(QIcon(":/base/this.svg"));
+    set_right_position->setIconVisibleInMenu(false);
+    set_right_position->setIcon(QIcon(":/base/this.svg"));
+    set_bottom_position->setIconVisibleInMenu(false);
+    set_bottom_position->setIcon(QIcon(":/base/this.svg"));
+    set_left_position->setIconVisibleInMenu(false);
+    set_left_position->setIcon(QIcon(":/base/this.svg"));
+    set_plugin_position->addAction(set_top_position);
+    set_plugin_position->addAction(set_right_position);
+    set_plugin_position->addAction(set_bottom_position);
+    set_plugin_position->addAction(set_left_position);
     menu->insertAction(set_distance_action, set_plugin_path_action);
     menu->insertAction(set_distance_action, tips_always_show_action);
     menu->insertAction(set_distance_action, popup_always_show_action);
@@ -706,6 +761,7 @@ Plugin_Item_Widget::Plugin_Item_Widget(QWidget *parent, Plugin_Root *plugin_root
     menu->insertAction(set_distance_action, disable_plugin_action);
     menu->insertAction(set_distance_action, only_hide_widget_action);
     menu->insertAction(set_distance_action, update_plugin_action);
+    menu->insertMenu(set_distance_action, set_plugin_position);
     hover_timer->setSingleShot(true);
     hover_timer->setInterval(1000);
     connect(hover_timer, &QTimer::timeout, this, [=]
@@ -1009,9 +1065,87 @@ void Plugin_Item_Widget::contextMenuEvent(QContextMenuEvent *event)
         delta_y = new_y;
         emit Basic_Widget::size_changed(this->get_self()->size());
     }
+    else if (know_what == set_top_position)
+    {
+        set_top_position->setIconVisibleInMenu(true);
+        set_right_position->setIconVisibleInMenu(false);
+        set_bottom_position->setIconVisibleInMenu(false);
+        set_left_position->setIconVisibleInMenu(false);
+        root->plugin_position = Dock::Position::Top;
+        root->update_plugin_position();
+    }
+    else if (know_what == set_right_position)
+    {
+        set_top_position->setIconVisibleInMenu(false);
+        set_right_position->setIconVisibleInMenu(true);
+        set_bottom_position->setIconVisibleInMenu(false);
+        set_left_position->setIconVisibleInMenu(false);
+        root->plugin_position = Dock::Position::Right;
+        root->update_plugin_position();
+    }
+    else if (know_what == set_bottom_position)
+    {
+        set_top_position->setIconVisibleInMenu(false);
+        set_right_position->setIconVisibleInMenu(false);
+        set_bottom_position->setIconVisibleInMenu(true);
+        set_left_position->setIconVisibleInMenu(false);
+        root->plugin_position = Dock::Position::Bottom;
+        root->update_plugin_position();
+    }
+    else if (know_what == set_left_position)
+    {
+        set_top_position->setIconVisibleInMenu(false);
+        set_right_position->setIconVisibleInMenu(false);
+        set_bottom_position->setIconVisibleInMenu(false);
+        set_left_position->setIconVisibleInMenu(true);
+        root->plugin_position = Dock::Position::Left;
+        root->update_plugin_position();
+    }
     else
     {
         basic_action_func(know_what);
+    }
+}
+void Plugin_Item_Widget::plugin_position_gui_update()
+{
+    switch (root->plugin_position)
+    {
+    case Dock::Position::Top:
+    {
+        set_top_position->setIconVisibleInMenu(true);
+        set_right_position->setIconVisibleInMenu(false);
+        set_bottom_position->setIconVisibleInMenu(false);
+        set_left_position->setIconVisibleInMenu(false);
+        root->update_plugin_position();
+        break;
+    }
+    case Dock::Position::Right:
+    {
+        set_top_position->setIconVisibleInMenu(false);
+        set_right_position->setIconVisibleInMenu(true);
+        set_bottom_position->setIconVisibleInMenu(false);
+        set_left_position->setIconVisibleInMenu(false);
+        root->update_plugin_position();
+        break;
+    }
+    case Dock::Position::Bottom:
+    {
+        set_top_position->setIconVisibleInMenu(false);
+        set_right_position->setIconVisibleInMenu(false);
+        set_bottom_position->setIconVisibleInMenu(true);
+        set_left_position->setIconVisibleInMenu(false);
+        root->update_plugin_position();
+        break;
+    }
+    case Dock::Position::Left:
+    {
+        set_top_position->setIconVisibleInMenu(false);
+        set_right_position->setIconVisibleInMenu(false);
+        set_bottom_position->setIconVisibleInMenu(false);
+        set_left_position->setIconVisibleInMenu(true);
+        root->update_plugin_position();
+        break;
+    }
     }
 }
 void Plugin_Item_Widget::mousePressEvent(QMouseEvent *event)

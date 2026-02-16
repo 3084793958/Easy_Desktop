@@ -1,4 +1,5 @@
 QT += core gui widgets multimedia multimediawidgets x11extras dbus charts
+QT += dtkcore dtkgui dtkwidget
 LIBS += -lX11 -lXtst -lpulse
 CONFIG += c++11
 TARGET = Easy_Desktop

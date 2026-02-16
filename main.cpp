@@ -25,9 +25,10 @@
 #include <unistd.h>
 #include <QDBusConnection>
 #include <QDBusMessage>
+#include <DApplication>
 int main(int argc, char* argv[])
 {
-    QApplication app(argc, argv);
+    Dtk::Widget::DApplication app(argc, argv);
     QString load_path = QDir::homePath() + "/.local/lib/easy_desktop/config.ini";
     int workspace = 0;
     int dbus_id = 0;

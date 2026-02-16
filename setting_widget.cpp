@@ -196,6 +196,10 @@ Setting_Widget::Setting_Widget(QWidget *parent)
                 break;
             }
         }
+        if (path_list.isEmpty())
+        {
+            path_list<<Path_Info(0,"",true,"",Scale_Type::Full,true,false,0,0,0,0,true);
+        }
         Setting_Widget::private_update();
     });
     choose_id_text->move(0, 365);
@@ -703,6 +707,10 @@ void Setting_Widget::remove_wallpaper(int wallpaper_id)
             break;
         }
     }
+    if (path_list.isEmpty())
+    {
+        path_list<<Path_Info(0,"",true,"",Scale_Type::Full,true,false,0,0,0,0,true);
+    }
     Setting_Widget::private_update();
 }
 void Setting_Widget::add_wallpaper(uint m_id, QString m_name, bool m_is_image, QString m_path, Scale_Type m_scale_type, bool m_center, bool m_mouse_effect,
@@ -763,6 +771,7 @@ bool Setting_Widget::eventFilter(QObject *watched, QEvent *event)
     {
         if (event->type() == QEvent::MouseButtonDblClick)
         {
+            if (id_box_list.empty()) return QObject::eventFilter(watched, event);
             choose_id_box->setValue(id_box_list[table_widget->currentRow()]->value());
         }
     }
