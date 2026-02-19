@@ -132,8 +132,8 @@ All_Control::All_Control(QWidget *parent, QString m_load_path, int m_workspace, 
             stay_on_top_timer->stop();
         }
         background->btnCheck->signal_delta_time = keyscan_timer;
-        Move_To_Workspace(workspace);
         Refresh_geometry(screen_geometry);
+        Move_To_Workspace(workspace);
         setStyleSheet(QString("QMenu{border-radius:10px 10px;background:rgba(%1,%2,%3,%4);margin:0px -1px 0px -1px;padding-top:8px;padding-bottom:8px;icon-size:20px;border-radius:10px 10px}"
                               "QMenu::item{color:rgba(%5,%6,%7,%8);background:rgba(0,0,0,0);}"
                               "QMenu::item:disabled{color:rgba(%9,%10,%11,%12)}"
