@@ -40,6 +40,13 @@ public:
     virtual void save(QSettings *settings);
     virtual void load(QSettings *settings);
     virtual void set_icon(QString checked_icon_path);
+    enum class Button_Pos
+    {
+        Top_Left,
+        Top_Right,
+        Bottom_Left,
+        Bottom_Right
+    };
 signals:
     void close_signals();
     void size_changed(QSize size);
@@ -48,7 +55,14 @@ public:
     QAction *move_to_page_action = new QAction(tr("移动到页"), this);
     QAction *set_background_radius = new QAction(tr("设置圆角大小"), this);
     QAction *set_background_color = new QAction(tr("设置背景颜色"), this);
-    QAction *show_close_button = new QAction(tr("显示关闭窗口键"), this);
+    QAction *show_close_button = new QAction(tr("显示关闭窗口按钮"), this);
+    QMenu *close_button_pos_menu = new QMenu(tr("关闭窗口按钮位置"), this);
+    QAction *close_button_pos_top_left = new QAction(tr("左上"), this);
+    QAction *close_button_pos_top_right = new QAction(tr("右上"), this);
+    QAction *close_button_pos_bottom_left = new QAction(tr("左下"), this);
+    QAction *close_button_pos_bottom_right = new QAction(tr("右下"), this);
+    Button_Pos close_button_pos = Button_Pos::Top_Right;
+    void update_close_button_pos();
     QAction *set_pos_action = new QAction(tr("设置位置"), this);
     QAction *set_size_action = new QAction(tr("设置大小"), this);
     QAction *close_action = new QAction(tr("关闭窗口"), this);

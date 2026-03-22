@@ -21,7 +21,7 @@ private:
     QVector<double> Rec_data_vec;
     QString Tra_str = "";
     QString Rec_str = "";
-    QTimer *updateTimer = new QTimer;
+    QTimer *updateTimer = new QTimer(this);
     int update_time = 1000;
     int vector_long = 60;
     int axis_type = 0;

@@ -28,7 +28,7 @@ private:
     QAction *set_program = new QAction(tr("设置程序"), this);
     QAction *break_program = new QAction(tr("脱离"), this);
     QAction *focus_action = new QAction(tr("聚焦"), this);
-    QAction *set_distance_action = new QAction(tr("设置距离"), this);
+    QAction *set_distance_action = new QAction(tr("设置间距"), this);
     QAction *set_delta_action = new QAction(tr("设置偏移"), this);
     void update_container();
     QString get_window_class(Display *display, Window window);

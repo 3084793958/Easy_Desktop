@@ -90,7 +90,7 @@ private:
     QGraphicsView *graphicsView = new QGraphicsView(scene, this);
     QMediaPlayer *media_player = new QMediaPlayer(this);
     QGraphicsVideoItem *video_item = new QGraphicsVideoItem;
-    QTimer *holding_pos_timer = new QTimer;
+    QTimer *holding_pos_timer = new QTimer(this);
     int holding_time = 0;
     int holding_value = 0;
     int holding_max_time = 10;

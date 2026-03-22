@@ -9,11 +9,12 @@
 #include "core/my_program_container.h"
 #include "file_tree.h"
 #include "plugin_widget.h"
-
+#ifdef USE_CHART
 #include "core/chart/basic_chart.h"
 #include "core/chart/cpu_chart.h"
 #include "core/chart/ram_chart.h"
 #include "core/chart/net_chart.h"
 #include "core/chart/disk_chart.h"
 #include "core/chart/pulseaudio_chart.h"
+#endif
 #endif // WIDGET_CONTROL_HPP

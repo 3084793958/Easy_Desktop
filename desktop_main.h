@@ -118,11 +118,13 @@ private:
     QList<My_Program_Container *> my_program_container_list;
     QList<Process_Widget *> process_widget_list;
     QList<File_Tree *> file_tree_list;
+#ifdef USE_CHART
     QList<CPU_Chart *> cpu_chart_list;
     QList<RAM_Chart *> ram_chart_list;
     QList<NET_Chart *> net_chart_list;
     QList<DISK_Chart *> disk_chart_list;
     QList<PulseAudio_Chart *> pulseaudio_chart_list;
+#endif
     QList<Plugin_Root *> plugin_root_list;
     //ACTION
     QMenu *menu=new QMenu(this);
@@ -139,12 +141,14 @@ private:
     QAction *my_process_Carrier_action = new QAction(tr("进程/文件按钮载体"), this);
     QAction *my_program_INNER_action = new QAction(tr("内嵌窗口"), this);
     QAction *plugin_widget_action = new QAction(tr("插件窗口"), this);
+#ifdef USE_CHART
     QMenu *my_chart_menu = new QMenu(tr("可视化图表"), this);
     QAction *cpu_chart_action = new QAction(tr("CPU"), this);
     QAction *ram_chart_action = new QAction(tr("内存"), this);
     QAction *net_chart_action = new QAction(tr("网络"), this);
     QAction *disk_chart_action = new QAction(tr("磁盘"), this);
     QAction *pulseaudio_chart_action = new QAction(tr("声音服务"), this);
+#endif
     QMenu *desktop_control_action = new QMenu(tr("桌面控制"),this);
     QAction *lock_desktop = new QAction(tr("锚定桌面"),this);
     QAction *unlock_desktop = new QAction(tr("取消锚定"),this);
@@ -169,7 +173,7 @@ private:
     int now_page = 0;//INDEX
     bool allow_dock_show = true;
     int desktop_move_x = 0;
-    QTimer *move_Timer = new QTimer;
+    QTimer *move_Timer = new QTimer(this);
     int run_time = 0;
     int timer_move_x = 0;
     bool locking_desktop = false;

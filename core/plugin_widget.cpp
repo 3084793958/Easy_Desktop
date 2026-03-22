@@ -34,47 +34,11 @@ void PluginController::itemAdded(PluginsItemInterface * const itemInter, const Q
 {
     if (!itemInter) return;
     if (root->has_been_closed) return;
-    root->item_widget = itemInter->itemWidget(itemKey);
-    root->tips_widget = itemInter->itemTipsWidget(itemKey);
-    root->popup_widget = itemInter->itemPopupApplet(itemKey);
-    root->item_carrier->remove_widget();
-    root->item_carrier->set_widget(root->item_widget);
-    if (root->item_widget)
-    {
-        root->item_widget->setStyleSheet(root->style_sheet);
-        root->item_widget->update();
-        root->item_widget->show();
-    }
-    if (root->follow_plugin_show_after_load) root->item_carrier->plugin_set_size();
-    root->item_carrier->call_to_show();
-
-    root->tips_carrier->remove_widget();
-    root->tips_carrier->set_widget(root->tips_widget);
-    if (root->tips_widget)
-    {
-        root->tips_widget->setStyleSheet(root->style_sheet);
-        root->tips_widget->update();
-        root->tips_widget->show();
-    }
-    if (root->follow_plugin_show_after_load) root->tips_carrier->plugin_set_size();
-    if (root->tips_always_show) root->tips_carrier->call_to_show();
-
-    root->popup_carrier->remove_widget();
-    root->popup_carrier->set_widget(root->popup_widget);
-    if (root->popup_widget)
-    {
-        root->popup_widget->setStyleSheet(root->style_sheet);
-        root->popup_widget->update();
-        root->popup_widget->show();
-    }
-    if (root->follow_plugin_show_after_load) root->popup_carrier->plugin_set_size();
-    if (root->popup_always_show) root->popup_carrier->call_to_show();
-
-    if (root->follow_plugin_show_after_load)
-    {
-        root->follow_plugin_show_after_load = false;
-    }
     root->plugin_itemKey = itemKey;
+    root->update_plugin(itemInter, itemKey);
+    root->item_carrier->plugin_set_size(itemInter);
+    root->popup_carrier->plugin_set_size(itemInter);
+    root->tips_carrier->plugin_set_size(itemInter);
     QString extra_Data = itemInter->itemContextMenu(itemKey);
     if (extra_Data.isNull() || extra_Data.isEmpty())
     {
@@ -93,42 +57,8 @@ void PluginController::itemUpdate(PluginsItemInterface * const itemInter, const 
 {
     if (!itemInter) return;
     if (root->has_been_closed) return;
-    root->item_widget = itemInter->itemWidget(itemKey);
-    root->tips_widget = itemInter->itemTipsWidget(itemKey);
-    root->popup_widget = itemInter->itemPopupApplet(itemKey);
-    root->item_carrier->remove_widget();
-    root->item_carrier->set_widget(root->item_widget);
-    if (root->item_widget)
-    {
-        root->item_widget->setStyleSheet(root->style_sheet);
-        root->item_widget->update();
-        root->item_widget->show();
-    }
-    if (root->follow_plugin_show_after_load) root->item_carrier->plugin_set_size();
-    root->item_carrier->call_to_show();
-
-    root->tips_carrier->remove_widget();
-    root->tips_carrier->set_widget(root->tips_widget);
-    if (root->tips_widget)
-    {
-        root->tips_widget->setStyleSheet(root->style_sheet);
-        root->tips_widget->update();
-        root->tips_widget->show();
-    }
-    if (root->follow_plugin_show_after_load) root->tips_carrier->plugin_set_size();
-    if (root->tips_always_show) root->tips_carrier->call_to_show();
-
-    root->popup_carrier->remove_widget();
-    root->popup_carrier->set_widget(root->popup_widget);
-    if (root->popup_widget)
-    {
-        root->popup_widget->setStyleSheet(root->style_sheet);
-        root->popup_widget->update();
-        root->popup_widget->show();
-    }
-    if (root->follow_plugin_show_after_load) root->popup_carrier->plugin_set_size();
-    if (root->popup_always_show) root->popup_carrier->call_to_show();
     root->plugin_itemKey = itemKey;
+    root->update_plugin(itemInter, itemKey);
     //itemInter->itemContextMenu(itemKey);不能在update中加载
     root->disable_plugin_update();
 }
@@ -173,30 +103,21 @@ Plugin_Root::Plugin_Root(QWidget *parent)
     :QObject(parent)
 {
     desktop_parent = parent;
-    item_carrier->is_item = true;
+    item_carrier->plugin_carrier_type = PluginsItemInterface::Carrier_Type::Plugin_Item;
     connect(item_carrier, &Plugin_Item_Widget::real_close_event, this, [=]
     {
-        unload_plugin();
-        if (plugin_root_list)
-        {
-            plugin_root_list->removeOne(this);
-        }
-        has_been_closed = true;
-        this->deleteLater();
+        close_plugin(true);
     });
     connect(item_carrier, &Plugin_Item_Widget::Released, this, [=]
     {
+        if (will_fully_remove) return;
         if (popup_always_show || popup_carrier->isHidden())
         {
             if (plugin_disabled) return;
-            QObject *pluginInstance = plugin_loader->instance();
-            if (pluginInstance)
+            PluginsItemInterface *plugin_interface = this->get_interface();
+            if (plugin_interface)
             {
-                PluginsItemInterface *plugin_interface = qobject_cast<PluginsItemInterface *>(pluginInstance);
-                if (plugin_interface)
-                {
-                    plugin_controller->itemUpdate(plugin_interface, plugin_itemKey);
-                }
+                plugin_controller->itemUpdate(plugin_interface, plugin_itemKey);
             }
             popup_carrier->call_to_show();
         }
@@ -207,20 +128,19 @@ Plugin_Root::Plugin_Root(QWidget *parent)
     });
     connect(item_carrier, &Plugin_Item_Widget::Hover, this, [=]
     {
+        if (will_fully_remove) return;
         if (plugin_disabled) return;
-        QObject *pluginInstance = plugin_loader->instance();
-        if (pluginInstance)
+        PluginsItemInterface *plugin_interface = this->get_interface();
+        if (plugin_interface)
         {
-            PluginsItemInterface *plugin_interface = qobject_cast<PluginsItemInterface *>(pluginInstance);
-            if (plugin_interface)
-            {
-                plugin_controller->itemUpdate(plugin_interface, plugin_itemKey);
-            }
+            plugin_controller->itemUpdate(plugin_interface, plugin_itemKey);
         }
         tips_carrier->call_to_show();
     });
     connect(item_carrier, &Plugin_Item_Widget::Hover_end, this, [=]
     {
+        if (will_fully_remove) return;
+        if (plugin_disabled) return;
         if (!tips_always_show)
         {
             tips_carrier->hide();
@@ -229,88 +149,164 @@ Plugin_Root::Plugin_Root(QWidget *parent)
     connect(item_carrier, &Plugin_Item_Widget::Call_X11_Raise, this, &Plugin_Root::X11_Raise);
     connect(item_carrier, &Plugin_Item_Widget::extra_menu_call, this, [=](QString menuId, bool checked)
     {
-        QObject *pluginInstance = plugin_loader->instance();
-        if (pluginInstance)
+        if (will_fully_remove) return;
+        if (plugin_disabled) return;
+        PluginsItemInterface *plugin_interface = this->get_interface();
+        if (plugin_interface)
         {
-            PluginsItemInterface *plugin_interface = qobject_cast<PluginsItemInterface *>(pluginInstance);
             plugin_interface->invokedMenuItem(plugin_itemKey, menuId, checked);
         }
     });
     connect(item_carrier, &Basic_Widget::close_signals, this, [=]
     {
-        only_hide();
+        close_plugin();
+    });
+    connect(update_sender, &P_Sender::sig_Send, this, [=]
+    {
+        PluginsItemInterface *plugin_interface = this->get_interface();
+        if (plugin_interface)
+        {
+            this->item_carrier->plugin_carrier_update(plugin_interface);
+            this->popup_carrier->plugin_carrier_update(plugin_interface);
+            this->tips_carrier->plugin_carrier_update(plugin_interface);
+        }
+    });
+    connect(send_data_sender, &P_Sender::sig_Send, this, [=]
+    {
+        PluginsItemInterface *plugin_interface = this->get_interface();
+        if (plugin_interface)
+        {
+            this->item_carrier->plugin_carrier_sending_data(plugin_interface);
+            this->popup_carrier->plugin_carrier_sending_data(plugin_interface);
+            this->tips_carrier->plugin_carrier_sending_data(plugin_interface);
+        }
     });
 }
 void Plugin_Root::click_call()
 {
-    QObject *pluginInstance = plugin_loader->instance();
-    if (pluginInstance)
+    if (will_fully_remove) return;
+    if (plugin_disabled) return;
+    PluginsItemInterface *plugin_interface = this->get_interface();
+    if (plugin_interface)
     {
-        PluginsItemInterface *plugin_interface = qobject_cast<PluginsItemInterface *>(pluginInstance);
-        if (plugin_interface)
-        {
-            QString command = plugin_interface->itemCommand(plugin_itemKey);
-            if (command.isNull() || command.isEmpty()) return;
-            QProcess process;
-            process.setProgram("/bin/bash");
-            process.setArguments(QStringList() << "-c" << command);
-            process.setStandardOutputFile("/dev/null");
-            process.setStandardErrorFile("/dev/null");
-            process.startDetached();
-        }
+        QString command = plugin_interface->itemCommand(plugin_itemKey);
+        if (command.isNull() || command.isEmpty()) return;
+        QProcess process;
+        process.setProgram("/bin/bash");
+        process.setArguments(QStringList() << "-c" << command);
+        process.setStandardOutputFile("/dev/null");
+        process.setStandardErrorFile("/dev/null");
+        process.startDetached();
     }
 }
 void Plugin_Root::update_plugin()
 {
-    QObject *pluginInstance = plugin_loader->instance();
-    if (pluginInstance)
+    if (will_fully_remove) return;
+    if (plugin_disabled) return;
+    PluginsItemInterface *plugin_interface = this->get_interface();
+    if (plugin_interface)
     {
-        PluginsItemInterface *plugin_interface = qobject_cast<PluginsItemInterface *>(pluginInstance);
-        if (plugin_interface)
-        {
-            plugin_controller->itemUpdate(plugin_interface, plugin_itemKey);
-            plugin_interface->positionChanged(plugin_position);
-        }
+        plugin_controller->itemUpdate(plugin_interface, plugin_itemKey);
+        plugin_interface->positionChanged(plugin_position);
+        this->item_carrier->plugin_carrier_sending_data(plugin_interface);
+        this->popup_carrier->plugin_carrier_sending_data(plugin_interface);
+        this->tips_carrier->plugin_carrier_sending_data(plugin_interface);
     }
 }
-void Plugin_Root::update_plugin_position()
+void Plugin_Root::update_plugin(PluginsItemInterface * const itemInter, const QString &itemKey)
 {
+    auto m_item_widget = itemInter->itemWidget(itemKey);
+    if (m_item_widget != item_widget)
+    {
+        item_widget = m_item_widget;
+        item_carrier->remove_widget();
+        item_carrier->set_widget(item_widget);
+    }
+    if (item_widget)
+    {
+        item_widget->setStyleSheet(style_sheet);
+        item_widget->update();
+        item_widget->show();
+    }
+    item_carrier->call_to_show();
+
+    auto m_tips_widget = itemInter->itemTipsWidget(itemKey);
+    if (m_tips_widget != tips_widget)
+    {
+        tips_widget = m_tips_widget;
+        tips_carrier->remove_widget();
+        tips_carrier->set_widget(tips_widget);
+    }
+    if (tips_widget)
+    {
+        tips_widget->setStyleSheet(style_sheet);
+        tips_widget->update();
+        tips_widget->show();
+    }
+    if (tips_always_show) tips_carrier->call_to_show();
+
+    auto m_popup_widget = itemInter->itemPopupApplet(itemKey);
+    if (m_popup_widget != popup_widget)
+    {
+        popup_widget = m_popup_widget;
+        popup_carrier->remove_widget();
+        popup_carrier->set_widget(popup_widget);
+    }
+    if (popup_widget)
+    {
+        popup_widget->setStyleSheet(style_sheet);
+        popup_widget->update();
+        popup_widget->show();
+    }
+    if (popup_always_show) popup_carrier->call_to_show();
+
+    item_carrier->plugin_carrier_update(itemInter);
+    popup_carrier->plugin_carrier_update(itemInter);
+    tips_carrier->plugin_carrier_update(itemInter);
+}
+PluginsItemInterface *Plugin_Root::get_interface()
+{
+    if (will_fully_remove) return nullptr;
     QObject *pluginInstance = plugin_loader->instance();
     if (pluginInstance)
     {
         PluginsItemInterface *plugin_interface = qobject_cast<PluginsItemInterface *>(pluginInstance);
-        if (plugin_interface)
-        {
-            plugin_interface->positionChanged(plugin_position);
-        }
+        if (plugin_interface) return plugin_interface;
     }
+    return nullptr;
+}
+bool Plugin_Root::is_Ext_plugin()
+{
+    QJsonObject root_obj = plugin_loader->metaData();
+    if (!root_obj.contains("MetaData")) return false;
+    QJsonValue meta_value = root_obj.value("MetaData");
+    if (!meta_value.isObject()) return false;
+    QJsonObject meta_obj = meta_value.toObject();
+    return meta_obj.contains("Ext_Plugin");
+}
+bool Plugin_Root::Contains_Ext_Plugin(QString Ext_name, QString plugin_controller_name)
+{
+    QStringList ext_list = Ext_name.split("|");
+    return ext_list.contains(plugin_controller_name);
 }
 Plugin_Root::~Plugin_Root()
 {
-    //this->setParent(nullptr);
-    only_hide();
-    return;//偷天还日
+    close_plugin();
+    if (!will_fully_remove) return;
 }
-void Plugin_Root::only_hide()
+void Plugin_Root::close_plugin(bool force_remove)
 {
-    this->setParent(nullptr);
+    if (has_been_closed) return;
+    bool has_unload = false;
     if (!plugin_loader->isLoaded())
     {
         unload_plugin();
-        if (plugin_root_list)
-        {
-            plugin_root_list->removeOne(this);
-        }
-        has_been_closed = true;
-        this->deleteLater();
-        return;
+        has_unload = true;
+        will_fully_remove = true;
     }
-    if (has_been_closed) return;
-    has_been_closed = true;
-    QObject *pluginInstance = plugin_loader->instance();
-    if (pluginInstance)
+    else
     {
-        PluginsItemInterface *plugin_interface = qobject_cast<PluginsItemInterface *>(pluginInstance);
+        PluginsItemInterface *plugin_interface = this->get_interface();
         if (plugin_interface)
         {
             if (plugin_interface->pluginIsAllowDisable())
@@ -322,11 +318,7 @@ void Plugin_Root::only_hide()
             }
         }
     }
-    if (plugin_root_list)
-    {
-        plugin_root_list->removeOne(this);
-    }
-    item_carrier->is_item = false;
+    item_carrier->plugin_carrier_type = PluginsItemInterface::Carrier_Type::Unknown;
     plugin_path.clear();
     item_carrier->remove_widget();
     if (item_widget) item_widget->hide();
@@ -337,9 +329,41 @@ void Plugin_Root::only_hide()
     item_carrier->hide();
     tips_carrier->hide();
     popup_carrier->hide();
-    item_carrier->deleteLater();
-    tips_carrier->deleteLater();
-    popup_carrier->deleteLater();
+    if (plugin_loader->isLoaded())
+    {
+        PluginsItemInterface *plugin_interface = this->get_interface();
+        if (plugin_interface)
+        {
+            if (is_Ext_plugin())
+            {
+                if (Plugin_Root::Contains_Ext_Plugin(plugin_interface->Ext_Name, "Easy_Desktop"))
+                {
+                    if (plugin_interface->Plugin_Version >= P_Version{0, 0, 1})
+                    {
+                        if (plugin_interface->pluginIsAllowUnload())
+                        {
+                            plugin_interface->pluginUnload();
+                            will_fully_remove = true;
+                            //hide_item
+                            plugin_loader->unload();
+                            has_unload = true;
+                            plugin_path.clear();
+                        }
+                    }
+                }
+            }
+        }
+    }
+    if (force_remove && !has_unload)
+    {
+        plugin_loader->unload();
+    }
+    if (plugin_root_list)
+    {
+        plugin_root_list->removeOne(this);
+    }
+    has_been_closed = true;
+    this->deleteLater();
 }
 void Plugin_Root::set_now_page(int *m_now_page)
 {
@@ -378,6 +402,7 @@ void Plugin_Root::call_update_plugin_carrier()
 }
 void Plugin_Root::load_plugin(QString filepath)
 {
+    if (has_been_closed) return;
     unload_plugin();
     if (filepath.isEmpty()) return;
     plugin_loader->setFileName(filepath);
@@ -398,21 +423,31 @@ void Plugin_Root::load_plugin(QString filepath)
         plugin_interface->init(plugin_controller);
         plugin_controller->itemUpdate(plugin_interface, "");
         plugin_interface->positionChanged(plugin_position);
+        if (is_Ext_plugin())
+        {
+            if (Plugin_Root::Contains_Ext_Plugin(plugin_interface->Ext_Name, "Easy_Desktop"))
+            {
+                if (plugin_interface->Plugin_Version >= P_Version{0, 0, 1})
+                {
+                    this->item_carrier->plugin_carrier_sending_data(plugin_interface);
+                    this->popup_carrier->plugin_carrier_sending_data(plugin_interface);
+                    this->tips_carrier->plugin_carrier_sending_data(plugin_interface);
+                    plugin_interface->pluginGetSender(update_sender, send_data_sender);
+                }
+            }
+        }
     }
 }
 void Plugin_Root::unload_plugin()
 {
+    if (has_been_closed) return;
     if (!plugin_loader->isLoaded()) return;
-    QObject *pluginInstance = plugin_loader->instance();
-    if (pluginInstance)
+    PluginsItemInterface *plugin_interface = this->get_interface();
+    if (plugin_interface)
     {
-        PluginsItemInterface *plugin_interface = qobject_cast<PluginsItemInterface *>(pluginInstance);
-        if (plugin_interface)
+        if (plugin_interface->pluginIsAllowDisable() && !plugin_interface->pluginIsDisable())
         {
-            if (plugin_interface->pluginIsAllowDisable() && !plugin_interface->pluginIsDisable())
-            {
-                plugin_interface->pluginStateSwitched();
-            }
+            plugin_interface->pluginStateSwitched();
         }
     }
     item_carrier->set_extra_menu(QString());
@@ -425,9 +460,26 @@ void Plugin_Root::unload_plugin()
     item_widget = nullptr;
     tips_widget = nullptr;
     popup_widget = nullptr;
-    plugin_loader->unload();//奇怪点:手动禁用有效,自动无效
+    tips_carrier->hide();
+    popup_carrier->hide();
+    if (plugin_interface)
+    {
+        if (is_Ext_plugin())
+        {
+            if (Plugin_Root::Contains_Ext_Plugin(plugin_interface->Ext_Name, "Easy_Desktop"))
+            {
+                if (plugin_interface->Plugin_Version >= P_Version{0, 0, 1})
+                {
+                    if (plugin_interface->pluginIsAllowUnload())
+                    {
+                        plugin_interface->pluginUnload();
+                    }
+                }
+            }
+        }
+    }
+    plugin_loader->unload();
     plugin_path.clear();
-    follow_plugin_show_after_load = true;
 }
 void Plugin_Root::save(QSettings *settings)
 {
@@ -441,7 +493,6 @@ void Plugin_Root::save(QSettings *settings)
 }
 void Plugin_Root::load(QSettings *settings)
 {
-    follow_plugin_show_after_load = false;
     plugin_path = settings->value("plugin_path", "").toString();
     tips_always_show = settings->value("tips_always_show", false).toBool();
     plugin_disabled = settings->value("plugin_disabled", false).toBool();
@@ -491,22 +542,19 @@ void Plugin_Root::set_icon(QString checked_icon_path)
 }
 void Plugin_Root::disable_plugin_update()
 {
-    QObject *pluginInstance = plugin_loader->instance();
-    if (pluginInstance)
+    if (will_fully_remove) return;
+    PluginsItemInterface *plugin_interface = this->get_interface();
+    if (plugin_interface)
     {
-        PluginsItemInterface *plugin_interface = qobject_cast<PluginsItemInterface *>(pluginInstance);
-        if (plugin_interface)
+        if (plugin_interface->pluginIsAllowDisable())
         {
-            if (plugin_interface->pluginIsAllowDisable())
+            if (plugin_interface->pluginIsDisable() && !plugin_disabled)
             {
-                if (plugin_interface->pluginIsDisable() && !plugin_disabled)
-                {
-                    plugin_interface->pluginStateSwitched();
-                }
-                else if (!plugin_interface->pluginIsDisable() && plugin_disabled)
-                {
-                    plugin_interface->pluginStateSwitched();
-                }
+                plugin_interface->pluginStateSwitched();
+            }
+            else if (!plugin_interface->pluginIsDisable() && plugin_disabled)
+            {
+                plugin_interface->pluginStateSwitched();
             }
         }
     }
@@ -553,8 +601,10 @@ void Plugin_Root::update_style(QColor theme_color, QColor theme_background_color
     if (tips_widget) tips_widget->setStyleSheet(style_sheet);
     if (popup_widget) popup_widget->setStyleSheet(style_sheet);
 }
-Plugin_Widget::Plugin_Widget(QWidget *parent)
+Plugin_Widget::Plugin_Widget(QWidget *parent, Plugin_Root *plugin_root, PluginsItemInterface::Carrier_Type m_carrier_type)
     :Basic_Widget(parent)
+    ,plugin_carrier_type(m_carrier_type)
+    ,root(plugin_root)
 {
     auto_close = false;
     menu->addAction(set_distance_action);
@@ -573,6 +623,13 @@ Plugin_Widget::Plugin_Widget(QWidget *parent)
     });
     resize(300, 200);
     hide();
+    connect(carrier_action_sender, &P_Sender::sig_Send_Ptr, this, [=](void *ptr)
+    {
+        if (ptr)
+        {
+            this->context_menu_event(reinterpret_cast<QAction *>(ptr));//无视风险,继续使用reinterpret_cast
+        }
+    });
 }
 void Plugin_Widget::P_save(QSettings *settings, QString Token)
 {
@@ -656,9 +713,137 @@ void Plugin_Widget::plugin_set_size()
     }
     this->resize(res + QSize(2 * distance_width, 2 * distance_height));
 }
+void Plugin_Widget::plugin_set_size(PluginsItemInterface *const itemInter)
+{
+    if (!save_ptr) return;
+    QSize res = QSize();
+    if (root->is_Ext_plugin())
+    {
+        if (Plugin_Root::Contains_Ext_Plugin(itemInter->Ext_Name, "Easy_Desktop"))
+        {
+            if (itemInter->Plugin_Version >= P_Version{0, 0, 1})
+            {
+                bool ok = false;
+                res = itemInter->pluginSetWidgetSize(this->plugin_carrier_type, &ok);
+                if (!ok)
+                {
+                    res = itemInter->pluginSetCarrierSize(this->plugin_carrier_type, &ok);
+                    if (!ok) return;
+                }
+            }
+        }
+    }
+    save_ptr->adjustSize();
+    if (!res.isValid())
+    {
+        res = save_ptr->sizeHint();
+    }
+    if (!res.isValid())
+    {
+        res = save_ptr->size();
+    }
+    this->resize(res + QSize(2 * distance_width, 2 * distance_height));
+}
+void Plugin_Widget::plugin_carrier_update(PluginsItemInterface * const itemInter)
+{
+    if (!save_ptr) return;
+    if (!itemInter) return;
+    if (root->is_Ext_plugin())
+    {
+        if (Plugin_Root::Contains_Ext_Plugin(itemInter->Ext_Name, "Easy_Desktop"))
+        {
+            if (itemInter->Plugin_Version >= P_Version{0, 0, 1})
+            {
+                bool ok = true;
+                QPair<int, int> Spacing = itemInter->pluginSetCarrierSpacing(this->plugin_carrier_type, &ok);
+                if (ok)
+                {
+                    distance_width = Spacing.first;
+                    distance_height = Spacing.second;
+                }
+                ok = true;
+                QPair<int, int> Offset = itemInter->pluginSetCarrierOffset(this->plugin_carrier_type, &ok);
+                if (ok)
+                {
+                    delta_x = Offset.first;
+                    delta_y = Offset.second;
+                }
+                ok = true;
+                QColor carrier_color = itemInter->pluginSetCarrierColor(this->plugin_carrier_type, &ok);
+                if (ok)
+                {
+                    background_color = carrier_color;
+                }
+                ok = true;
+                int Radius = itemInter->pluginSetCarrierRadius(this->plugin_carrier_type, &ok);
+                if (ok)
+                {
+                    background_radius = Radius;
+                }
+                ok = true;
+                int page_num = itemInter->pluginSetCarrierPage(this->plugin_carrier_type, *desktop_number, &ok);
+                if (ok)
+                {
+                    moveToDesktop(page_num);
+                }
+                ok = true;
+                bool show_close_button_bool = itemInter->pluginSetShowCarrierCloseButton(this->plugin_carrier_type, &ok);
+                if (ok)
+                {
+                    show_close_button->setIconVisibleInMenu(show_close_button_bool);
+                    close_button->setVisible(show_close_button_bool);
+                }
+                ok = true;
+                QPair<QMenu *, P_Sender * const> plugin_menu = itemInter->pluginAddToCarrierQMenu(this->plugin_carrier_type, &ok);
+                if (ok)
+                {
+                    if (plugin_menu_ptr)
+                    {
+                        this->menu->removeAction(plugin_menu_ptr);
+                        plugin_menu_ptr = nullptr;
+                    }
+                    if (plugin_action_sender)
+                    {
+                        plugin_action_sender = nullptr;
+                    }
+                    if (plugin_menu.first) plugin_menu_ptr = this->menu->addMenu(plugin_menu.first);
+                    if (plugin_menu.second) plugin_action_sender = plugin_menu.second;
+                }
+                ok = true;
+                QPoint pos = itemInter->pluginSetCarrierPos(this->plugin_carrier_type, root->item_carrier->pos() + root->item_carrier->get_self()->pos(), root->item_carrier->get_self()->size(), &ok);
+                if (ok)
+                {
+                    move(pos - root->item_carrier->get_self()->pos());
+                }
+                this->Update_Background();
+                plugin_set_size(itemInter);
+            }
+        }
+    }
+}
+void Plugin_Widget::plugin_carrier_sending_data(PluginsItemInterface * const itemInter)
+{
+    if (!save_ptr) return;
+    if (!itemInter) return;
+    if (root->is_Ext_plugin())
+    {
+        if (Plugin_Root::Contains_Ext_Plugin(itemInter->Ext_Name, "Easy_Desktop"))
+        {
+            if (itemInter->Plugin_Version >= P_Version{0, 0, 1})
+            {
+                itemInter->pluginGetCarrierColor(this->plugin_carrier_type, this->background_color);
+                itemInter->pluginGetCarrierOffset(this->plugin_carrier_type, this->delta_x, this->delta_y);
+                itemInter->pluginGetCarrierRadius(this->plugin_carrier_type, this->background_radius);
+                itemInter->pluginGetCarrierSpacing(this->plugin_carrier_type, this->distance_width, this->distance_height);
+                itemInter->pluginGetCarrierQMenu(this->plugin_carrier_type, menu, carrier_action_sender);
+                itemInter->pluginGetShowCarrierCloseButton(this->plugin_carrier_type, show_close_button->isIconVisibleInMenu());
+            }
+        }
+    }
+}
 void Plugin_Widget::call_to_show()
 {
-    if (is_item)
+    if (this->plugin_carrier_type == PluginsItemInterface::Carrier_Type::Plugin_Item)
     {
         this->show();
         return;
@@ -678,19 +863,19 @@ void Plugin_Widget::call_to_show()
         this->hide();
     }
 }
-void Plugin_Widget::contextMenuEvent(QContextMenuEvent *event)
+void Plugin_Widget::context_menu_event(QAction *know_what)
 {
-    QAction *know_what = menu->exec(mapToGlobal(event->pos()));
+    if (!know_what) return;
     if (know_what == set_distance_action)
     {
         bool ok = false;
-        int new_width = QInputDialog::getInt(nullptr, "获取数值", "宽度距离:", distance_width, 0, 2147483647, 1, &ok);
+        int new_width = QInputDialog::getInt(nullptr, "获取数值", "宽度间距:", distance_width, 0, 2147483647, 1, &ok);
         if (!ok)
         {
             return;
         }
         ok = false;
-        int new_height = QInputDialog::getInt(nullptr, "获取数值", "高度距离:", distance_height, 0, 2147483647, 1, &ok);
+        int new_height = QInputDialog::getInt(nullptr, "获取数值", "高度间距:", distance_height, 0, 2147483647, 1, &ok);
         if (!ok)
         {
             return;
@@ -720,7 +905,16 @@ void Plugin_Widget::contextMenuEvent(QContextMenuEvent *event)
     else
     {
         basic_action_func(know_what);
+        if (this->plugin_action_sender)
+        {
+            plugin_action_sender->Send_Ptr(know_what);
+        }
     }
+}
+void Plugin_Widget::contextMenuEvent(QContextMenuEvent *event)
+{
+    QAction *know_what = menu->exec(mapToGlobal(event->pos()));
+    context_menu_event(know_what);
 }
 void Plugin_Widget::wheelEvent(QWheelEvent *event)
 {
@@ -730,9 +924,50 @@ void Plugin_Widget::wheelEvent(QWheelEvent *event)
         return;
     }
 }
+void Plugin_Widget::enterEvent(QEvent *event)
+{
+    if (!root->will_fully_remove)
+    {
+        PluginsItemInterface *plugin_interface = root->get_interface();
+        if (plugin_interface)
+        {
+            if (root->is_Ext_plugin())
+            {
+                if (Plugin_Root::Contains_Ext_Plugin(plugin_interface->Ext_Name, "Easy_Desktop"))
+                {
+                    if (plugin_interface->Plugin_Version >= P_Version{0, 0, 1})
+                    {
+                        plugin_interface->pluginGetIsMouseInPluginCarrier(this->plugin_carrier_type, true);
+                    }
+                }
+            }
+        }
+    }
+    Basic_Widget::enterEvent(event);
+}
+void Plugin_Widget::leaveEvent(QEvent *event)
+{
+    if (!root->will_fully_remove)
+    {
+        PluginsItemInterface *plugin_interface = root->get_interface();
+        if (plugin_interface)
+        {
+            if (root->is_Ext_plugin())
+            {
+                if (Plugin_Root::Contains_Ext_Plugin(plugin_interface->Ext_Name, "Easy_Desktop"))
+                {
+                    if (plugin_interface->Plugin_Version >= P_Version{0, 0, 1})
+                    {
+                        plugin_interface->pluginGetIsMouseInPluginCarrier(this->plugin_carrier_type, false);
+                    }
+                }
+            }
+        }
+    }
+    Basic_Widget::leaveEvent(event);
+}
 Plugin_Item_Widget::Plugin_Item_Widget(QWidget *parent, Plugin_Root *plugin_root)
-    :Plugin_Widget(parent)
-    ,root(plugin_root)
+    :Plugin_Widget(parent, plugin_root, PluginsItemInterface::Carrier_Type::Plugin_Item)
 {
     setMouseTracking(true);
     this->activateWindow();
@@ -957,6 +1192,53 @@ void Plugin_Item_Widget::contextMenuEvent(QContextMenuEvent *event)
         }
     }
     QAction *know_what = menu->exec(mapToGlobal(event->pos()));
+    context_menu_event(know_what);
+}
+void Plugin_Item_Widget::plugin_position_gui_update()
+{
+    switch (root->plugin_position)
+    {
+    case Dock::Position::Top:
+    {
+        set_top_position->setIconVisibleInMenu(true);
+        set_right_position->setIconVisibleInMenu(false);
+        set_bottom_position->setIconVisibleInMenu(false);
+        set_left_position->setIconVisibleInMenu(false);
+        root->update_plugin();
+        break;
+    }
+    case Dock::Position::Right:
+    {
+        set_top_position->setIconVisibleInMenu(false);
+        set_right_position->setIconVisibleInMenu(true);
+        set_bottom_position->setIconVisibleInMenu(false);
+        set_left_position->setIconVisibleInMenu(false);
+        root->update_plugin();
+        break;
+    }
+    case Dock::Position::Bottom:
+    {
+        set_top_position->setIconVisibleInMenu(false);
+        set_right_position->setIconVisibleInMenu(false);
+        set_bottom_position->setIconVisibleInMenu(true);
+        set_left_position->setIconVisibleInMenu(false);
+        root->update_plugin();
+        break;
+    }
+    case Dock::Position::Left:
+    {
+        set_top_position->setIconVisibleInMenu(false);
+        set_right_position->setIconVisibleInMenu(false);
+        set_bottom_position->setIconVisibleInMenu(false);
+        set_left_position->setIconVisibleInMenu(true);
+        root->update_plugin();
+        break;
+    }
+    }
+}
+void Plugin_Item_Widget::context_menu_event(QAction *know_what)
+{
+    if (!know_what) return;
     if (know_what == set_plugin_path_action)
     {
         QString plugin_filename = QFileDialog::getOpenFileName(nullptr, "获取插件", QDir::homePath(), "插件(*.so);;所有文件(*.*)");
@@ -1013,6 +1295,26 @@ void Plugin_Item_Widget::contextMenuEvent(QContextMenuEvent *event)
     }
     else if (know_what == follow_plugin_show_action)
     {
+        PluginsItemInterface *plugin_interface = root->get_interface();
+        if (plugin_interface)
+        {
+            if (root->item_widget)
+            {
+                root->item_carrier->plugin_set_size(plugin_interface);
+                root->item_carrier->call_to_show();
+            }
+            if (root->tips_widget)
+            {
+                root->tips_carrier->plugin_set_size(plugin_interface);
+                if (root->tips_always_show) root->tips_carrier->call_to_show();
+            }
+            if (root->popup_widget)
+            {
+                root->popup_carrier->plugin_set_size(plugin_interface);
+                if (root->popup_always_show) root->popup_carrier->call_to_show();
+            }
+            return;
+        }
         if (root->item_widget)
         {
             root->item_carrier->plugin_set_size();
@@ -1032,13 +1334,13 @@ void Plugin_Item_Widget::contextMenuEvent(QContextMenuEvent *event)
     else if (know_what == set_distance_action)
     {
         bool ok = false;
-        int new_width = QInputDialog::getInt(nullptr, "获取数值", "宽度距离:", distance_width, 0, 2147483647, 1, &ok);
+        int new_width = QInputDialog::getInt(nullptr, "获取数值", "宽度间距:", distance_width, 0, 2147483647, 1, &ok);
         if (!ok)
         {
             return;
         }
         ok = false;
-        int new_height = QInputDialog::getInt(nullptr, "获取数值", "高度距离:", distance_height, 0, 2147483647, 1, &ok);
+        int new_height = QInputDialog::getInt(nullptr, "获取数值", "高度间距:", distance_height, 0, 2147483647, 1, &ok);
         if (!ok)
         {
             return;
@@ -1072,7 +1374,7 @@ void Plugin_Item_Widget::contextMenuEvent(QContextMenuEvent *event)
         set_bottom_position->setIconVisibleInMenu(false);
         set_left_position->setIconVisibleInMenu(false);
         root->plugin_position = Dock::Position::Top;
-        root->update_plugin_position();
+        root->update_plugin();
     }
     else if (know_what == set_right_position)
     {
@@ -1081,7 +1383,7 @@ void Plugin_Item_Widget::contextMenuEvent(QContextMenuEvent *event)
         set_bottom_position->setIconVisibleInMenu(false);
         set_left_position->setIconVisibleInMenu(false);
         root->plugin_position = Dock::Position::Right;
-        root->update_plugin_position();
+        root->update_plugin();
     }
     else if (know_what == set_bottom_position)
     {
@@ -1090,7 +1392,7 @@ void Plugin_Item_Widget::contextMenuEvent(QContextMenuEvent *event)
         set_bottom_position->setIconVisibleInMenu(true);
         set_left_position->setIconVisibleInMenu(false);
         root->plugin_position = Dock::Position::Bottom;
-        root->update_plugin_position();
+        root->update_plugin();
     }
     else if (know_what == set_left_position)
     {
@@ -1099,53 +1401,15 @@ void Plugin_Item_Widget::contextMenuEvent(QContextMenuEvent *event)
         set_bottom_position->setIconVisibleInMenu(false);
         set_left_position->setIconVisibleInMenu(true);
         root->plugin_position = Dock::Position::Left;
-        root->update_plugin_position();
+        root->update_plugin();
     }
     else
     {
         basic_action_func(know_what);
-    }
-}
-void Plugin_Item_Widget::plugin_position_gui_update()
-{
-    switch (root->plugin_position)
-    {
-    case Dock::Position::Top:
-    {
-        set_top_position->setIconVisibleInMenu(true);
-        set_right_position->setIconVisibleInMenu(false);
-        set_bottom_position->setIconVisibleInMenu(false);
-        set_left_position->setIconVisibleInMenu(false);
-        root->update_plugin_position();
-        break;
-    }
-    case Dock::Position::Right:
-    {
-        set_top_position->setIconVisibleInMenu(false);
-        set_right_position->setIconVisibleInMenu(true);
-        set_bottom_position->setIconVisibleInMenu(false);
-        set_left_position->setIconVisibleInMenu(false);
-        root->update_plugin_position();
-        break;
-    }
-    case Dock::Position::Bottom:
-    {
-        set_top_position->setIconVisibleInMenu(false);
-        set_right_position->setIconVisibleInMenu(false);
-        set_bottom_position->setIconVisibleInMenu(true);
-        set_left_position->setIconVisibleInMenu(false);
-        root->update_plugin_position();
-        break;
-    }
-    case Dock::Position::Left:
-    {
-        set_top_position->setIconVisibleInMenu(false);
-        set_right_position->setIconVisibleInMenu(false);
-        set_bottom_position->setIconVisibleInMenu(false);
-        set_left_position->setIconVisibleInMenu(true);
-        root->update_plugin_position();
-        break;
-    }
+        if (this->plugin_action_sender)
+        {
+            plugin_action_sender->Send_Ptr(know_what);
+        }
     }
 }
 void Plugin_Item_Widget::mousePressEvent(QMouseEvent *event)

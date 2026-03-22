@@ -159,13 +159,13 @@ void My_Program_Container::contextMenuEvent(QContextMenuEvent *event)
     else if (know_what == set_distance_action)
     {
         bool ok = false;
-        int new_width = QInputDialog::getInt(nullptr, "获取数值", "宽度距离:", distance_width, 0, 2147483647, 1, &ok);
+        int new_width = QInputDialog::getInt(nullptr, "获取数值", "宽度间距:", distance_width, 0, 2147483647, 1, &ok);
         if (!ok)
         {
             return;
         }
         ok = false;
-        int new_height = QInputDialog::getInt(nullptr, "获取数值", "高度距离:", distance_height, 0, 2147483647, 1, &ok);
+        int new_height = QInputDialog::getInt(nullptr, "获取数值", "高度间距:", distance_height, 0, 2147483647, 1, &ok);
         if (!ok)
         {
             return;

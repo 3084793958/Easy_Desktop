@@ -13,7 +13,7 @@ public:
     virtual void load(QSettings *settings);
 private:
     Out_line_Label *time_label = new Out_line_Label(this->get_self());
-    QTimer *clock_timer = new QTimer;
+    QTimer *clock_timer = new QTimer(this);
     QMenu *menu = new QMenu(this);
     QAction *set_outline = new QAction(tr("设置描边大小"), this);
     QAction *set_outline_color = new QAction(tr("设置描边颜色"), this);

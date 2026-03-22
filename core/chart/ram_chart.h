@@ -19,7 +19,7 @@ private:
     QString swap_data_str = "";
     QVector<double> ram_data_vec;
     QVector<double> swap_data_vec;
-    QTimer *updateTimer = new QTimer;
+    QTimer *updateTimer = new QTimer(this);
     int update_time = 1000;
     int channel = 0;
     int vector_long = 60;

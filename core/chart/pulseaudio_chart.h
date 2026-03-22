@@ -20,7 +20,7 @@ public:
     virtual void load(QSettings *settings);
     virtual void set_icon(QString checked_icon_path);
 private:
-    QTimer *pa_timer = new QTimer;
+    QTimer *pa_timer = new QTimer(this);
     QLineSeries *sec_series = new QLineSeries;
     int update_time = 100;
     bool use_rms = true;

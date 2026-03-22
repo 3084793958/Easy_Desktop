@@ -25,10 +25,12 @@
 #include <unistd.h>
 #include <QDBusConnection>
 #include <QDBusMessage>
+//#define USE_DTK //在QMake中定义
+#ifdef USE_DTK
 #include <DApplication>
+#endif
 int main(int argc, char* argv[])
 {
-    Dtk::Widget::DApplication app(argc, argv);
     QString load_path = QDir::homePath() + "/.local/lib/easy_desktop/config.ini";
     int workspace = 0;
     int dbus_id = 0;
@@ -36,7 +38,7 @@ int main(int argc, char* argv[])
     QString method = "";
     QStringList argument;
     bool always_refresh_screen_size = true;
-    QRect screen_geometry = QApplication::desktop()->geometry();
+    QRect screen_geometry = QRect(0, 0, 1440, 900);
     bool has_set_geometry = false;
     for (int i = 1; i <argc; i++)
     {
@@ -127,9 +129,17 @@ int main(int argc, char* argv[])
             std::cout << "                X轴偏移量(Int32)" << std::endl;
             std::cout << "                Y轴偏移量(Int32)" << std::endl;
             std::cout << "                抗锯齿(String)       [true/false]" << std::endl;
-            app.exit();
             return 0;
         }
+    }
+#ifdef USE_DTK
+    Dtk::Widget::DApplication app(argc, argv);
+#else
+    QApplication app(argc, argv);
+#endif
+    if (!has_set_geometry)
+    {
+        screen_geometry = QApplication::desktop()->geometry();
     }
     if (send_dbus)
     {

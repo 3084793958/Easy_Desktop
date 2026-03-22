@@ -45,6 +45,7 @@ void Process_Widget::Set_Base_Icon()
 void Process_Widget::set_icon(QString checked_icon_path)
 {
     set_auto_resize->setIcon(QIcon(checked_icon_path));
+    single_press_mode_action->setIcon(QIcon(checked_icon_path));
     Basic_Widget::set_icon(checked_icon_path);
 }
 Process_Widget::Process_Widget(QWidget *parent)
@@ -76,6 +77,9 @@ Process_Widget::Process_Widget(QWidget *parent)
     process_name_label->outlineWidth = 2;
     process_name_label->outlineColor = QColor(255, 255, 255, 255);
     menu->addAction(run_action);
+    single_press_mode_action->setIcon(QIcon(":/base/this.svg"));
+    single_press_mode_action->setIconVisibleInMenu(true);
+    setting_menu->addAction(single_press_mode_action);
     setting_menu->addAction(set_image);
     setting_menu->addAction(reset_image);
     setting_menu->addAction(set_name);
@@ -163,6 +167,8 @@ Process_Widget::Process_Widget(QWidget *parent)
         process.setStandardErrorFile("/dev/null");
         process.startDetached();
     });
+    double_click_timer->setInterval(500);
+    double_click_timer->setSingleShot(true);
     resize(75, 75);
 }
 void Process_Widget::mousePressEvent(QMouseEvent *event)
@@ -172,6 +178,18 @@ void Process_Widget::mousePressEvent(QMouseEvent *event)
         left_mouse_on_press = true;
         moved = false;
         Carrier->setStyleSheet(QString("background:rgba(%1,%2,%3,%4)").arg(press_color.red()).arg(press_color.green()).arg(press_color.blue()).arg(press_color.alpha()));
+        if (!single_press_mode_action->isIconVisibleInMenu())
+        {
+            if (!double_click_timer->isActive())
+            {
+                double_click_timer->start();
+            }
+            else
+            {
+                double_click_timer->stop();
+                emit Pressed();
+            }
+        }
     }
     Basic_Widget::mousePressEvent(event);
 }
@@ -184,7 +202,10 @@ void Process_Widget::mouseReleaseEvent(QMouseEvent *event)
             Carrier->setStyleSheet(QString("background:rgba(%1,%2,%3,%4)").arg(basic_color.red()).arg(basic_color.green()).arg(basic_color.blue()).arg(basic_color.alpha()));
             if (!moved)
             {
-                emit Pressed();
+                if (single_press_mode_action->isIconVisibleInMenu())
+                {
+                    emit Pressed();
+                }
             }
         }
     }
@@ -226,6 +247,10 @@ void Process_Widget::context_solution(QAction *know_what)
     if (know_what == run_action)
     {
         emit Pressed();
+    }
+    else if (know_what == single_press_mode_action)
+    {
+        single_press_mode_action->setIconVisibleInMenu(!single_press_mode_action->isIconVisibleInMenu());
     }
     else if (know_what == set_image)
     {
@@ -512,6 +537,7 @@ void Process_Widget::save(QSettings *settings)
     settings->setValue("label_name", process_name_label->text());
     settings->setValue("label_font", process_name_label->font());
     settings->setValue("label_auto_resize", set_auto_resize->isIconVisibleInMenu());
+    settings->setValue("single_press_mode", single_press_mode_action->isIconVisibleInMenu());
     settings->setValue("label_text_color", process_name_label->text_color.rgba());
     settings->setValue("label_out_line_color", process_name_label->outlineColor.rgba());
     settings->setValue("label_out_line_width", process_name_label->outlineWidth);
@@ -552,6 +578,8 @@ void Process_Widget::load(QSettings *settings)
     process_name_label->setFont(settings->value("label_font", QFontDatabase::systemFont(QFontDatabase::FixedFont)).value<QFont>());
     bool auto_resize = settings->value("label_auto_resize", false).toBool();
     set_auto_resize->setIconVisibleInMenu(auto_resize);
+    bool single_press_mode = settings->value("single_press_mode", true).toBool();
+    single_press_mode_action->setIconVisibleInMenu(single_press_mode);
     process_name_label->text_color = QColor::fromRgba(settings->value("label_text_color", QColor(255, 255, 255, 255).rgba()).toUInt());
     process_name_label->outlineColor = QColor::fromRgba(settings->value("label_out_line_color", QColor(0, 0, 0, 255).rgba()).toUInt());
     process_name_label->outlineWidth = settings->value("label_out_line_width", 2).toInt();

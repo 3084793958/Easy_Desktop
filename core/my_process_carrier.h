@@ -56,7 +56,7 @@ public:
     int carrier_page_number = 1;
 private:
     int desktop_move_x = 0;
-    QTimer *move_Timer = new QTimer;
+    QTimer *move_Timer = new QTimer(this);
     int run_time = 0;
     int timer_move_x = 0;
     Page_Control_Dock *control_Dock = new Page_Control_Dock(this->Basic_Carrier);

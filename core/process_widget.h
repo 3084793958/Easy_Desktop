@@ -42,6 +42,7 @@ protected:
     QMenu *menu = new QMenu(this);
     QAction *run_action = new QAction(tr("运行"), this);
     QMenu *setting_menu = new QMenu(tr("设置"), this);
+    QAction *single_press_mode_action = new QAction(tr("单击模式"), this);
     QAction *set_image = new QAction(tr("设置图像"), this);
     QAction *reset_image = new QAction(tr("还原图像"), this);
     QAction *set_name = new QAction(tr("设置名称"), this);
@@ -54,6 +55,7 @@ protected:
     QAction *set_process = new QAction(tr("设置进程信息"), this);
     QAction *set_by_desktop = new QAction(tr("通过.desktop设置"), this);
     QAction *break_out = new QAction(tr("移入/脱离"), this);
+    QTimer *double_click_timer = new QTimer(this);
     void X11_Rasie();
 private:
     virtual void mousePressEvent(QMouseEvent *event);

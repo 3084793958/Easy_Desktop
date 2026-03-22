@@ -47,6 +47,19 @@ Basic_Widget::Basic_Widget(QWidget *parent)
     basic_control->addAction(set_background_radius);
     basic_control->addAction(set_background_color);
     basic_control->addAction(show_close_button);
+    close_button_pos_top_left->setIconVisibleInMenu(false);
+    close_button_pos_top_left->setIcon(QIcon(":/base/this.svg"));
+    close_button_pos_menu->addAction(close_button_pos_top_left);
+    close_button_pos_top_right->setIconVisibleInMenu(true);
+    close_button_pos_top_right->setIcon(QIcon(":/base/this.svg"));
+    close_button_pos_menu->addAction(close_button_pos_top_right);
+    close_button_pos_bottom_left->setIconVisibleInMenu(false);
+    close_button_pos_bottom_left->setIcon(QIcon(":/base/this.svg"));
+    close_button_pos_menu->addAction(close_button_pos_bottom_left);
+    close_button_pos_bottom_right->setIconVisibleInMenu(false);
+    close_button_pos_bottom_right->setIcon(QIcon(":/base/this.svg"));
+    close_button_pos_menu->addAction(close_button_pos_bottom_right);
+    basic_control->addMenu(close_button_pos_menu);
     basic_control->addAction(set_pos_action);
     basic_control->addAction(set_size_action);
     basic_control->addAction(close_action);
@@ -64,7 +77,7 @@ Basic_Widget::Basic_Widget(QWidget *parent)
         emit close_signals();
         if (auto_close)
         {
-            delete this;
+            this->deleteLater();
         }
     });
     setMouseTracking(true);
@@ -83,8 +96,7 @@ void Basic_Widget::resize(int w, int h)
 {
     background->move(5, 10);
     background->resize(w, h);
-    close_button->move(w - 9, 0);
-    close_button->raise();
+    update_close_button_pos();
     QWidget::resize(w + 15 ,h + 15);
     emit size_changed(background->size());
 }
@@ -95,7 +107,7 @@ void Basic_Widget::resize(QSize size)
 void Basic_Widget::setGeometry(QRect rect)
 {
     background->resize(rect.width() - 15, rect.height() - 15);
-    close_button->move(rect.width() -24, 0);
+    update_close_button_pos();
     QWidget::setGeometry(rect);
     emit size_changed(background->size());
 }
@@ -485,8 +497,28 @@ void Basic_Widget::basic_action_func(QAction *action)
         emit close_signals();
         if (auto_close)
         {
-            delete this;
+            this->deleteLater();
         }
+    }
+    else if (action == close_button_pos_top_left)
+    {
+        close_button_pos = Button_Pos::Top_Left;
+        update_close_button_pos();
+    }
+    else if (action == close_button_pos_top_right)
+    {
+        close_button_pos = Button_Pos::Top_Right;
+        update_close_button_pos();
+    }
+    else if (action == close_button_pos_bottom_left)
+    {
+        close_button_pos = Button_Pos::Bottom_Left;
+        update_close_button_pos();
+    }
+    else if (action == close_button_pos_bottom_right)
+    {
+        close_button_pos = Button_Pos::Bottom_Right;
+        update_close_button_pos();
     }
 }
 void Basic_Widget::save(QSettings *settings)
@@ -506,6 +538,7 @@ void Basic_Widget::save(QSettings *settings)
         }
     }
     settings->setValue("in_page", res);
+    settings->setValue("close_button_pos", static_cast<int>(close_button_pos));
 }
 void Basic_Widget::load(QSettings *settings)
 {
@@ -526,8 +559,58 @@ void Basic_Widget::load(QSettings *settings)
         }
         this->setParent(basic_list->at(res));
     }
+    close_button_pos = static_cast<Button_Pos>(settings->value("close_button_pos", 1).toInt());
+    update_close_button_pos();
 }
 void Basic_Widget::set_icon(QString checked_icon_path)
 {
     show_close_button->setIcon(QIcon(checked_icon_path));
+    close_button_pos_top_left->setIcon(QIcon(checked_icon_path));
+    close_button_pos_top_right->setIcon(QIcon(checked_icon_path));
+    close_button_pos_bottom_left->setIcon(QIcon(checked_icon_path));
+    close_button_pos_bottom_right->setIcon(QIcon(checked_icon_path));
+}
+void Basic_Widget::update_close_button_pos()
+{
+    QSize size = background->size();
+    switch (close_button_pos)
+    {
+    case Button_Pos::Top_Left:
+    {
+        close_button_pos_top_left->setIconVisibleInMenu(true);
+        close_button_pos_top_right->setIconVisibleInMenu(false);
+        close_button_pos_bottom_left->setIconVisibleInMenu(false);
+        close_button_pos_bottom_right->setIconVisibleInMenu(false);
+        close_button->move(0, 0);
+        break;
+    }
+    case Button_Pos::Top_Right:
+    {
+        close_button_pos_top_left->setIconVisibleInMenu(false);
+        close_button_pos_top_right->setIconVisibleInMenu(true);
+        close_button_pos_bottom_left->setIconVisibleInMenu(false);
+        close_button_pos_bottom_right->setIconVisibleInMenu(false);
+        close_button->move(size.width() - 9, 0);
+        break;
+    }
+    case Button_Pos::Bottom_Left:
+    {
+        close_button_pos_top_left->setIconVisibleInMenu(false);
+        close_button_pos_top_right->setIconVisibleInMenu(false);
+        close_button_pos_bottom_left->setIconVisibleInMenu(true);
+        close_button_pos_bottom_right->setIconVisibleInMenu(false);
+        close_button->move(0, size.height() - 9);
+        break;
+    }
+    case Button_Pos::Bottom_Right:
+    {
+        close_button_pos_top_left->setIconVisibleInMenu(false);
+        close_button_pos_top_right->setIconVisibleInMenu(false);
+        close_button_pos_bottom_left->setIconVisibleInMenu(false);
+        close_button_pos_bottom_right->setIconVisibleInMenu(true);
+        close_button->move(size.width() - 9, size.height() - 9);
+        break;
+    }
+    }
+    close_button->raise();
 }

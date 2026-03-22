@@ -1,6 +1,7 @@
 #include "file_tree.h"
 #include <QX11Info>
 #include <X11/Xlib.h>
+My_Tree_View * My_Tree_View::catch_ptr;
 void File_Tree::X11_Raise()
 {
     Window win_Id = static_cast<Window>(m_WinId);
@@ -15,9 +16,11 @@ File_Tree::File_Tree(QWidget *parent)
     setAcceptDrops(true);
     treeView->setAcceptDrops(true);
     treeView->setDragEnabled(true);
+    treeView->setMouseTracking(true);
+    treeView->setTabletTracking(true);
     treeView->setDragDropMode(QAbstractItemView::DragDrop);
     treeView->F_model = model;
-    treeView->m_allow_drop = &m_allow_drop;
+    treeView->proxyModel = proxyModel;
     show();
     this->background_color = QColor(255,255,255,50);
     Update_Background();
@@ -26,14 +29,90 @@ File_Tree::File_Tree(QWidget *parent)
     menu->addAction(open_path_way);
     menu->addAction(show_info);
     menu->addAction(copy_action);
+    menu->addAction(clean_selection_action);
+    single_press_mode_action->setIcon(QIcon(":/base/this.svg"));
+    single_press_mode_action->setIconVisibleInMenu(false);
+    tree_setting->addAction(single_press_mode_action);
     tree_setting->addAction(set_dir_path);
     tree_setting->addAction(refresh_action);
     set_style_menu->addAction(set_icon_size_action);
+    set_style_menu->addAction(set_font_action);
+    set_style_menu->addAction(set_select_radius);
     set_style_menu->addAction(set_hover_color);
     set_style_menu->addAction(set_select_color);
     tree_setting->addMenu(set_style_menu);
     menu->addMenu(tree_setting);
     basic_context(menu);
+    shortcut_copy_action->setShortcut(QKeySequence::Copy);
+    shortcut_copy_action->setShortcutContext(Qt::WidgetWithChildrenShortcut);
+    connect(shortcut_copy_action, &QAction::triggered, this, [=]
+    {
+        if (treeView->selectionModel() && treeView == My_Tree_View::catch_ptr)
+        {
+            QModelIndexList selectedList = treeView->selectionModel()->selectedIndexes();
+            if (!selectedList.isEmpty())
+            {
+                QList<QUrl> urls;
+                QByteArray gnomeData;
+                gnomeData.append("copy\n");
+                for (int i = 0; i < selectedList.count(); i += 4)
+                {
+                    QString this_file_path = model->filePath(proxyModel->mapToSource(selectedList[i]));
+                    urls.append(QUrl::fromLocalFile(this_file_path));
+                    gnomeData.append(QUrl::fromLocalFile(this_file_path).toEncoded() + "\n");
+                }
+                QMimeData *mimeData = new QMimeData;
+                mimeData->setUrls(urls);
+                mimeData->setData("x-special/gnome-copied-files", gnomeData);//添加此项用于激活dde-file-manager的"粘贴"
+                QApplication::clipboard()->setMimeData(mimeData, QClipboard::Mode::Clipboard);
+            }
+        }
+    });
+    shortcut_show_info->setShortcut(Qt::Key_Space);
+    shortcut_show_info->setShortcutContext(Qt::WidgetWithChildrenShortcut);
+    connect(shortcut_show_info, &QAction::triggered, this, [=]
+    {
+        if (treeView->selectionModel() && treeView == My_Tree_View::catch_ptr)
+        {
+            QModelIndexList selectedList = treeView->selectionModel()->selectedIndexes();
+            if (!selectedList.isEmpty())
+            {
+                QString this_file_path = root_path;
+                QProcess process;
+                process.setProgram("/bin/bash");
+                process.setWorkingDirectory(QDir::homePath());
+                QString m_process_str = "dde-file-manager -p";
+                if (file_open_info_process)
+                {
+                    m_process_str = *file_open_info_process;
+                }
+                for (int i = 0; i < selectedList.count(); i += 4)
+                {
+                    QString this_file_path = model->filePath(selectedList[i]);
+                    m_process_str += " ";
+                    m_process_str += '"';
+                    m_process_str += this_file_path;
+                    m_process_str += '"';
+                }
+                process.setArguments(QStringList() << "-c" << m_process_str);
+                process.setStandardOutputFile("/dev/null");
+                process.setStandardErrorFile("/dev/null");
+                process.startDetached();
+            }
+        }
+    });
+    shortcut_enter->setShortcut(Qt::Key_Return);
+    shortcut_enter->setShortcutContext(Qt::WidgetWithChildrenShortcut);
+    connect(shortcut_enter, &QAction::triggered, this, [=]
+    {
+        if (treeView->selectionModel() && treeView == My_Tree_View::catch_ptr)
+        {
+            Pressed(true);
+        }
+    });
+    treeView->addAction(shortcut_copy_action);
+    treeView->addAction(shortcut_show_info);
+    treeView->addAction(shortcut_enter);
     carrier_widget->move(10, 10);
     search_edit->move(0, 5);
     treeView->move(0, 50);
@@ -42,7 +121,9 @@ File_Tree::File_Tree(QWidget *parent)
                                "QLineEdit:hover{border: 1px solid rgba(0,170,255,255)}");
     treeView->setAlternatingRowColors(true);
     treeView->setLayoutDirection(Qt::LeftToRight);
+    treeView->setSelectionMode(QAbstractItemView::SelectionMode::ExtendedSelection);
     treeView->setEditTriggers(QListView::NoEditTriggers);
+    treeView->setItemDelegate(my_delegate);
     set_tree_view_style();
     treeView->verticalScrollBar()->setStyleSheet("QScrollBar:vertical{border:none;background:rgba(0,0,0,0);width:8px;margin:0px0px0px0px;}"
                                                  "QScrollBar::handle:vertical{background:rgba(0,0,0,75);border-radius:4px;min-height:20px;}"
@@ -61,16 +142,16 @@ File_Tree::File_Tree(QWidget *parent)
     model->setFilter(QDir::AllEntries | QDir::NoDotAndDotDot);
     model->setRootPath(QDir::rootPath());
     model->setIconProvider(icon_provider);
-    treeView->setModel(model);
+    proxyModel->setSourceModel(model);
+    treeView->setModel(proxyModel);
     treeView->setIconSize(QSize(24, 24));
     treeView->setIndentation(24);
-    treeView->setRootIndex(model->index(QDir::rootPath()));
+    treeView->setRootIndex(proxyModel->mapFromSource(model->index(QDir::rootPath())));
     treeView->setAnimated(true);
     treeView->setSortingEnabled(true);
     treeView->header()->setSortIndicator(0, Qt::SortOrder::AscendingOrder);
     treeView->setColumnWidth(0, 150);
     carrier_widget->setMouseTracking(true);
-    treeView->setMouseTracking(true);
     search_edit->setMouseTracking(true);
     treeView->setUniformRowHeights(true);
     installEventFilter(treeView);
@@ -81,18 +162,19 @@ File_Tree::File_Tree(QWidget *parent)
     });
     connect(search_edit, &QLineEdit::textChanged, this, [=]
     {
+        if (treeView->selectionModel())
+        {
+            treeView->selectionModel()->clear();
+        }
         if (search_edit->text().isEmpty())
         {
             search_edit->removeAction(search_del_action);
-            model->setNameFilters(QStringList());
+            proxyModel->setSearchPattern("");
         }
         else
         {
             search_edit->addAction(search_del_action,QLineEdit::TrailingPosition);
-            QStringList filters;
-            filters << QString("*%1*").arg(search_edit->text());
-            model->setNameFilters(filters);
-            model->setNameFilterDisables(false);
+            proxyModel->setSearchPattern(search_edit->text());
         }
     });
     connect(this, &Basic_Widget::size_changed, this, [=](QSize size)
@@ -101,45 +183,181 @@ File_Tree::File_Tree(QWidget *parent)
         search_edit->resize(size.width() - 20, 40);
         treeView->resize(size - QSize(20, 70));
     });
+    connect(this->treeView, &QTreeView::clicked, this, [=]
+    {
+        if (single_press_mode_action->isIconVisibleInMenu())
+        {
+            Pressed();
+        }
+    });
     connect(this->treeView, &QTreeView::doubleClicked, this, [=]
+    {
+        if (!single_press_mode_action->isIconVisibleInMenu())
+        {
+            Pressed();
+        }
+    });
+    resize(600, 300);
+    show();
+}
+void File_Tree::Pressed(bool from_key)
+{
+    if (treeView->selectionModel())
+    {
+        QModelIndexList selectedList = treeView->selectionModel()->selectedIndexes();
+        if (!selectedList.isEmpty())
+        {
+            for (int i = 0; i < selectedList.count(); i += 4)
+            {
+                if (model->hasChildren(proxyModel->mapToSource(selectedList[i])))
+                {
+                    if (single_press_mode_action->isIconVisibleInMenu() || from_key)
+                    {
+                        if (treeView->isExpanded(selectedList[i]))
+                        {
+                            treeView->setExpanded(selectedList[i], false);
+                        }
+                        else
+                        {
+                            treeView->expand(selectedList[i]);
+                        }
+                    }
+                    return;
+                }
+                QString this_file_path = model->filePath(proxyModel->mapToSource(selectedList[i]));
+                QFileInfo fileinfo(this_file_path);
+                QString running_path = fileinfo.dir().path();
+                QProcess process;
+                process.start("xdg-mime", QStringList() << "query" << "filetype" << this_file_path);
+                QString mime_type = "";
+                if (process.waitForFinished(5000) && process.exitCode() == 0)
+                {
+                    mime_type = process.readAllStandardOutput().trimmed();
+                }
+                QString m_running_process = "";
+                if (mime_type == "application/x-desktop")
+                {
+                    QSettings desktopSettings(this_file_path, QSettings::IniFormat);
+                    desktopSettings.setIniCodec("UTF-8");
+                    desktopSettings.beginGroup("Desktop Entry");
+                    QString exec = desktopSettings.value("Exec", "ls").toString();
+                    desktopSettings.endGroup();
+                    exec.replace("%f", "");
+                    exec.replace("%F", "");
+                    exec.replace("%u", "");
+                    exec.replace("%U", "");
+                    QRegularExpression placeholderRegex("%[a-zA-Z]");
+                    exec.replace(placeholderRegex, "");
+                    m_running_process = exec;
+                }
+                else
+                {
+                    QString final_process = "";
+                    process.start("xdg-mime", QStringList() << "query" << "default" << mime_type);
+                    if (process.waitForFinished(5000) && process.exitCode() == 0)
+                    {
+                        final_process = process.readAllStandardOutput().trimmed();
+                    }
+                    if (!final_process.isEmpty())
+                    {
+                        if (!final_process.endsWith(".desktop"))
+                        {
+                            final_process += ".desktop";
+                        }
+                        QStringList searchPaths = {QDir::home().filePath(".local/share/applications"),
+                                                  "/usr/local/share/applications",
+                                                  "/usr/share/applications"};
+                        for (const QString &path : searchPaths)
+                        {
+                            QString m_filepath = QDir(path).filePath(final_process);
+                            if (QFile::exists(m_filepath))
+                            {
+                                QSettings desktopSettings(m_filepath, QSettings::IniFormat);
+                                desktopSettings.beginGroup("Desktop Entry");
+                                QString exec = desktopSettings.value("Exec").toString();
+                                desktopSettings.endGroup();
+                                m_running_process = exec;
+                            }
+                        }
+                    }
+                    if (m_running_process.isEmpty())
+                    {
+                        m_running_process = this_file_path;
+                    }
+                    else
+                    {
+                        m_running_process.replace("%f", QDir::toNativeSeparators('"' + this_file_path + '"'));
+                        m_running_process.replace("%F", QDir::toNativeSeparators('"' + this_file_path + '"'));
+                        m_running_process.replace("%u", QDir::toNativeSeparators('"' + this_file_path + '"'));
+                        m_running_process.replace("%U", QDir::toNativeSeparators('"' + this_file_path + '"'));
+                        QRegularExpression placeholderRegex("%[a-zA-Z]");
+                        m_running_process.replace(placeholderRegex, "");
+                    }
+                }
+                QProcess process2;
+                process2.setProgram("/bin/bash");
+                process2.setWorkingDirectory(running_path);
+                process2.setArguments(QStringList() << "-c" << m_running_process);
+                process2.setStandardOutputFile("/dev/null");
+                process2.setStandardErrorFile("/dev/null");
+                process2.startDetached();
+            }
+        }
+    }
+}
+void File_Tree::set_tree_view_style()
+{
+    treeView->setStyleSheet(QString("QTreeView{background:rgba(255,255,255,0);color:rgb(60,60,60);selection-background-color:rgba(0,0,0,0);}"
+                                    "QTreeView::item:first{color:rgb(0,0,0)}"
+                                    "QTreeView::item:selected{color:rgb(255,255,255);border: 0px solid rgba(255,255,255,0)}"));
+}
+File_Tree::~File_Tree()
+{
+    if (file_tree_list)
+    {
+        file_tree_list->removeOne(this);
+    }
+}
+void File_Tree::contextMenuEvent(QContextMenuEvent *event)
+{
+    QAction *know_what = menu->exec(mapToGlobal(event->pos()));
+    if (know_what == open_it)
     {
         if (treeView->selectionModel())
         {
-            if (model->hasChildren(treeView->selectionModel()->currentIndex())) return;
-            QString this_file_path = model->filePath(treeView->selectionModel()->currentIndex());
-            QFileInfo fileinfo(this_file_path);
-            QString running_path = fileinfo.dir().path();
-            QProcess process;
-            process.start("xdg-mime", QStringList() << "query" << "filetype" << this_file_path);
-            QString mime_type = "";
-            if (process.waitForFinished(5000) && process.exitCode() == 0)
+            QModelIndexList selectedList = treeView->selectionModel()->selectedIndexes();
+            QStringList file_list = {};
+            if (!selectedList.isEmpty())
             {
-                mime_type = process.readAllStandardOutput().trimmed();
-            }
-            QString m_running_process = "";
-            if (mime_type == "application/x-desktop")
-            {
-                QSettings desktopSettings(this_file_path, QSettings::IniFormat);
-                desktopSettings.setIniCodec("UTF-8");
-                desktopSettings.beginGroup("Desktop Entry");
-                QString exec = desktopSettings.value("Exec", "ls").toString();
-                desktopSettings.endGroup();
-                exec.replace("%f", "");
-                exec.replace("%F", "");
-                exec.replace("%u", "");
-                exec.replace("%U", "");
-                QRegularExpression placeholderRegex("%[a-zA-Z]");
-                exec.replace(placeholderRegex, "");
-                m_running_process = exec;
+                for (int i = 0; i < selectedList.count(); i += 4)
+                {
+                    QString this_file_path = model->filePath(proxyModel->mapToSource(selectedList[i]));
+                    file_list << this_file_path;
+                }
             }
             else
             {
-                QString final_process = "";
+                file_list << root_path;
+            }
+            for (int i = 0; i < file_list.count(); i++)
+            {
+                QString this_file_path = file_list[i];
+                QFileInfo fileinfo(this_file_path);
+                QString running_path = fileinfo.dir().path();
+                QProcess process;
+                process.start("xdg-mime", QStringList() << "query" << "filetype" << this_file_path);
+                QString mime_type = "";
+                if (process.waitForFinished(5000) && process.exitCode() == 0)
+                {
+                    mime_type = process.readAllStandardOutput().trimmed();
+                }
                 process.start("xdg-mime", QStringList() << "query" << "default" << mime_type);
+                QString final_process = "";
                 if (process.waitForFinished(5000) && process.exitCode() == 0)
                 {
                     final_process = process.readAllStandardOutput().trimmed();
                 }
+                QString m_running_process = "";
                 if (!final_process.isEmpty())
                 {
                     if (!final_process.endsWith(".desktop"))
@@ -168,187 +386,193 @@ File_Tree::File_Tree(QWidget *parent)
                 }
                 else
                 {
-                    m_running_process.replace("%f", QDir::toNativeSeparators(this_file_path));
-                    m_running_process.replace("%F", QDir::toNativeSeparators(this_file_path));
-                    m_running_process.replace("%u", QDir::toNativeSeparators(this_file_path));
-                    m_running_process.replace("%U", QDir::toNativeSeparators(this_file_path));
+                    m_running_process.replace("%f", QDir::toNativeSeparators('"' + this_file_path + '"'));
+                    m_running_process.replace("%F", QDir::toNativeSeparators('"' + this_file_path + '"'));
+                    m_running_process.replace("%u", QDir::toNativeSeparators('"' + this_file_path + '"'));
+                    m_running_process.replace("%U", QDir::toNativeSeparators('"' + this_file_path + '"'));
                     QRegularExpression placeholderRegex("%[a-zA-Z]");
                     m_running_process.replace(placeholderRegex, "");
                 }
-            }
-            QProcess process2;
-            process2.setProgram("/bin/bash");
-            process2.setWorkingDirectory(running_path);
-            process2.setArguments(QStringList() << "-c" << m_running_process);
-            process2.setStandardOutputFile("/dev/null");
-            process2.setStandardErrorFile("/dev/null");
-            process2.startDetached();
-        }
-    });
-    resize(600, 300);
-    show();
-}
-void File_Tree::set_tree_view_style()
-{
-    treeView->setStyleSheet(QString("QTreeView{background:rgba(255,255,255,0);color:rgb(60,60,60)}"
-                                    "QTreeView::item:first{color:rgb(0,0,0)}"
-                                    "QTreeView::item:last{color:rgb(60,60,60);border-top-left-radius:0px;border-top-right-radius:10px;border-bottom-left-radius:0px;border-bottom-right-radius:10px}"
-                                    "QTreeView::item:hover{background-color:rgb(%1,%2,%3)}"
-                                    "QTreeView::item:selected{background:rgb(%4,%5,%6);color:rgb(255,255,255);border: 0px solid rgba(255,255,255,0)}").arg(hover_color.red()).arg(hover_color.green()).arg(hover_color.blue()).arg(select_color.red()).arg(select_color.green()).arg(select_color.blue()));
-}
-File_Tree::~File_Tree()
-{
-    if (file_tree_list)
-    {
-        file_tree_list->removeOne(this);
-    }
-}
-void File_Tree::contextMenuEvent(QContextMenuEvent *event)
-{
-    QAction *know_what = menu->exec(mapToGlobal(event->pos()));
-    if (know_what == open_it)
-    {
-        QString this_file_path = model->rootPath();
-        if (treeView->selectionModel() && treeView->selectionModel()->currentIndex().isValid())
-        {
-             this_file_path = model->filePath(treeView->selectionModel()->currentIndex());
-        }
-        QFileInfo fileinfo(this_file_path);
-        QString running_path = fileinfo.dir().path();
-        QProcess process;
-        process.start("xdg-mime", QStringList() << "query" << "filetype" << this_file_path);
-        QString mime_type = "";
-        if (process.waitForFinished(5000) && process.exitCode() == 0)
-        {
-            mime_type = process.readAllStandardOutput().trimmed();
-        }
-        process.start("xdg-mime", QStringList() << "query" << "default" << mime_type);
-        QString final_process = "";
-        if (process.waitForFinished(5000) && process.exitCode() == 0)
-        {
-            final_process = process.readAllStandardOutput().trimmed();
-        }
-        QString m_running_process = "";
-        if (!final_process.isEmpty())
-        {
-            if (!final_process.endsWith(".desktop"))
-            {
-                final_process += ".desktop";
-            }
-            QStringList searchPaths = {QDir::home().filePath(".local/share/applications"),
-                                      "/usr/local/share/applications",
-                                      "/usr/share/applications"};
-            for (const QString &path : searchPaths)
-            {
-                QString m_filepath = QDir(path).filePath(final_process);
-                if (QFile::exists(m_filepath))
-                {
-                    QSettings desktopSettings(m_filepath, QSettings::IniFormat);
-                    desktopSettings.beginGroup("Desktop Entry");
-                    QString exec = desktopSettings.value("Exec").toString();
-                    desktopSettings.endGroup();
-                    m_running_process = exec;
-                }
+                ;
+                QProcess process2;
+                process2.setProgram("/bin/bash");
+                process2.setWorkingDirectory(running_path);
+                process2.setArguments(QStringList() << "-c" << m_running_process);
+                process2.setStandardOutputFile("/dev/null");
+                process2.setStandardErrorFile("/dev/null");
+                process2.startDetached();
             }
         }
-        if (m_running_process.isEmpty())
-        {
-            m_running_process = this_file_path;
-        }
-        else
-        {
-            m_running_process.replace("%f", QDir::toNativeSeparators(this_file_path));
-            m_running_process.replace("%F", QDir::toNativeSeparators(this_file_path));
-            m_running_process.replace("%u", QDir::toNativeSeparators(this_file_path));
-            m_running_process.replace("%U", QDir::toNativeSeparators(this_file_path));
-            QRegularExpression placeholderRegex("%[a-zA-Z]");
-            m_running_process.replace(placeholderRegex, "");
-        }
-        ;
-        QProcess process2;
-        process2.setProgram("/bin/bash");
-        process2.setWorkingDirectory(running_path);
-        process2.setArguments(QStringList() << "-c" << m_running_process);
-        process2.setStandardOutputFile("/dev/null");
-        process2.setStandardErrorFile("/dev/null");
-        process2.startDetached();
     }
     else if (know_what == open_way)
     {
-        QString this_file_path = model->rootPath();
-        if (treeView->selectionModel() && treeView->selectionModel()->currentIndex().isValid())
+        if (treeView->selectionModel())
         {
-             this_file_path = model->filePath(treeView->selectionModel()->currentIndex());
+            QModelIndexList selectedList = treeView->selectionModel()->selectedIndexes();
+            if (!selectedList.isEmpty())
+            {
+                for (int i = 0; i < selectedList.count(); i += 4)
+                {
+                    QString this_file_path = model->filePath(proxyModel->mapToSource(selectedList[i]));
+                    QProcess process;
+                    process.setProgram("/bin/bash");
+                    process.setWorkingDirectory(this_file_path);
+                    QString m_process_str = "dde-file-manager -d -o";
+                    if (file_open_way_process)
+                    {
+                        m_process_str = *file_open_way_process;
+                    }
+                    m_process_str += " ";
+                    m_process_str += '"';
+                    m_process_str += this_file_path;
+                    m_process_str += '"';
+                    process.setArguments(QStringList() << "-c" << m_process_str);
+                    process.setStandardOutputFile("/dev/null");
+                    process.setStandardErrorFile("/dev/null");
+                    process.startDetached();
+                }
+            }
+            else
+            {
+                QString this_file_path = root_path;
+                QProcess process;
+                process.setProgram("/bin/bash");
+                process.setWorkingDirectory(this_file_path);
+                QString m_process_str = "dde-file-manager -d -o";
+                if (file_open_way_process)
+                {
+                    m_process_str = *file_open_way_process;
+                }
+                m_process_str += " ";
+                m_process_str += '"';
+                m_process_str += this_file_path;
+                m_process_str += '"';
+                process.setArguments(QStringList() << "-c" << m_process_str);
+                process.setStandardOutputFile("/dev/null");
+                process.setStandardErrorFile("/dev/null");
+                process.startDetached();
+            }
         }
-        QProcess process;
-        process.setProgram("/bin/bash");
-        process.setWorkingDirectory(this_file_path);
-        QString m_process_str = "dde-file-manager -d -o";
-        if (file_open_way_process)
-        {
-            m_process_str = *file_open_way_process;
-        }
-        m_process_str += " ";
-        m_process_str += this_file_path;
-        process.setArguments(QStringList() << "-c" << m_process_str);
-        process.setStandardOutputFile("/dev/null");
-        process.setStandardErrorFile("/dev/null");
-        process.startDetached();
     }
     else if (know_what == open_path_way)
     {
-        QString this_file_path = model->rootPath();
-        if (treeView->selectionModel() && treeView->selectionModel()->currentIndex().isValid())
+        if (treeView->selectionModel())
         {
-             this_file_path = model->filePath(treeView->selectionModel()->currentIndex());
+            QModelIndexList selectedList = treeView->selectionModel()->selectedIndexes();
+            if (!selectedList.isEmpty())
+            {
+                for (int i = 0; i < selectedList.count(); i += 4)
+                {
+                    QString this_file_path = model->filePath(proxyModel->mapToSource(selectedList[i]));
+                    QProcess process;
+                    process.setProgram("/bin/bash");
+                    process.setWorkingDirectory(this_file_path);
+                    QString m_process_str = "dde-file-manager --show-item";
+                    if (file_open_path_process)
+                    {
+                        m_process_str = *file_open_path_process;
+                    }
+                    m_process_str += " ";
+                    m_process_str += '"';
+                    m_process_str += this_file_path;
+                    m_process_str += '"';
+                    process.setArguments(QStringList() << "-c" << m_process_str);
+                    process.setStandardOutputFile("/dev/null");
+                    process.setStandardErrorFile("/dev/null");
+                    process.startDetached();
+                }
+            }
+            else
+            {
+                QString this_file_path = root_path;
+                QProcess process;
+                process.setProgram("/bin/bash");
+                process.setWorkingDirectory(this_file_path);
+                QString m_process_str = "dde-file-manager --show-item";
+                if (file_open_path_process)
+                {
+                    m_process_str = *file_open_path_process;
+                }
+                m_process_str += " ";
+                m_process_str += '"';
+                m_process_str += this_file_path;
+                m_process_str += '"';
+                process.setArguments(QStringList() << "-c" << m_process_str);
+                process.setStandardOutputFile("/dev/null");
+                process.setStandardErrorFile("/dev/null");
+                process.startDetached();
+            }
         }
-        QProcess process;
-        process.setProgram("/bin/bash");
-        process.setWorkingDirectory(this_file_path);
-        QString m_process_str = "dde-file-manager --show-item";
-        if (file_open_path_process)
-        {
-            m_process_str = *file_open_path_process;
-        }
-        m_process_str += " ";
-        m_process_str += this_file_path;
-        process.setArguments(QStringList() << "-c" << m_process_str);
-        process.setStandardOutputFile("/dev/null");
-        process.setStandardErrorFile("/dev/null");
-        process.startDetached();
     }
     else if (know_what == show_info)
     {
-        QString this_file_path = model->rootPath();
-        if (treeView->selectionModel() && treeView->selectionModel()->currentIndex().isValid())
+        if (treeView->selectionModel())
         {
-             this_file_path = model->filePath(treeView->selectionModel()->currentIndex());
+            QString this_file_path = root_path;
+            QProcess process;
+            process.setProgram("/bin/bash");
+            process.setWorkingDirectory(QDir::homePath());
+            QString m_process_str = "dde-file-manager -p";
+            if (file_open_info_process)
+            {
+                m_process_str = *file_open_info_process;
+            }
+            QModelIndexList selectedList = treeView->selectionModel()->selectedIndexes();
+            if (!selectedList.isEmpty())
+            {
+                for (int i = 0; i < selectedList.count(); i += 4)
+                {
+                    QString this_file_path = model->filePath(proxyModel->mapToSource(selectedList[i]));
+                    m_process_str += " ";
+                    m_process_str += '"';
+                    m_process_str += this_file_path;
+                    m_process_str += '"';
+                }
+            }
+            else
+            {
+                m_process_str += " ";
+                m_process_str += '"';
+                m_process_str += this_file_path;
+                m_process_str += '"';
+            }
+            process.setArguments(QStringList() << "-c" << m_process_str);
+            process.setStandardOutputFile("/dev/null");
+            process.setStandardErrorFile("/dev/null");
+            process.startDetached();
         }
-        QProcess process;
-        process.setProgram("/bin/bash");
-        process.setWorkingDirectory(this_file_path);
-        QString m_process_str = "dde-file-manager -p";
-        if (file_open_info_process)
-        {
-            m_process_str = *file_open_info_process;
-        }
-        m_process_str += " ";
-        m_process_str += this_file_path;
-        process.setArguments(QStringList() << "-c" << m_process_str);
-        process.setStandardOutputFile("/dev/null");
-        process.setStandardErrorFile("/dev/null");
-        process.startDetached();
     }
     else if (know_what == copy_action)
     {
-        if (treeView->selectionModel() && treeView->selectionModel()->currentIndex().isValid())
+        if (treeView->selectionModel())
         {
+            QModelIndexList selectedList = treeView->selectionModel()->selectedIndexes();
             QList<QUrl> urls;
-            urls.append(QUrl::fromLocalFile(model->filePath(treeView->selectionModel()->currentIndex())));
+            QByteArray gnomeData;
+            gnomeData.append("copy\n");
+            if (!selectedList.isEmpty())
+            {
+                for (int i = 0; i < selectedList.count(); i += 4)
+                {
+                    QString this_file_path = model->filePath(proxyModel->mapToSource(selectedList[i]));
+                    urls.append(QUrl::fromLocalFile(this_file_path));
+                    gnomeData.append(QUrl::fromLocalFile(this_file_path).toEncoded() + "\n");
+                }
+            }
+            else
+            {
+                urls.append(QUrl::fromLocalFile(root_path));
+                gnomeData.append(urls.first().toEncoded() + "\n");
+            }
             QMimeData *mimeData = new QMimeData;
             mimeData->setUrls(urls);
-            QApplication::clipboard()->setMimeData(mimeData);
+            mimeData->setData("x-special/gnome-copied-files", gnomeData);//添加此项用于激活dde-file-manager的"粘贴"
+            QApplication::clipboard()->setMimeData(mimeData, QClipboard::Mode::Clipboard);
         }
+    }
+    else if (know_what == single_press_mode_action)
+    {
+        single_press_mode_action->setIconVisibleInMenu(!single_press_mode_action->isIconVisibleInMenu());
     }
     else if (know_what == set_dir_path)
     {
@@ -359,12 +583,20 @@ void File_Tree::contextMenuEvent(QContextMenuEvent *event)
             return;
         }
         root_path = filename;
-        treeView->setRootIndex(model->index(root_path));
+        treeView->setRootIndex(proxyModel->mapFromSource(model->index(root_path)));
+        if (treeView->selectionModel())
+        {
+            treeView->selectionModel()->clear();
+        }
     }
     else if (know_what == refresh_action)
     {
         treeView->reset();
-        treeView->setRootIndex(model->index(root_path));
+        treeView->setRootIndex(proxyModel->mapFromSource(model->index(root_path)));
+        if (treeView->selectionModel())
+        {
+            treeView->selectionModel()->clear();
+        }
     }
     else if (know_what == set_icon_size_action)
     {
@@ -376,9 +608,30 @@ void File_Tree::contextMenuEvent(QContextMenuEvent *event)
             treeView->setIndentation(num);
         }
     }
+    else if (know_what == set_font_action)
+    {
+        bool ok = false;
+        QFont font = QFontDialog::getFont(&ok, treeView->font(), nullptr);
+        if (!ok)
+        {
+            return;
+        }
+        treeView->setFont(font);
+    }
+    else if (know_what == set_select_radius)
+    {
+        bool ok = false;
+        int num = QInputDialog::getInt(nullptr, "获取数值", "大小:", radius, 0, 2147483647, 1, &ok);
+        if (ok)
+        {
+            radius = num;
+            set_tree_view_style();
+        }
+    }
     else if (know_what == set_hover_color)
     {
         QColorDialog colorDialog;
+        colorDialog.setOption(QColorDialog::ShowAlphaChannel);
         colorDialog.setCurrentColor(hover_color);
         colorDialog.setParent(nullptr);
         colorDialog.setWindowTitle("获取颜色");
@@ -392,6 +645,7 @@ void File_Tree::contextMenuEvent(QContextMenuEvent *event)
     else if (know_what == set_select_color)
     {
         QColorDialog colorDialog;
+        colorDialog.setOption(QColorDialog::ShowAlphaChannel);
         colorDialog.setCurrentColor(select_color);
         colorDialog.setParent(nullptr);
         colorDialog.setWindowTitle("获取颜色");
@@ -402,6 +656,13 @@ void File_Tree::contextMenuEvent(QContextMenuEvent *event)
         select_color = colorDialog.currentColor();
         set_tree_view_style();
     }
+    else if (know_what == clean_selection_action)
+    {
+        if (treeView->selectionModel())
+        {
+            treeView->selectionModel()->clear();
+        }
+    }
     else
     {
         basic_action_func(know_what);
@@ -409,7 +670,7 @@ void File_Tree::contextMenuEvent(QContextMenuEvent *event)
 }
 void File_Tree::dropEvent(QDropEvent *event)
 {
-    if (*m_allow_drop && event->mimeData()->hasUrls())
+    if (*m_allow_drop && event->mimeData()->hasUrls() && !treeView->move_copying)
     {
         QString filename;
         for (QUrl url : event->mimeData()->urls())
@@ -429,7 +690,11 @@ void File_Tree::dropEvent(QDropEvent *event)
             return;
         }
         root_path = filename;
-        treeView->setRootIndex(model->index(root_path));
+        treeView->setRootIndex(proxyModel->mapFromSource(model->index(root_path)));
+        if (treeView->selectionModel())
+        {
+            treeView->selectionModel()->clear();
+        }
     }
 }
 void File_Tree::dragEnterEvent(QDragEnterEvent *event)
@@ -441,7 +706,10 @@ void File_Tree::dragEnterEvent(QDragEnterEvent *event)
 }
 void File_Tree::wheelEvent(QWheelEvent *event)
 {
-    event->accept();
+    if (treeView == My_Tree_View::catch_ptr)
+    {
+        event->accept();
+    }
 }
 void File_Tree::save(QSettings *settings)
 {
@@ -454,14 +722,17 @@ void File_Tree::save(QSettings *settings)
     settings->setValue("sort_section", treeView->header()->sortIndicatorSection());
     settings->setValue("sort_order", treeView->header()->sortIndicatorOrder() == Qt::SortOrder::AscendingOrder);
     settings->setValue("indentation", treeView->indentation());
-    settings->setValue("hover_color", hover_color.rgb());
-    settings->setValue("select_color", select_color.rgb());
+    settings->setValue("text_font", treeView->font());
+    settings->setValue("hover_color", hover_color.rgba());
+    settings->setValue("select_color", select_color.rgba());
+    settings->setValue("single_press_mode", single_press_mode_action->isIconVisibleInMenu());
+    settings->setValue("treeview_radius", radius);
 }
 void File_Tree::load(QSettings *settings)
 {
     Basic_Widget::load(settings);
     root_path = settings->value("root_path", QDir::rootPath()).toString();
-    treeView->setRootIndex(model->index(root_path));
+    treeView->setRootIndex(proxyModel->mapFromSource(model->index(root_path)));
     treeView->setColumnWidth(0, settings->value("column_width0", 150).toInt());
     treeView->setColumnWidth(1, settings->value("column_width1", 150).toInt());
     treeView->setColumnWidth(2, settings->value("column_width2", 150).toInt());
@@ -470,8 +741,12 @@ void File_Tree::load(QSettings *settings)
     int indentation_num = settings->value("indentation", 24).toInt();
     treeView->setIconSize(QSize(indentation_num, indentation_num));
     treeView->setIndentation(indentation_num);
-    hover_color = QColor::fromRgb(settings->value("hover_color", QColor(227, 242, 253).rgb()).toUInt());
-    select_color = QColor::fromRgb(settings->value("select_color", QColor(0, 170, 255).rgb()).toUInt());
+    treeView->setFont(settings->value("text_font", QFontDatabase::systemFont(QFontDatabase::FixedFont)).value<QFont>());
+    hover_color = QColor::fromRgba(settings->value("hover_color", QColor(227, 242, 253, 255).rgb()).toUInt());
+    select_color = QColor::fromRgba(settings->value("select_color", QColor(0, 170, 255, 255).rgb()).toUInt());
+    bool single_press_mode = settings->value("single_press_mode", false).toBool();
+    single_press_mode_action->setIconVisibleInMenu(single_press_mode);
+    radius = settings->value("treeview_radius", 10).toInt();
     set_tree_view_style();
 }
 QIcon My_Icon_Provider::icon(QFileIconProvider::IconType type) const
@@ -530,50 +805,187 @@ My_Tree_View::My_Tree_View(QWidget *parent)
 }
 void My_Tree_View::dropEvent(QDropEvent *event)
 {
-    if (m_allow_drop && *m_allow_drop && **m_allow_drop && event->mimeData()->hasUrls() && F_model)
-    {
-        QString filename;
-        for (QUrl url : event->mimeData()->urls())
-        {
-            if (url.isValid())
-            {
-                QFileInfo fileinfo(url.path());
-                if (fileinfo.isDir())
-                {
-                    filename = url.path();
-                    break;
-                }
-            }
-        }
-        if (filename.isNull() || filename.isEmpty())
-        {
-            return;
-        }
-        this->setRootIndex(this->F_model->index(filename));
-    }
+    QWidget::dropEvent(event);
 }
 void My_Tree_View::dragEnterEvent(QDragEnterEvent *event)
 {
-    if (m_allow_drop && *m_allow_drop && **m_allow_drop && event->mimeData()->hasUrls())
-    {
-        event->accept();
-    }
+    QWidget::dragEnterEvent(event);
 }
 void My_Tree_View::mouseMoveEvent(QMouseEvent *event)
 {
-    if (event->buttons() & Qt::LeftButton && F_model)
+    if (event->buttons() & Qt::LeftButton && F_model && proxyModel)
     {
-        if (selectionModel() && selectionModel()->currentIndex().isValid())
+        if (selectionModel())
         {
-            QList<QUrl> urls;
-            urls.append(QUrl::fromLocalFile(F_model->filePath(selectionModel()->currentIndex())));
-            QMimeData *mimeData = new QMimeData;
-            mimeData->setUrls(urls);
-            QDrag *drag=new QDrag(this);
-            drag->setMimeData(mimeData);
-            drag->setPixmap(F_model->fileIcon(selectionModel()->currentIndex()).pixmap(50, 50));
-            drag->setHotSpot(QPoint(13,13));
-            drag->exec(Qt::CopyAction, Qt::CopyAction);
+            QModelIndexList selectedList = selectionModel()->selectedIndexes();
+            if (!selectedList.isEmpty())
+            {
+                move_copying = true;
+                QList<QUrl> urls;
+                for (int i = 0; i < selectedList.count(); i += 4)
+                {
+                    urls.append(QUrl::fromLocalFile(F_model->filePath(proxyModel->mapToSource(selectedList[i]))));
+                }
+                QMimeData *mimeData = new QMimeData;
+                mimeData->setUrls(urls);
+                QDrag *drag=new QDrag(this);
+                drag->setMimeData(mimeData);
+                drag->setPixmap(F_model->fileIcon(proxyModel->mapToSource(selectedList[0])).pixmap(50, 50));
+                drag->setHotSpot(QPoint(13,13));
+                drag->exec(Qt::CopyAction, Qt::CopyAction);
+            }
         }
     }
+    QWidget::mouseMoveEvent(event);
+}
+void My_Tree_View::enterEvent(QEvent *event)
+{
+    My_Tree_View::catch_ptr = this;
+    QWidget::enterEvent(event);
+}
+My_TreeView_Delegate::My_TreeView_Delegate(QObject *parent, QColor *m_hover_color, QColor *m_select_color, int *m_radius)
+    :QStyledItemDelegate(parent)
+    ,hover_color(m_hover_color)
+    ,select_color(m_select_color)
+    ,radius(m_radius)
+{}
+void My_TreeView_Delegate::paint(QPainter *painter, const QStyleOptionViewItem &option, const QModelIndex &index) const
+{
+    QStyleOptionViewItem opt = option;
+    if (opt.state & QStyle::State_MouseOver || opt.state & QStyle::State_Selected)
+    {
+        painter->save();
+        painter->setRenderHint(QPainter::Antialiasing, true);
+        int index_id = index.column();
+        if (opt.state & QStyle::State_MouseOver)
+        {
+            QColor hoverColor(227, 242, 253, 255);
+            if (hover_color) hoverColor = *hover_color;
+            int Radius = 10;
+            if (radius) Radius = *radius;
+            painter->setBrush(hoverColor);
+            painter->setPen(Qt::NoPen);
+            if (index_id == 0)
+            {
+                QPainterPath path;
+                QRectF rect = opt.rect;
+                path.moveTo(rect.x() + Radius, rect.y());
+                path.lineTo(rect.right(), rect.y());
+                path.lineTo(rect.right(), rect.bottom());
+                path.lineTo(rect.x() + Radius, rect.bottom());
+                path.quadTo(rect.bottomLeft(), QPointF(rect.x(), rect.bottom() - Radius));
+                path.lineTo(rect.x(), rect.y() + Radius);
+                path.quadTo(rect.topLeft(), QPointF(rect.x() + Radius, rect.y()));
+                path.closeSubpath();
+                painter->drawPath(path);
+            }
+            else if (index_id == 3)
+            {
+                QPainterPath path;
+                QRectF rect = opt.rect;
+                path.moveTo(rect.topLeft());
+                QPointF topRight = rect.topRight();
+                path.lineTo(topRight.x() - Radius, topRight.y());
+                path.quadTo(topRight, QPointF(topRight.x(), topRight.y() + Radius));
+                QPointF bottomRight = rect.bottomRight();
+                path.lineTo(bottomRight.x(), bottomRight.y() - Radius);
+                path.quadTo(bottomRight, QPointF(bottomRight.x() - Radius, bottomRight.y()));
+                path.lineTo(rect.bottomLeft());
+                path.closeSubpath();
+                painter->drawPath(path);
+            }
+            else
+            {
+                painter->drawRect(opt.rect);
+            }
+        }
+        if (opt.state & QStyle::State_Selected)
+        {
+            QColor selectColor(0, 170, 255, 255);
+            if (select_color) selectColor = *select_color;
+            int Radius = 10;
+            if (radius) Radius = *radius;
+            painter->setBrush(selectColor);
+            painter->setPen(Qt::NoPen);
+            if (index_id == 0)
+            {
+                QPainterPath path;
+                QRectF rect = opt.rect;
+                path.moveTo(rect.x() + Radius, rect.y());
+                path.lineTo(rect.right(), rect.y());
+                path.lineTo(rect.right(), rect.bottom());
+                path.lineTo(rect.x() + Radius, rect.bottom());
+                path.quadTo(rect.bottomLeft(), QPointF(rect.x(), rect.bottom() - Radius));
+                path.lineTo(rect.x(), rect.y() + Radius);
+                path.quadTo(rect.topLeft(), QPointF(rect.x() + Radius, rect.y()));
+                path.closeSubpath();
+                painter->drawPath(path);
+            }
+            else if (index_id == 3)
+            {
+                QPainterPath path;
+                QRectF rect = opt.rect;
+                path.moveTo(rect.topLeft());
+                QPointF topRight = rect.topRight();
+                path.lineTo(topRight.x() - Radius, topRight.y());
+                path.quadTo(topRight, QPointF(topRight.x(), topRight.y() + Radius));
+                QPointF bottomRight = rect.bottomRight();
+                path.lineTo(bottomRight.x(), bottomRight.y() - Radius);
+                path.quadTo(bottomRight, QPointF(bottomRight.x() - Radius, bottomRight.y()));
+                path.lineTo(rect.bottomLeft());
+                path.closeSubpath();
+                painter->drawPath(path);
+            }
+            else
+            {
+                painter->drawRect(opt.rect);
+            }
+        }
+        opt.backgroundBrush = Qt::NoBrush;
+        painter->restore();
+    }
+    QStyledItemDelegate::paint(painter, opt, index);
+}
+My_ProxyModel::My_ProxyModel(QObject *parent)
+    :QSortFilterProxyModel(parent)
+{}
+void My_ProxyModel::setSearchPattern(const QString &pattern)
+{
+    m_pattern = pattern;
+    invalidateFilter();
+}
+bool My_ProxyModel::filterAcceptsRow(int sourceRow, const QModelIndex &sourceParent) const
+{
+    QModelIndex sourceIndex = sourceModel()->index(sourceRow, 0, sourceParent);
+    if (!sourceIndex.isValid())
+    {
+        return false;
+    }
+    QFileSystemModel *fileSystemModel = qobject_cast<QFileSystemModel *>(sourceModel());
+    if (fileSystemModel)
+    {
+        QFileInfo fileInfo = fileSystemModel->fileInfo(sourceIndex);
+        if (fileInfo.isDir())
+        {
+            return true;
+        }
+    }
+    if (m_pattern.isEmpty())
+    {
+        return true;
+    }
+    QString fileName = sourceIndex.data().toString();
+    return fileName.contains(m_pattern, Qt::CaseInsensitive);
+}
+void My_ProxyModel::sort(int column, Qt::SortOrder order)
+{
+    if (QFileSystemModel *fsModel = qobject_cast<QFileSystemModel*>(sourceModel()))
+    {
+        fsModel->sort(column, order);
+    }
+    else
+    {
+        QSortFilterProxyModel::sort(column, order);
+    }
+    invalidate();
 }

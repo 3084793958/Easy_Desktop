@@ -10,7 +10,7 @@ class PluginController : public QObject, public PluginProxyInterface
     Q_OBJECT
 public:
     explicit PluginController(QObject *parent = nullptr, Plugin_Root *plugin_root = nullptr);
-    ~PluginController() override;
+    virtual ~PluginController() override;
     virtual void itemAdded(PluginsItemInterface * const itemInter, const QString &itemKey) override;
     virtual void itemUpdate(PluginsItemInterface * const itemInter, const QString &itemKey) override;
     virtual void itemRemoved(PluginsItemInterface * const itemInter, const QString &itemKey) override;
@@ -29,11 +29,11 @@ class Plugin_Widget : public Basic_Widget
 {
     Q_OBJECT
 public:
-    explicit Plugin_Widget(QWidget *parent);
+    explicit Plugin_Widget(QWidget *parent, Plugin_Root *plugin_root, PluginsItemInterface::Carrier_Type m_carrier_type);
     virtual void P_save(QSettings *settings, QString Token);
     virtual void p_load(QSettings *settings, QString Token);
-    bool is_item = false;
-    char m_padding[6];//配位
+    char m_padding[3];//配位
+    PluginsItemInterface::Carrier_Type plugin_carrier_type = PluginsItemInterface::Carrier_Type::Unknown;
     QWidget *carrier = new QWidget(this->get_self());
     QWidget *save_ptr = nullptr;
     int distance_width = 10;
@@ -42,14 +42,26 @@ public:
     int delta_y = 0;
     void set_widget(QWidget *ptr);
     void remove_widget();
+    void plugin_set_size(PluginsItemInterface *const itemInter);
+    void plugin_carrier_update(PluginsItemInterface * const itemInter);
+    void plugin_carrier_sending_data(PluginsItemInterface * const itemInter);
     void plugin_set_size();
     void call_to_show();
+    virtual void context_menu_event(QAction *know_what);
+    P_Sender *carrier_action_sender = new P_Sender(this);
+    P_Sender *plugin_action_sender = nullptr;
+    QAction *plugin_menu_ptr = nullptr;
 protected:
-    QMenu *menu = new QMenu(this);
-    QAction *set_distance_action = new QAction(tr("设置距离"), this);
+    QMenu *menu = new QMenu(tr("载体菜单"), this);
+    QAction *set_distance_action = new QAction(tr("设置间距"), this);
     QAction *set_delta_action = new QAction(tr("设置偏移"), this);
     virtual void contextMenuEvent(QContextMenuEvent *event);
     virtual void wheelEvent(QWheelEvent *event);
+    //music-island补丁
+    virtual void enterEvent(QEvent *event);
+    virtual void leaveEvent(QEvent *event);
+    //music-island补丁
+    Plugin_Root *root = nullptr;
 };
 class Plugin_Item_Widget : public Plugin_Widget
 {
@@ -63,6 +75,7 @@ public:
     void parseMenuItemsArray(QMenu *parentMenu, const QJsonArray &itemsArray, bool checkableMenu, bool singleCheck);
     void parseMenuItemsArray(const QJsonArray &itemsArray, bool checkableMenu, bool singleCheck);
     void plugin_position_gui_update();
+    virtual void context_menu_event(QAction *know_what);
 signals:
     void Released();
     void Hover();
@@ -71,7 +84,6 @@ signals:
     void extra_menu_call(QString menuId, bool checked);
     void real_close_event();
 private:
-    Plugin_Root *root = nullptr;
     QAction *set_plugin_path_action = new QAction(tr("设置插件路径"), this);
     QAction *tips_always_show_action = new QAction(tr("tips窗口永久显示"), this);
     QAction *popup_always_show_action = new QAction(tr("popup窗口永久显示"), this);
@@ -85,7 +97,7 @@ private:
     QAction *set_bottom_position = new QAction(tr("Bottom"), this);
     QAction *set_left_position = new QAction(tr("Left"), this);
     QMenu *plugin_extra_context_menu = new QMenu(this);
-    QTimer *hover_timer = new QTimer;
+    QTimer *hover_timer = new QTimer(this);
     QPoint press_event_point = QPoint(0, 0);
     bool mouse_in = false;
     bool use_plugin_context = false;
@@ -103,7 +115,7 @@ class Plugin_Root : public QObject
 public:
     explicit Plugin_Root(QWidget *parent);
     ~Plugin_Root();
-    void only_hide();
+    void close_plugin(bool force_remove = false);
     void set_now_page(int *m_now_page);
     void set_desktop_number(int *m_desktop_number);
     void set_basic_list(QList<QWidget *> *m_basic_list);
@@ -117,20 +129,25 @@ public:
     void disable_plugin_update();
     void click_call();
     void update_plugin();
-    void update_plugin_position();
+    void update_plugin(PluginsItemInterface * const itemInter, const QString &itemKey);
+    PluginsItemInterface *get_interface();
+    bool is_Ext_plugin();
     WId WinId;
     void X11_Raise();
     QList<Plugin_Root *> *plugin_root_list;
+    static bool Contains_Ext_Plugin(QString Ext_name, QString plugin_controller_name);
 public:
     QString plugin_path = "";
     bool tips_always_show = false;
     bool popup_always_show = false;
-    bool follow_plugin_show_after_load = true;
     bool plugin_disabled = false;
+    bool will_fully_remove = false;
     QString style_sheet = "";
     QString plugin_itemKey= "";
     bool has_been_closed = false;
     Dock::Position plugin_position = Dock::Position::Top;
+    P_Sender *update_sender = new P_Sender(this, false, false);
+    P_Sender *send_data_sender = new P_Sender(this, false, false);
 private:
     QWidget *desktop_parent = nullptr;
     int *now_page;
@@ -141,8 +158,8 @@ private:
     PluginController *plugin_controller = new PluginController(this, this);
 public:
     Plugin_Item_Widget *item_carrier = new Plugin_Item_Widget(nullptr, this);
-    Plugin_Widget *tips_carrier = new Plugin_Widget(nullptr);
-    Plugin_Widget *popup_carrier = new Plugin_Widget(nullptr);
+    Plugin_Widget *tips_carrier = new Plugin_Widget(nullptr, this, PluginsItemInterface::Carrier_Type::Plugin_Tips);
+    Plugin_Widget *popup_carrier = new Plugin_Widget(nullptr, this, PluginsItemInterface::Carrier_Type::Plugin_Popup);
     QWidget *item_widget = nullptr;
     QWidget *tips_widget = nullptr;
     QWidget *popup_widget = nullptr;

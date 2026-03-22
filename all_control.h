@@ -40,9 +40,9 @@ private:
     Desktop_Main *main_desktop = new Desktop_Main(this);
     Setting_Widget *setting_widget = new Setting_Widget;
     Experimental_Settings *experimental_settings = new Experimental_Settings;
-    QTimer *stay_on_top_timer = new QTimer;
-    QTimer *workspace_timer = new QTimer;
-    QTimer *auto_save_timer = new QTimer;
+    QTimer *stay_on_top_timer = new QTimer(this);
+    QTimer *workspace_timer = new QTimer(this);
+    QTimer *auto_save_timer = new QTimer(this);
 private slots:
     void dbus_slot(QDBusMessage message);
 };

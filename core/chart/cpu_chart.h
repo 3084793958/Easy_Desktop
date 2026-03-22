@@ -16,7 +16,7 @@ private:
     QList<QVector<double> *> send_cpu_data_list;
     QList<QPair<unsigned long long, unsigned long long>> last_data;
     QList<QPair<unsigned long long, unsigned long long>> new_data;
-    QTimer *updateTimer = new QTimer;
+    QTimer *updateTimer = new QTimer(this);
     int update_time = 1000;
     int channel = 0;
     int vector_long = 60;

@@ -228,12 +228,14 @@ Desktop_Main::Desktop_Main(QWidget *parent)
     background_Add_Action->addAction(my_process_Carrier_action);
     background_Add_Action->addAction(my_program_INNER_action);
     background_Add_Action->addAction(plugin_widget_action);
+#ifdef USE_CHART
     my_chart_menu->addAction(cpu_chart_action);
     my_chart_menu->addAction(ram_chart_action);
     my_chart_menu->addAction(net_chart_action);
     my_chart_menu->addAction(disk_chart_action);
     my_chart_menu->addAction(pulseaudio_chart_action);
     background_Add_Action->addMenu(my_chart_menu);
+#endif
     menu->addMenu(background_Add_Action);
     desktop_control_action->addAction(lock_desktop);
     desktop_control_action->addAction(unlock_desktop);
@@ -340,6 +342,7 @@ void Desktop_Main::contextMenuEvent(QContextMenuEvent *event)
         {
             process_widget_list[0]->~Process_Widget();
         }
+#ifdef USE_CHART
         count = cpu_chart_list.count();
         for (int i = 0; i < count; i++)
         {
@@ -365,6 +368,7 @@ void Desktop_Main::contextMenuEvent(QContextMenuEvent *event)
         {
             pulseaudio_chart_list[0]->~PulseAudio_Chart();
         }
+#endif
         count = file_tree_list.count();
         for (int i = 0; i < count; i++)
         {
@@ -373,7 +377,7 @@ void Desktop_Main::contextMenuEvent(QContextMenuEvent *event)
         count = plugin_root_list.count();
         for (int i = 0; i < count; i++)
         {
-            plugin_root_list[0]->~Plugin_Root();//删除方法不一致
+            plugin_root_list[0]->~Plugin_Root();
         }
         QApplication::quit();
     }
@@ -575,6 +579,7 @@ void Desktop_Main::contextMenuEvent(QContextMenuEvent *event)
         my_program_container_list.append(my_program_Carrier);
         my_program_Carrier->my_program_container_list = &my_program_container_list;
     }
+#ifdef USE_CHART
     else if (know_what == cpu_chart_action)
     {
         CPU_Chart *cpu_chart = new CPU_Chart(desktop_core_dock_list[now_page]);
@@ -625,6 +630,7 @@ void Desktop_Main::contextMenuEvent(QContextMenuEvent *event)
         pulseaudio_chart_list.append(pulseaudio_chart);
         pulseaudio_chart->pulseaudio_chart_list = &pulseaudio_chart_list;
     }
+#endif
     else if (know_what == file_tree_action)
     {
         File_Tree *file_tree = new File_Tree(desktop_core_dock_list[now_page]);
@@ -830,6 +836,7 @@ void Desktop_Main::update_for_lineedit(QColor m_theme_color, QColor m_theme_back
     {
         item->set_icon(m_checked_icon_path);
     }
+#ifdef USE_CHART
     for (auto *item : cpu_chart_list)
     {
         item->set_icon(m_checked_icon_path);
@@ -850,6 +857,7 @@ void Desktop_Main::update_for_lineedit(QColor m_theme_color, QColor m_theme_back
     {
         item->set_icon(m_checked_icon_path);
     }
+#endif
     for (auto *item : plugin_root_list)
     {
         item->set_icon(m_checked_icon_path);
@@ -977,11 +985,13 @@ void Desktop_Main::save(QString path)
     settings.setValue("my_process_carrier_list_count", my_process_carrier_list.count());
     settings.setValue("my_program_container_list_count", my_program_container_list.count());
     settings.setValue("process_widget_list_count", process_widget_list.count());
+#ifdef USE_CHART
     settings.setValue("cpu_chart_list_count", cpu_chart_list.count());
     settings.setValue("ram_chart_list_count", ram_chart_list.count());
     settings.setValue("net_chart_list_count", net_chart_list.count());
     settings.setValue("disk_chart_list_count", disk_chart_list.count());
     settings.setValue("pulseaudio_chart_list_count", pulseaudio_chart_list.count());
+#endif
     settings.setValue("file_tree_list_count", file_tree_list.count());
     settings.setValue("plugin_root_list_count", plugin_root_list.count());
     settings.setValue("stay_on_top", *stay_on_top);
@@ -1050,6 +1060,7 @@ void Desktop_Main::save(QString path)
         process_widget_list[i]->save(&settings);
         settings.endGroup();
     }
+#ifdef USE_CHART
     count = cpu_chart_list.count();
     for (int i = 0; i < count; i++)
     {
@@ -1085,6 +1096,7 @@ void Desktop_Main::save(QString path)
         pulseaudio_chart_list[i]->save(&settings);
         settings.endGroup();
     }
+#endif
     count = file_tree_list.count();
     for (int i = 0; i < count; i++)
     {
@@ -1184,11 +1196,13 @@ void Desktop_Main::load()
     int my_lineedit_list_count = settings.value("my_lineedit_list_count", 0).toInt();
     int my_process_carrier_list_count = settings.value("my_process_carrier_list_count", 0).toInt();
     int my_program_container_list_count = settings.value("my_program_container_list_count", 0).toInt();
+#ifdef USE_CHART
     int cpu_chart_list_count = settings.value("cpu_chart_list_count", 0).toInt();
     int ram_chart_list_count = settings.value("ram_chart_list_count", 0).toInt();
     int net_chart_list_count = settings.value("net_chart_list_count", 0).toInt();
     int disk_chart_list_count = settings.value("disk_chart_list_count", 0).toInt();
     int pulseaudio_chart_list_count = settings.value("pulseaudio_chart_list_count", 0).toInt();
+#endif
     int process_widget_list_count = settings.value("process_widget_list_count", 0).toInt();
     int file_tree_list_count = settings.value("file_tree_list_count", 0).toInt();
     int plugin_root_list_count = settings.value("plugin_root_list_count", 0).toInt();
@@ -1202,11 +1216,13 @@ void Desktop_Main::load()
     my_program_container_list.clear();
     process_widget_list.clear();
     file_tree_list.clear();
+#ifdef USE_CHART
     cpu_chart_list.clear();
     ram_chart_list.clear();
     net_chart_list.clear();
     disk_chart_list.clear();
     pulseaudio_chart_list.clear();
+#endif
     plugin_root_list.clear();
     for (int i = 0; i < my_clock_list_count; i++)
     {
@@ -1386,6 +1402,7 @@ void Desktop_Main::load()
         settings.endGroup();
         my_file->show();
     }
+#ifdef USE_CHART
     for (int i = 0; i < cpu_chart_list_count; i++)
     {
         CPU_Chart *cpu_chart = new CPU_Chart(desktop_core_dock_list[now_page]);
@@ -1456,6 +1473,7 @@ void Desktop_Main::load()
         settings.endGroup();
         pulseaudio_chart->show();
     }
+#endif
     for (int i = 0; i < file_tree_list_count; i++)
     {
         File_Tree *file_tree = new File_Tree(desktop_core_dock_list[now_page]);
