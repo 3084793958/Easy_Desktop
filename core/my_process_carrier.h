@@ -2,6 +2,13 @@
 #define MY_PROCESS_CARRIER_H
 #include "basic_widget.h"
 #include "file_widget.h"
+enum class Control_Dock_Pos
+{
+    Top = 0,
+    Bottom = 1,
+    Left = 2,
+    Right = 3
+};
 class Page_Dock_Button : public QPushButton
 {
     Q_OBJECT
@@ -10,9 +17,11 @@ public:
     void set_Number(int number);
     void set_Now_Page(int *m_now_page);
     void Update_Button();
+    void Set_Dock_Pos(Control_Dock_Pos *m_control_dock_pos);
 private:
     int Button_Number;
     int *now_page;
+    Control_Dock_Pos *control_dock_pos = nullptr;
 };
 class Page_Control_Dock : public QWidget
 {
@@ -23,14 +32,18 @@ public:
     void Set_Desktop_Number(int *number);
     void Set_Now_page(int *m_now_page);
     void Changed_Signals();
+    void Set_Dock_Pos(Control_Dock_Pos *m_control_dock_pos);
 private:
     int *Desktop_NUmber;
     int *now_page;
+    Control_Dock_Pos *control_dock_pos = nullptr;
     QList<Page_Dock_Button *> Dock_Button_List;
 };
 class My_Process_Carrier :public Basic_Widget
 {
     Q_OBJECT
+private:
+    Control_Dock_Pos control_dock_pos = Control_Dock_Pos::Bottom;
 public:
     explicit My_Process_Carrier(QWidget *parent);
     ~My_Process_Carrier();
@@ -39,7 +52,6 @@ public:
     QList<My_Process_Carrier *> *my_process_carrier_list;
     QList<File_Widget *> *file_widget_list;
     QList<Process_Widget *> *process_widget_list;
-    WId m_WinId;
     Process_Widget **process_widget_p;
     virtual void save(QSettings *settings);
     virtual void load(QSettings *settings);
@@ -70,8 +82,12 @@ protected:
     QAction *load_dir = new QAction(tr("载入文件夹"), this);
     QAction *create_carrier_action = new QAction(tr("新建页"), this);
     QAction *delete_carrier_action = new QAction(tr("删除页"), this);
+    QMenu *set_control_dock_pos_menu = new QMenu(tr("设置控制窗口方位"), this);
+    QAction *set_to_top_action = new QAction(tr("顶部"), this);
+    QAction *set_to_bottom_action = new QAction(tr("底部"), this);
+    QAction *set_to_left_action = new QAction(tr("左侧"), this);
+    QAction *set_to_right_action = new QAction(tr("右侧"), this);
     void context_solution(QAction *know_what, QPoint pos);
-    void X11_Raise();
 private:
     void Call_Timer_Move();
     void Timer_End();

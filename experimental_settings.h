@@ -1,7 +1,6 @@
 #ifndef EXPERIMENTAL_SETTINGS_H
 #define EXPERIMENTAL_SETTINGS_H
 #include <QtWidgets>
-#include <QX11Info>
 class Theme_Set_Dialog : public QWidget
 {
     Q_OBJECT
@@ -65,7 +64,6 @@ public:
     void update_data();
     void send_data();
     bool has_been_set = false;
-    WId winId;
 signals:
     void has_sended();
 public:
@@ -96,7 +94,6 @@ public:
     Theme_Set_Dialog *set_theme_dialog = new Theme_Set_Dialog(nullptr, &m_theme_color, &m_theme_background_color, &m_theme_text_color, &m_select_text_color, &m_disabled_text_color, &m_checked_icon_path);
 private:
     virtual void resizeEvent(QResizeEvent *event);
-    void X11_Raise();
 };
 
 #endif // EXPERIMENTAL_SETTINGS_H

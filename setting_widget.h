@@ -14,10 +14,9 @@ public:
     void remove_wallpaper(int wallpaper_id);
     void add_wallpaper(uint m_id, QString m_name, bool m_is_image, QString m_path, Scale_Type m_scale_type, bool m_center, bool m_mouse_effect,
                        qreal m_k_mouse_move_width, qreal m_k_mouse_move_height, int m_delta_x, int m_delta_y,
-                       bool m_on_Antialiasing);
+                       bool m_on_Antialiasing, Mouse_Control_Type m_mouse_control_type = Mouse_Control_Type::Follow_Desktop, int m_wallpaper_width = 0, int m_wallpaper_height = 0);
 public:
     Desktop_Background *background_path;
-    WId winId;
 private:
     Path_List path_list;
     int path_list_index;
@@ -35,6 +34,9 @@ private:
     QList<QSpinBox*> delta_x_box_list;
     QList<QSpinBox*> delta_y_box_list;
     QList<QComboBox*> on_Antialiasing_box_list;
+    QList<QComboBox*> mouse_control_type_box_list;
+    QList<QSpinBox*> wallpaper_width_box_list;
+    QList<QSpinBox*> wallpaper_height_box_list;
     QPushButton *update_button = new QPushButton(tr("更新"),this);
     QPushButton *sort_button = new QPushButton(tr("排序"),this);
     QPushButton *load_button = new QPushButton(tr("重载"),this);
@@ -48,7 +50,6 @@ private:
 private:
     int Get_id_to_Index(int id);
     virtual bool eventFilter(QObject *watched, QEvent *event);
-    void X11_Rasie();
     virtual void resizeEvent(QResizeEvent *event);
     void dropEvent(QDropEvent *event);
     void dragEnterEvent(QDragEnterEvent *event);

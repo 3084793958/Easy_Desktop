@@ -94,17 +94,11 @@ void PulseAudio_Chart::pa_delete()
         pa_mainloop_free(mainloop);
         mainloop = nullptr;
     }
-    if (input_stream)
+    if (main_stream)
     {
-        pa_stream_disconnect(input_stream);
-        pa_stream_unref(input_stream);
-        input_stream = nullptr;
-    }
-    if (output_stream)
-    {
-        pa_stream_disconnect(output_stream);
-        pa_stream_unref(output_stream);
-        output_stream = nullptr;
+        pa_stream_disconnect(main_stream);
+        pa_stream_unref(main_stream);
+        main_stream = nullptr;
     }
 }
 void PulseAudio_Chart::pa_start_monitor()
@@ -134,7 +128,7 @@ void PulseAudio_Chart::pa_start_monitor()
             PulseAudio_Chart *pulseaudio_chart = static_cast<PulseAudio_Chart *>(userdata);
             pulseaudio_chart->output_spec = i->sample_spec;
             pulseaudio_chart->output_name = const_cast<char *>(i->monitor_source_name);
-            pulseaudio_chart->pa_start_output_finished();
+            pulseaudio_chart->pa_start_main_finished(Stream_Type::Output);
         }, userdata);
         if (op1) pa_operation_unref(op1);
         pa_operation *op2 = pa_context_get_source_info_by_name(c, i->default_source_name, [](pa_context *c, const pa_source_info *i, int eol, void *userdata)
@@ -151,187 +145,50 @@ void PulseAudio_Chart::pa_start_monitor()
             PulseAudio_Chart *pulseaudio_chart = static_cast<PulseAudio_Chart *>(userdata);
             pulseaudio_chart->input_spec = i->sample_spec;
             pulseaudio_chart->input_name = const_cast<char *>(i->monitor_of_sink_name);
-            pulseaudio_chart->pa_start_input_finished();
+            pulseaudio_chart->pa_start_main_finished(Stream_Type::Input);
         }, userdata);
         if (op2) pa_operation_unref(op2);
     }, this);
     if (op0) pa_operation_unref(op0);
 }
-void PulseAudio_Chart::pa_start_input_finished()
+void PulseAudio_Chart::pa_start_main_finished(Stream_Type type)
 {
-    if (input_stream)
-    {
-        pa_stream_disconnect(input_stream);
-        pa_stream_unref(input_stream);
-        input_stream = nullptr;
-    }
     pa_buffer_attr buffer_attr;
     buffer_attr.maxlength = static_cast<uint32_t>(-1);
     buffer_attr.tlength = static_cast<uint32_t>(-1);
     buffer_attr.prebuf = static_cast<uint32_t>(-1);
     buffer_attr.minreq = static_cast<uint32_t>(-1);
     buffer_attr.fragsize = static_cast<uint32_t>(-1);
-    input_stream = pa_stream_new(context, "Easy_Desktop_Mic_Stream", &input_spec, nullptr);
-    pa_stream_set_state_callback(input_stream, nullptr, nullptr);
-    pa_stream_set_read_callback(input_stream, stream_input_read_callback, this);
-    pa_stream_connect_record(input_stream, input_name, &buffer_attr, PA_STREAM_NOFLAGS);
-}
-void PulseAudio_Chart::pa_start_output_finished()
-{
-    if (output_stream)
+    if (type == Stream_Type::Input && get_input)
     {
-        pa_stream_disconnect(output_stream);
-        pa_stream_unref(output_stream);
-        output_stream = nullptr;
-    }
-    if (!output_name) return;
-    pa_buffer_attr buffer_attr;
-    buffer_attr.maxlength = static_cast<uint32_t>(-1);
-    buffer_attr.tlength = static_cast<uint32_t>(-1);
-    buffer_attr.prebuf = static_cast<uint32_t>(-1);
-    buffer_attr.minreq = static_cast<uint32_t>(-1);
-    buffer_attr.fragsize = static_cast<uint32_t>(-1);
-    output_stream = pa_stream_new(context, "Easy_Desktop_Monitor_Stream", &output_spec, nullptr);
-    pa_stream_set_state_callback(output_stream, nullptr, nullptr);
-    pa_stream_set_read_callback(output_stream, stream_output_read_callback, this);
-    pa_stream_connect_record(output_stream, output_name, &buffer_attr, PA_STREAM_NOFLAGS);
-}
-void PulseAudio_Chart::stream_input_read_callback(pa_stream *p, size_t nbytes, void *userdata)
-{
-    PulseAudio_Chart *pulseaudio_chart = static_cast<PulseAudio_Chart *>(userdata);
-    if (pulseaudio_chart->connecting) pulseaudio_chart->connecting = false;
-    if (!pulseaudio_chart->get_input) return;
-    if (pulseaudio_chart->pa_now_process >= pulseaudio_chart->pa_can_process)
-    {
-        const void *buffer;
-        pa_stream_peek(p, &buffer, &nbytes);
-        pa_stream_drop(p);
-        return;
-    }
-    const void *buffer;
-    pa_stream_peek(p, &buffer, &nbytes);
-    if (buffer == nullptr && nbytes == 0) return;
-    if (buffer == nullptr)
-    {
-        pa_stream_drop(p);
-        return;
-    }
-    const pa_stream_state_t state = pa_stream_get_state(p);
-    if (state != PA_STREAM_READY)
-    {
-        pa_stream_drop(p);
-        return;
-    }
-    const pa_sample_spec *spec = pa_stream_get_sample_spec(p);
-    size_t sample_count = 0;
-    uint8_t channels;
-    channels = spec->channels;
-    size_t samples = nbytes / pa_frame_size(spec);
-    float left_channel[1024];
-    float right_channel[1024];
-    if (channels == 0)
-    {
-        samples = 0;
-        channels = 1;
-    }
-    switch (spec->format)
-    {
-    case PA_SAMPLE_S16LE:
-    {
-        const int16_t *samples_ptr = static_cast<const int16_t *>(buffer);
-        size_t sample_index = 0;
-        sample_count = samples / channels;
-        // 提取声道
-        for (size_t i = 0; i < samples; i += channels)
+        if (main_stream)
         {
-            if (sample_index >= 1024)
-            {
-                break;
-            }
-            if (channels >= 1)
-            {
-                left_channel[sample_index] = samples_ptr[i] / 32768.0f;
-            }
-            if (channels >= 2)
-            {
-                right_channel[sample_index] = samples_ptr[i + 1] / 32768.0f;
-            }
-            sample_index++;
+            pa_stream_disconnect(main_stream);
+            pa_stream_unref(main_stream);
         }
-        break;
+        main_stream = pa_stream_new(context, "Easy_Desktop_Mic_Stream", &input_spec, nullptr);
+        pa_stream_set_state_callback(main_stream, nullptr, nullptr);
+        pa_stream_set_read_callback(main_stream, stream_main_read_callback, this);
+        pa_stream_connect_record(main_stream, input_name, &buffer_attr, PA_STREAM_NOFLAGS);
     }
-    case PA_SAMPLE_FLOAT32LE:
+    else if (type == Stream_Type::Output && !get_input)
     {
-        const float *samples_ptr = static_cast<const float*>(buffer);
-        size_t sample_index = 0;
-        sample_count = samples / channels;
-        for (size_t i = 0; i < samples; i += channels)
+        if (!output_name) return;
+        if (main_stream)
         {
-            if (sample_index >= 1024)
-            {
-                break;
-            }
-            if (channels >= 1)
-            {
-                left_channel[sample_index] = samples_ptr[i];
-            }
-            if (channels >= 2)
-            {
-                right_channel[sample_index] = samples_ptr[i + 1];
-            }
-            sample_index++;
+            pa_stream_disconnect(main_stream);
+            pa_stream_unref(main_stream);
         }
-        break;
+        main_stream = pa_stream_new(context, "Easy_Desktop_Monitor_Stream", &output_spec, nullptr);
+        pa_stream_set_state_callback(main_stream, nullptr, nullptr);
+        pa_stream_set_read_callback(main_stream, stream_main_read_callback, this);
+        pa_stream_connect_record(main_stream, output_name, &buffer_attr, PA_STREAM_NOFLAGS);
     }
-    default:
-        break;
-    }
-    // 处理数据
-    float left_rms = 0.0f, right_rms = 0.0f;
-    if (sample_count >= 1024) sample_count = 1023;
-    for (size_t i = 0; i < sample_count; i++)
-    {
-        left_rms += left_channel[i] * left_channel[i];
-        if (channels >= 2)
-        {
-            right_rms += right_channel[i] * right_channel[i];
-        }
-    }
-    left_rms = sqrtf(left_rms / sample_count);
-    if (channels >= 2)
-    {
-        right_rms = sqrtf(right_rms / sample_count);
-    }
-    const float silence_threshold = 1e-6f; // -120 dB
-    if (left_rms < silence_threshold) left_rms = silence_threshold;
-    if (right_rms < silence_threshold) right_rms = silence_threshold;
-    float left_db = 20 * log10f(left_rms);
-    float right_db = 20 * log10f(right_rms);
-    if (std::isinf(left_db) || std::isnan(left_db) || std::isinf(right_db) || std::isnan(right_db))
-    {
-        pa_stream_drop(p);
-        return;
-    }
-    pulseaudio_chart->pa_now_process++;
-    pulseaudio_chart->left_data.erase(pulseaudio_chart->left_data.begin());
-    pulseaudio_chart->right_data.erase(pulseaudio_chart->right_data.begin());
-    if (pulseaudio_chart->use_rms)
-    {
-        pulseaudio_chart->left_data.push_back(left_rms);
-        pulseaudio_chart->right_data.push_back(right_rms);
-    }
-    else
-    {
-        pulseaudio_chart->left_data.push_back(left_db);
-        pulseaudio_chart->right_data.push_back(right_db);
-    }
-    pa_stream_drop(p);
 }
-void PulseAudio_Chart::stream_output_read_callback(pa_stream *p, size_t nbytes, void *userdata)
+void PulseAudio_Chart::stream_main_read_callback(pa_stream *p, size_t nbytes, void *userdata)
 {
     PulseAudio_Chart *pulseaudio_chart = static_cast<PulseAudio_Chart *>(userdata);
     if (pulseaudio_chart->connecting) pulseaudio_chart->connecting = false;
-    if (pulseaudio_chart->get_input) return;
     if (pulseaudio_chart->pa_now_process >= pulseaudio_chart->pa_can_process)
     {
         const void *buffer;
@@ -460,7 +317,14 @@ void PulseAudio_Chart::stream_output_read_callback(pa_stream *p, size_t nbytes, 
 }
 void PulseAudio_Chart::pa_update()
 {
-    if (!connecting) pa_timer->setInterval(update_time);
+    if (connecting)
+    {
+        pa_timer->setInterval(10);
+    }
+    else
+    {
+        pa_timer->setInterval(update_time);
+    }
     pa_now_process = 0;
     if (mainloop) pa_mainloop_iterate(mainloop, 0, nullptr);//与前chart逻辑不同,滞后,多数据更新
     if (left_data.size() == 0)
@@ -482,6 +346,7 @@ void PulseAudio_Chart::pa_update()
         sec_series->setName("右声道dB");
     }
     axisX->setRange(0, left_data.size());
+    update_data_size();
     if (use_rms)
     {
         for (int i = 0; i < left_data.size(); i++)
@@ -552,6 +417,7 @@ void PulseAudio_Chart::load(QSettings *settings)
     axisX->setLabelsFont(font);
     axisY->setLabelsFont(font);
     update_data_size();
+    pa_start_monitor();
     if (use_rms)
     {
         use_rms_action->setIconVisibleInMenu(true);
@@ -619,12 +485,14 @@ void PulseAudio_Chart::contextMenuEvent(QContextMenuEvent *event)
     else if (know_what == output_action)
     {
         get_input = false;
+        pa_start_monitor();
         input_action->setIconVisibleInMenu(false);
         output_action->setIconVisibleInMenu(true);
     }
     else if (know_what == input_action)
     {
         get_input = true;
+        pa_start_monitor();
         input_action->setIconVisibleInMenu(true);
         output_action->setIconVisibleInMenu(false);
     }

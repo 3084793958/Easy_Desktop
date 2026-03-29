@@ -47,13 +47,17 @@ private:
     QAction *set_line_color = new QAction(tr("设置折线颜色"), this);
     QMenu *menu = new QMenu(this);
 private:
+    enum class Stream_Type
+    {
+        Input,
+        Output
+    };
     bool get_input = false;
     bool connecting = true;
     pa_mainloop *mainloop = nullptr;
     pa_mainloop_api *mainloop_api = nullptr;
     pa_context *context = nullptr;
-    pa_stream *input_stream = nullptr;
-    pa_stream *output_stream = nullptr;
+    pa_stream *main_stream = nullptr;
     pa_sample_spec input_spec;
     pa_sample_spec output_spec;
     char *input_name;
@@ -64,10 +68,8 @@ private:
     void pa_delete();
     void pa_update();
     void pa_start_monitor();
-    void pa_start_input_finished();
-    void pa_start_output_finished();
-    static void stream_input_read_callback(pa_stream *p, size_t nbytes, void *userdata);
-    static void stream_output_read_callback(pa_stream *p, size_t nbytes, void *userdata);
+    void pa_start_main_finished(Stream_Type type);
+    static void stream_main_read_callback(pa_stream *p, size_t nbytes, void *userdata);
 };
 
 #endif // PULSEAUDIO_CHART_H

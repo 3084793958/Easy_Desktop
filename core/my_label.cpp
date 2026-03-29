@@ -1,18 +1,4 @@
 #include "my_label.h"
-#include <QX11Info>
-#include <X11/Xlib.h>
-void My_Label::X11_Rasie()
-{
-    Window win_Id = static_cast<Window>(winId);
-    Display *display = QX11Info::display();
-    XRaiseWindow(display, win_Id);
-    XFlush(display);
-}
-#undef CursorShape
-void My_Label::set_WinId(WId m_winId)
-{
-    winId = m_winId;
-}
 QSize My_Label::get_Image_Size(QString path)
 {
     if (path.isEmpty())
@@ -110,7 +96,7 @@ void My_Label::contextMenuEvent(QContextMenuEvent *event)
     if (know_what == set_image)
     {
         QString filename = QFileDialog::getOpenFileName(nullptr, "获取图像", QDir::homePath(), "图像文件(*.png *.jpg *.jpeg *.svg *.gif *.bmp);;所有文件(*.*)");
-        My_Label::X11_Rasie();
+        My_X11_Libs::X11_Raise();
         if (filename.isEmpty())
         {
             return;

@@ -1,15 +1,6 @@
 #include "setting_widget.h"
 #include <QComboBox>
-#include <QX11Info>
-#include <X11/Xlib.h>
-void Setting_Widget::X11_Rasie()
-{
-    Window win_Id = static_cast<Window>(winId);
-    Display *display = QX11Info::display();
-    XRaiseWindow(display, win_Id);
-    XFlush(display);
-}
-#undef CursorShape
+#include "core/my_x11_libs.h"
 Setting_Widget::Setting_Widget(QWidget *parent)
     :QWidget(parent)
 {
@@ -18,8 +9,8 @@ Setting_Widget::Setting_Widget(QWidget *parent)
     setWindowTitle("壁纸设置");
     resize(600,400);
     table_widget->resize(600,300);
-    table_widget->setColumnCount(12);
-    table_widget->setHorizontalHeaderLabels({"ID","名称","显示方式","路径","缩放方式","居中","鼠标效果","鼠标效果宽度系数","鼠标效果高度系数","X轴偏移量","Y轴偏移量","抗锯齿"});
+    table_widget->setColumnCount(15);
+    table_widget->setHorizontalHeaderLabels({"ID","名称","显示方式","路径","缩放方式","居中","鼠标效果","鼠标效果宽度系数","鼠标效果高度系数","X轴偏移量","Y轴偏移量","抗锯齿","鼠标控制类型","自定宽","自定高"});
     table_widget->setAlternatingRowColors(true);
     update_button->move(540,360);
     connect(update_button, &QPushButton::pressed, this, &Setting_Widget::List_Update);
@@ -42,6 +33,7 @@ Setting_Widget::Setting_Widget(QWidget *parent)
                             <<Scale_Type::Short
                             <<Scale_Type::Long
                             <<Scale_Type::Full
+                            <<Scale_Type::User
                             )[scale_box_list[i]->currentIndex()],
                            !center_box_list[i]->currentIndex(),
                            !mouse_effect_box_list[i]->currentIndex(),
@@ -49,7 +41,13 @@ Setting_Widget::Setting_Widget(QWidget *parent)
                            mouse_height_box_list[i]->value(),
                            delta_x_box_list[i]->value(),
                            delta_y_box_list[i]->value(),
-                           !on_Antialiasing_box_list[i]->currentIndex()
+                           !on_Antialiasing_box_list[i]->currentIndex(),
+                           (QList<Mouse_Control_Type>()
+                            <<Mouse_Control_Type::Follow_Desktop
+                            <<Mouse_Control_Type::Follow_Wallpaper
+                            )[mouse_control_type_box_list[i]->currentIndex()],
+                           wallpaper_width_box_list[i]->value(),
+                           wallpaper_height_box_list[i]->value()
                            );
         }
         path_list.Sort();
@@ -98,6 +96,11 @@ Setting_Widget::Setting_Widget(QWidget *parent)
                 index = 6;
                 break;
             }
+            case Scale_Type::User:
+            {
+                index = 7;
+                break;
+            }
             }
             scale_box_list[i]->setCurrentIndex(index);
             center_box_list[i]->setCurrentIndex(!path_list[i].center);
@@ -107,6 +110,23 @@ Setting_Widget::Setting_Widget(QWidget *parent)
             delta_x_box_list[i]->setValue(path_list[i].delta_x);
             delta_y_box_list[i]->setValue(path_list[i].delta_y);
             on_Antialiasing_box_list[i]->setCurrentIndex(!path_list[i].on_Antialiasing);
+            index = 0;
+            switch (path_list[i].mouse_control_type)
+            {
+            case Mouse_Control_Type::Follow_Desktop:
+            {
+                index = 0;
+                break;
+            }
+            case Mouse_Control_Type::Follow_Wallpaper:
+            {
+                index = 1;
+                break;
+            }
+            }
+            mouse_control_type_box_list[i]->setCurrentIndex(index);
+            wallpaper_width_box_list[i]->setValue(path_list[i].wallpaper_width);
+            wallpaper_height_box_list[i]->setValue(path_list[i].wallpaper_height);
         }
     });
     load_button->move(420,360);
@@ -131,6 +151,7 @@ Setting_Widget::Setting_Widget(QWidget *parent)
                             <<Scale_Type::Short
                             <<Scale_Type::Long
                             <<Scale_Type::Full
+                            <<Scale_Type::User
                             )[scale_box_list[i]->currentIndex()],
                            !center_box_list[i]->currentIndex(),
                            !mouse_effect_box_list[i]->currentIndex(),
@@ -138,7 +159,13 @@ Setting_Widget::Setting_Widget(QWidget *parent)
                            mouse_height_box_list[i]->value(),
                            delta_x_box_list[i]->value(),
                            delta_y_box_list[i]->value(),
-                           !on_Antialiasing_box_list[i]->currentIndex()
+                           !on_Antialiasing_box_list[i]->currentIndex(),
+                           (QList<Mouse_Control_Type>()
+                            <<Mouse_Control_Type::Follow_Desktop
+                            <<Mouse_Control_Type::Follow_Wallpaper
+                            )[mouse_control_type_box_list[i]->currentIndex()],
+                           wallpaper_width_box_list[i]->value(),
+                           wallpaper_height_box_list[i]->value()
                            );
         }
         uint max_id = 0;
@@ -170,6 +197,7 @@ Setting_Widget::Setting_Widget(QWidget *parent)
                             <<Scale_Type::Short
                             <<Scale_Type::Long
                             <<Scale_Type::Full
+                            <<Scale_Type::User
                             )[scale_box_list[i]->currentIndex()],
                            !center_box_list[i]->currentIndex(),
                            !mouse_effect_box_list[i]->currentIndex(),
@@ -177,7 +205,13 @@ Setting_Widget::Setting_Widget(QWidget *parent)
                            mouse_height_box_list[i]->value(),
                            delta_x_box_list[i]->value(),
                            delta_y_box_list[i]->value(),
-                           !on_Antialiasing_box_list[i]->currentIndex()
+                           !on_Antialiasing_box_list[i]->currentIndex(),
+                           (QList<Mouse_Control_Type>()
+                            <<Mouse_Control_Type::Follow_Desktop
+                            <<Mouse_Control_Type::Follow_Wallpaper
+                            )[mouse_control_type_box_list[i]->currentIndex()],
+                           wallpaper_width_box_list[i]->value(),
+                           wallpaper_height_box_list[i]->value()
                            );
         }
         bool get_ok = false;
@@ -228,7 +262,7 @@ Setting_Widget::Setting_Widget(QWidget *parent)
             return;
         }
         QString file_name = QFileDialog::getOpenFileName(nullptr, "获取文件", QDir::homePath(), "所有文件(*.*)");
-        Setting_Widget::X11_Rasie();//没办法,要跟dde-desktop争夺[桌面显示权]
+        My_X11_Libs::X11_Raise();//没办法,要跟dde-desktop争夺[桌面显示权]
         path_box_list[index]->setText(file_name);
     });
     load_img_button->move(5, 320);
@@ -236,7 +270,7 @@ Setting_Widget::Setting_Widget(QWidget *parent)
     connect(load_img_button, &QPushButton::released, this, [=]
     {
         QStringList filenames = QFileDialog::getOpenFileNames(nullptr, "获取文件", QDir::homePath(), "图像文件(*.png *.jpg *.jpeg *.svg *.gif *.bmp);;所有文件(*.*)");
-        X11_Rasie();//将错就错
+        My_X11_Libs::X11_Raise();
         path_list.clear();
         for (int i = 0; i < id_box_list.count(); i++)
         {
@@ -253,6 +287,7 @@ Setting_Widget::Setting_Widget(QWidget *parent)
                             <<Scale_Type::Short
                             <<Scale_Type::Long
                             <<Scale_Type::Full
+                            <<Scale_Type::User
                             )[scale_box_list[i]->currentIndex()],
                            !center_box_list[i]->currentIndex(),
                            !mouse_effect_box_list[i]->currentIndex(),
@@ -260,7 +295,13 @@ Setting_Widget::Setting_Widget(QWidget *parent)
                            mouse_height_box_list[i]->value(),
                            delta_x_box_list[i]->value(),
                            delta_y_box_list[i]->value(),
-                           !on_Antialiasing_box_list[i]->currentIndex()
+                           !on_Antialiasing_box_list[i]->currentIndex(),
+                           (QList<Mouse_Control_Type>()
+                            <<Mouse_Control_Type::Follow_Desktop
+                            <<Mouse_Control_Type::Follow_Wallpaper
+                            )[mouse_control_type_box_list[i]->currentIndex()],
+                           wallpaper_width_box_list[i]->value(),
+                           wallpaper_height_box_list[i]->value()
                            );
         }
         uint max_id = 0;
@@ -280,7 +321,7 @@ Setting_Widget::Setting_Widget(QWidget *parent)
     connect(load_video_button, &QPushButton::released, this, [=]
     {
         QStringList filenames = QFileDialog::getOpenFileNames(nullptr, "获取文件", QDir::homePath(), "视频文件(*.*);;所有文件(*.*)");
-        X11_Rasie();
+        My_X11_Libs::X11_Raise();
         path_list.clear();
         for (int i = 0; i < id_box_list.count(); i++)
         {
@@ -297,6 +338,7 @@ Setting_Widget::Setting_Widget(QWidget *parent)
                             <<Scale_Type::Short
                             <<Scale_Type::Long
                             <<Scale_Type::Full
+                            <<Scale_Type::User
                             )[scale_box_list[i]->currentIndex()],
                            !center_box_list[i]->currentIndex(),
                            !mouse_effect_box_list[i]->currentIndex(),
@@ -304,7 +346,13 @@ Setting_Widget::Setting_Widget(QWidget *parent)
                            mouse_height_box_list[i]->value(),
                            delta_x_box_list[i]->value(),
                            delta_y_box_list[i]->value(),
-                           !on_Antialiasing_box_list[i]->currentIndex()
+                           !on_Antialiasing_box_list[i]->currentIndex(),
+                           (QList<Mouse_Control_Type>()
+                            <<Mouse_Control_Type::Follow_Desktop
+                            <<Mouse_Control_Type::Follow_Wallpaper
+                            )[mouse_control_type_box_list[i]->currentIndex()],
+                           wallpaper_width_box_list[i]->value(),
+                           wallpaper_height_box_list[i]->value()
                            );
         }
         uint max_id = 0;
@@ -381,6 +429,15 @@ void Setting_Widget::private_update()
             auto B12 = on_Antialiasing_box_list[0];
             on_Antialiasing_box_list.removeAt(0);
             delete B12;
+            auto B13 = mouse_control_type_box_list[0];
+            mouse_control_type_box_list.removeAt(0);
+            delete B13;
+            auto B14 = wallpaper_width_box_list[0];
+            wallpaper_width_box_list.removeAt(0);
+            delete B14;
+            auto B15 = wallpaper_height_box_list[0];
+            wallpaper_height_box_list.removeAt(0);
+            delete B15;
         }
         return;
     }
@@ -436,6 +493,15 @@ void Setting_Widget::private_update()
             auto B12 = on_Antialiasing_box_list[path_list.count()];
             on_Antialiasing_box_list.removeAt(path_list.count());
             delete B12;
+            auto B13 = mouse_control_type_box_list[path_list.count()];
+            mouse_control_type_box_list.removeAt(path_list.count());
+            delete B13;
+            auto B14 = wallpaper_width_box_list[path_list.count()];
+            wallpaper_width_box_list.removeAt(path_list.count());
+            delete B14;
+            auto B15 = wallpaper_height_box_list[path_list.count()];
+            wallpaper_height_box_list.removeAt(path_list.count());
+            delete B15;
         }
     }
     else
@@ -454,6 +520,9 @@ void Setting_Widget::private_update()
             QSpinBox *B10 = new QSpinBox();
             QSpinBox *B11 = new QSpinBox();
             QComboBox *B12 = new QComboBox();
+            QComboBox *B13 = new QComboBox();
+            QSpinBox *B14 = new QSpinBox();
+            QSpinBox *B15 = new QSpinBox();
             B1->setRange(0, 2147483647);
             B1->setValue(static_cast<int>(path_list[basic_count + i].id));
             B2->setPlaceholderText("输入名称:");
@@ -462,7 +531,7 @@ void Setting_Widget::private_update()
             B3->setCurrentIndex(!path_list[basic_count + i].is_image);
             B4->setPlaceholderText("输入路径:");
             B4->setText(path_list[basic_count + i].path);
-            B5->addItems({"不缩放","全缩放","宽基准","高基准","短基准","长基准","饱满"});
+            B5->addItems({"不缩放","全缩放","宽基准","高基准","短基准","长基准","饱满","自定义宽高"});
             int index;
             switch (path_list[basic_count + i].scale_type)
             {
@@ -501,6 +570,11 @@ void Setting_Widget::private_update()
                 index = 6;
                 break;
             }
+            case Scale_Type::User:
+            {
+                index = 7;
+                break;
+            }
             }
             B5->setCurrentIndex(index);
             B6->addItems({"是","否"});
@@ -517,6 +591,26 @@ void Setting_Widget::private_update()
             B11->setValue(path_list[basic_count + i].delta_y);
             B12->addItems({"是","否"});
             B12->setCurrentIndex(!path_list[basic_count + i].on_Antialiasing);
+            B13->addItems({"跟随桌面", "跟随壁纸"});
+            index = 0;
+            switch (path_list[basic_count + i].mouse_control_type)
+            {
+            case Mouse_Control_Type::Follow_Desktop:
+            {
+                index = 0;
+                break;
+            }
+            case Mouse_Control_Type::Follow_Wallpaper:
+            {
+                index = 1;
+                break;
+            }
+            }
+            B13->setCurrentIndex(index);
+            B14->setRange(-2147483647, 2147483647);
+            B14->setValue(path_list[basic_count + i].wallpaper_width);
+            B15->setRange(-2147483647, 2147483647);
+            B15->setValue(path_list[basic_count + i].wallpaper_height);
             id_box_list.append(B1);
             name_box_list.append(B2);
             image_box_list.append(B3);
@@ -529,6 +623,9 @@ void Setting_Widget::private_update()
             delta_x_box_list.append(B10);
             delta_y_box_list.append(B11);
             on_Antialiasing_box_list.append(B12);
+            mouse_control_type_box_list.append(B13);
+            wallpaper_width_box_list.append(B14);
+            wallpaper_height_box_list.append(B15);
         }
     }
     for (int i = 0; i < path_list.count(); i++)
@@ -575,6 +672,11 @@ void Setting_Widget::private_update()
             index = 6;
             break;
         }
+        case Scale_Type::User:
+        {
+            index = 7;
+            break;
+        }
         }
         scale_box_list[i]->setCurrentIndex(index);
         center_box_list[i]->setCurrentIndex(!path_list[i].center);
@@ -584,6 +686,23 @@ void Setting_Widget::private_update()
         delta_x_box_list[i]->setValue(path_list[i].delta_x);
         delta_y_box_list[i]->setValue(path_list[i].delta_y);
         on_Antialiasing_box_list[i]->setCurrentIndex(!path_list[i].on_Antialiasing);
+        index = 0;
+        switch (path_list[i].mouse_control_type)
+        {
+        case Mouse_Control_Type::Follow_Desktop:
+        {
+            index = 0;
+            break;
+        }
+        case Mouse_Control_Type::Follow_Wallpaper:
+        {
+            index = 1;
+            break;
+        }
+        }
+        mouse_control_type_box_list[i]->setCurrentIndex(index);
+        wallpaper_width_box_list[i]->setValue(path_list[i].wallpaper_width);
+        wallpaper_height_box_list[i]->setValue(path_list[i].wallpaper_height);
     }
     for (int i = 0; i < path_list.count(); i++)
     {
@@ -599,6 +718,9 @@ void Setting_Widget::private_update()
         table_widget->setCellWidget(i, 9, this->delta_x_box_list[i]);
         table_widget->setCellWidget(i, 10, this->delta_y_box_list[i]);
         table_widget->setCellWidget(i, 11, this->on_Antialiasing_box_list[i]);
+        table_widget->setCellWidget(i, 12, this->mouse_control_type_box_list[i]);
+        table_widget->setCellWidget(i, 13, this->wallpaper_width_box_list[i]);
+        table_widget->setCellWidget(i, 14, this->wallpaper_height_box_list[i]);
     }
     table_widget->setColumnWidth(0, 145);
     table_widget->setColumnWidth(1, 145);
@@ -612,6 +734,9 @@ void Setting_Widget::private_update()
     table_widget->setColumnWidth(9, 145);
     table_widget->setColumnWidth(10, 145);
     table_widget->setColumnWidth(11, 100);
+    table_widget->setColumnWidth(12, 145);
+    table_widget->setColumnWidth(13, 145);
+    table_widget->setColumnWidth(14, 145);
     table_widget->show();
 }
 void Setting_Widget::Table_Update()
@@ -638,6 +763,7 @@ void Setting_Widget::List_Update()
                         <<Scale_Type::Short
                         <<Scale_Type::Long
                         <<Scale_Type::Full
+                        <<Scale_Type::User
                         )[scale_box_list[i]->currentIndex()],
                        !center_box_list[i]->currentIndex(),
                        !mouse_effect_box_list[i]->currentIndex(),
@@ -645,7 +771,13 @@ void Setting_Widget::List_Update()
                        mouse_height_box_list[i]->value(),
                        delta_x_box_list[i]->value(),
                        delta_y_box_list[i]->value(),
-                       !on_Antialiasing_box_list[i]->currentIndex()
+                       !on_Antialiasing_box_list[i]->currentIndex(),
+                       (QList<Mouse_Control_Type>()
+                        <<Mouse_Control_Type::Follow_Desktop
+                        <<Mouse_Control_Type::Follow_Wallpaper
+                        )[mouse_control_type_box_list[i]->currentIndex()],
+                       wallpaper_width_box_list[i]->value(),
+                       wallpaper_height_box_list[i]->value()
                        );
     }
     choose_id = choose_id_box->value();
@@ -683,6 +815,7 @@ void Setting_Widget::remove_wallpaper(int wallpaper_id)
                         <<Scale_Type::Short
                         <<Scale_Type::Long
                         <<Scale_Type::Full
+                        <<Scale_Type::User
                         )[scale_box_list[i]->currentIndex()],
                        !center_box_list[i]->currentIndex(),
                        !mouse_effect_box_list[i]->currentIndex(),
@@ -690,7 +823,13 @@ void Setting_Widget::remove_wallpaper(int wallpaper_id)
                        mouse_height_box_list[i]->value(),
                        delta_x_box_list[i]->value(),
                        delta_y_box_list[i]->value(),
-                       !on_Antialiasing_box_list[i]->currentIndex()
+                       !on_Antialiasing_box_list[i]->currentIndex(),
+                       (QList<Mouse_Control_Type>()
+                        <<Mouse_Control_Type::Follow_Desktop
+                        <<Mouse_Control_Type::Follow_Wallpaper
+                        )[mouse_control_type_box_list[i]->currentIndex()],
+                       wallpaper_width_box_list[i]->value(),
+                       wallpaper_height_box_list[i]->value()
                        );
     }
     bool get_ok = false;
@@ -715,7 +854,7 @@ void Setting_Widget::remove_wallpaper(int wallpaper_id)
 }
 void Setting_Widget::add_wallpaper(uint m_id, QString m_name, bool m_is_image, QString m_path, Scale_Type m_scale_type, bool m_center, bool m_mouse_effect,
                                    qreal m_k_mouse_move_width, qreal m_k_mouse_move_height, int m_delta_x, int m_delta_y,
-                                   bool m_on_Antialiasing)
+                                   bool m_on_Antialiasing, Mouse_Control_Type m_mouse_control_type, int m_wallpaper_width, int m_wallpaper_height)
 {
     path_list.clear();
     for (int i = 0; i < id_box_list.count(); i++)
@@ -733,6 +872,7 @@ void Setting_Widget::add_wallpaper(uint m_id, QString m_name, bool m_is_image, Q
                         <<Scale_Type::Short
                         <<Scale_Type::Long
                         <<Scale_Type::Full
+                        <<Scale_Type::User
                         )[scale_box_list[i]->currentIndex()],
                        !center_box_list[i]->currentIndex(),
                        !mouse_effect_box_list[i]->currentIndex(),
@@ -740,12 +880,18 @@ void Setting_Widget::add_wallpaper(uint m_id, QString m_name, bool m_is_image, Q
                        mouse_height_box_list[i]->value(),
                        delta_x_box_list[i]->value(),
                        delta_y_box_list[i]->value(),
-                       !on_Antialiasing_box_list[i]->currentIndex()
+                       !on_Antialiasing_box_list[i]->currentIndex(),
+                       (QList<Mouse_Control_Type>()
+                        <<Mouse_Control_Type::Follow_Desktop
+                        <<Mouse_Control_Type::Follow_Wallpaper
+                        )[mouse_control_type_box_list[i]->currentIndex()],
+                       wallpaper_width_box_list[i]->value(),
+                       wallpaper_height_box_list[i]->value()
                        );
     }
     path_list<<Path_Info(m_id, m_name, m_is_image, m_path, m_scale_type, m_center, m_mouse_effect,
                          m_k_mouse_move_width, m_k_mouse_move_height, m_delta_x, m_delta_y,
-                         m_on_Antialiasing);
+                         m_on_Antialiasing, m_mouse_control_type, m_wallpaper_width, m_wallpaper_height);
     Setting_Widget::private_update();
 }
 int Setting_Widget::Get_id_to_Index(int id)
@@ -815,6 +961,7 @@ void Setting_Widget::dropEvent(QDropEvent *event)
                             <<Scale_Type::Short
                             <<Scale_Type::Long
                             <<Scale_Type::Full
+                            <<Scale_Type::User
                             )[scale_box_list[i]->currentIndex()],
                            !center_box_list[i]->currentIndex(),
                            !mouse_effect_box_list[i]->currentIndex(),
@@ -822,7 +969,13 @@ void Setting_Widget::dropEvent(QDropEvent *event)
                            mouse_height_box_list[i]->value(),
                            delta_x_box_list[i]->value(),
                            delta_y_box_list[i]->value(),
-                           !on_Antialiasing_box_list[i]->currentIndex()
+                           !on_Antialiasing_box_list[i]->currentIndex(),
+                           (QList<Mouse_Control_Type>()
+                            <<Mouse_Control_Type::Follow_Desktop
+                            <<Mouse_Control_Type::Follow_Wallpaper
+                            )[mouse_control_type_box_list[i]->currentIndex()],
+                           wallpaper_width_box_list[i]->value(),
+                           wallpaper_height_box_list[i]->value()
                            );
         }
         uint max_id = 0;

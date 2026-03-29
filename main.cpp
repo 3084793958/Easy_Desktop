@@ -121,7 +121,7 @@ int main(int argc, char* argv[])
             std::cout << "                名称(String)" << std::endl;
             std::cout << "                显示方式(String)     [图像:true/视频:false](gif属于图像)" << std::endl;
             std::cout << "                路径(String)" << std::endl;
-            std::cout << "                缩放方式(String)     [Scale_Type::No/Scale_Type::Each/Scale_Type::Width/Scale_Type::Height/Scale_Type::Short/Scale_Type::Long/Scale_Type::Full]" << std::endl;
+            std::cout << "                缩放方式(String)     [Scale_Type::No/Scale_Type::Each/Scale_Type::Width/Scale_Type::Height/Scale_Type::Short/Scale_Type::Long/Scale_Type::Full/Scale_Type::User]" << std::endl;
             std::cout << "                居中(String)        [true/false]" << std::endl;
             std::cout << "                鼠标效果(String)     [true/false]" << std::endl;
             std::cout << "                鼠标效果宽度系数(Double)" << std::endl;
@@ -129,6 +129,9 @@ int main(int argc, char* argv[])
             std::cout << "                X轴偏移量(Int32)" << std::endl;
             std::cout << "                Y轴偏移量(Int32)" << std::endl;
             std::cout << "                抗锯齿(String)       [true/false]" << std::endl;
+            std::cout << "                (鼠标控制类型(String))       [Mouse_Control_Type::Follow_Desktop/Mouse_Control_Type::Follow_Wallpaper]" << std::endl;
+            std::cout << "                自定宽(Int32)" << std::endl;
+            std::cout << "                自定高(Int32)" << std::endl;
             return 0;
         }
     }

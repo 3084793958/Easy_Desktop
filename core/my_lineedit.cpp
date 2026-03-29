@@ -1,14 +1,4 @@
 #include "my_lineedit.h"
-#include <QX11Info>
-#include <X11/Xlib.h>
-void Basic_TextEdit::X11_Rasie()
-{
-    Window win_Id = static_cast<Window>(winId);
-    Display *display = QX11Info::display();
-    XRaiseWindow(display, win_Id);
-    XFlush(display);
-}
-#undef CursorShape
 Basic_TextEdit::Basic_TextEdit(QWidget *parent)
     :QTextEdit(parent)
 {
@@ -237,7 +227,7 @@ void Basic_TextEdit::Added_Action_Func(QAction *action, QPoint pos)
     else if (action == insert_image_action)
     {
         QList<QString> urls = QFileDialog::getOpenFileNames(nullptr, "获取图像", QDir::homePath(), "图像文件(*.png *.jpg *.jpeg *.svg *.gif *.bmp);;所有文件(*.*)");
-        Basic_TextEdit::X11_Rasie();//没办法,要跟dde-desktop争夺[桌面显示权]
+        My_X11_Libs::X11_Raise();//没办法,要跟dde-desktop争夺[桌面显示权]
         if (urls.isEmpty())
         {
             return;
@@ -683,10 +673,6 @@ void Basic_TextEdit::insertImage(const QImage &image)
     QString imageData = QString("data:image/png;base64," + ba.toBase64());
     cursor.insertHtml(QString("<img src=\"%1\" style=\"background-color:transparent;\">").arg(imageData));
 }
-void Basic_TextEdit::set_WinId(WId m_winId)
-{
-    winId = m_winId;
-}
 My_LineEdit::My_LineEdit(QWidget *parent)
     :Basic_Widget(parent)
 {
@@ -748,10 +734,6 @@ void My_LineEdit::wheelEvent(QWheelEvent *event)
         event->accept();
         return;
     }
-}
-void My_LineEdit::set_WinId(WId m_winId)
-{
-    this->textEdit->set_WinId(m_winId);
 }
 void My_LineEdit::save(QSettings *settings)
 {

@@ -1,14 +1,4 @@
 #include "plugin_widget.h"
-#include <QX11Info>
-#include <X11/Xlib.h>
-void Plugin_Root::X11_Raise()
-{
-    Window win_Id = static_cast<Window>(WinId);
-    Display *display = QX11Info::display();
-    XRaiseWindow(display, win_Id);
-    XFlush(display);
-}
-#undef CursorShape
 PluginController::PluginController(QObject *parent, Plugin_Root *plugin_root)
     :QObject(parent)
     ,root(plugin_root)
@@ -146,7 +136,7 @@ Plugin_Root::Plugin_Root(QWidget *parent)
             tips_carrier->hide();
         }
     });
-    connect(item_carrier, &Plugin_Item_Widget::Call_X11_Raise, this, &Plugin_Root::X11_Raise);
+    connect(item_carrier, &Plugin_Item_Widget::Call_X11_Raise, this, [=]{My_X11_Libs::X11_Raise();});
     connect(item_carrier, &Plugin_Item_Widget::extra_menu_call, this, [=](QString menuId, bool checked)
     {
         if (will_fully_remove) return;

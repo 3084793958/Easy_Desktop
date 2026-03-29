@@ -7,13 +7,6 @@
 #include <QDBusPendingReply>
 #include <QDBusInterface>
 #include <QDBusPendingCallWatcher>
-void All_Control::X11_Rasie()
-{
-    Window win_Id = static_cast<Window>(winId());
-    Display *display = QX11Info::display();
-    XRaiseWindow(display, win_Id);
-    XFlush(display);
-}
 void All_Control::Move_To_Workspace(int human_index)
 {
     int workspace_count = 0;
@@ -58,13 +51,12 @@ All_Control::All_Control(QWidget *parent, QString m_load_path, int m_workspace, 
     ,always_refresh_screen_size(m_always_refresh_screen_size)
     ,screen_geometry(m_screen_geometry)
 {
+    My_X11_Libs::WinId = this->winId();
     setAttribute(Qt::WA_X11NetWmWindowTypeDesktop, true);
     setting_widget->background_path = background;
     main_desktop->setting_widget = setting_widget;
     main_desktop->experimental_settings = experimental_settings;
     main_desktop->desktop_background = background;
-    main_desktop->m_WinId = this->winId();
-    setting_widget->winId = this->winId();
     experimental_settings->workspace = &workspace;
     experimental_settings->dbus_id = &dbus_id;
     experimental_settings->load_path = &load_path;
@@ -72,7 +64,6 @@ All_Control::All_Control(QWidget *parent, QString m_load_path, int m_workspace, 
     experimental_settings->allow_drop = &allow_drop;
     experimental_settings->on_top_time = &on_top_time;
     experimental_settings->keyscan_timer = &keyscan_timer;
-    experimental_settings->winId = this->winId();
     experimental_settings->has_been_set = true;
     experimental_settings->geometry = &screen_geometry;
     experimental_settings->always_refresh_geometry = &always_refresh_screen_size;
@@ -117,7 +108,7 @@ All_Control::All_Control(QWidget *parent, QString m_load_path, int m_workspace, 
     show();
     connect(stay_on_top_timer, &QTimer::timeout, this, [=]
     {
-        this->X11_Rasie();//将错就错吧
+        My_X11_Libs::X11_Raise();
     });
     connect(experimental_settings, &Experimental_Settings::has_sended, this , [=]
     {
@@ -415,6 +406,10 @@ void All_Control::dbus_slot(QDBusMessage message)
         {
             m_scale_type = Scale_Type::Long;
         }
+        else if (m_argument[4] == "Scale_Type::User")
+        {
+            m_scale_type = Scale_Type::User;
+        }
         else
         {
             m_scale_type = Scale_Type::Full;
@@ -438,9 +433,31 @@ void All_Control::dbus_slot(QDBusMessage message)
         {
             m_on_Antialiasing = false;
         }
+        Mouse_Control_Type mouse_control_type = Mouse_Control_Type::Follow_Desktop;
+        if (m_argument.count() > 12)
+        {
+            if (m_argument[12] == "Mouse_Control_Type::Follow_Wallpaper")
+            {
+                mouse_control_type = Mouse_Control_Type::Follow_Wallpaper;
+            }
+            else
+            {
+                mouse_control_type = Mouse_Control_Type::Follow_Desktop;
+            }
+        }
+        int wallpaper_width = 0;
+        if (m_argument.count() > 13)
+        {
+            wallpaper_width = m_argument[13].toInt();
+        }
+        int wallpaper_height = 0;
+        if (m_argument.count() > 14)
+        {
+            wallpaper_height = m_argument[14].toInt();
+        }
         setting_widget->add_wallpaper(m_id, m_name, m_is_image, m_path, m_scale_type, m_center, m_mouse_effect,
                                       m_k_mouse_move_width, m_k_mouse_move_height, m_delta_x, m_delta_y,
-                                      m_on_Antialiasing);
+                                      m_on_Antialiasing, mouse_control_type, wallpaper_width, wallpaper_height);
     }
 }
 void All_Control::Refresh_geometry(QRect geometry)

@@ -12,7 +12,6 @@ class My_Label : public Basic_Widget
 public:
     explicit My_Label(QWidget *parent = nullptr);
     ~My_Label();
-    void set_WinId(WId m_winId);
     QList<My_Label *> *my_label_list;
     virtual void save(QSettings *settings);
     virtual void load(QSettings *settings);
@@ -32,7 +31,6 @@ private:
     QAction *set_out_line_width = new QAction(tr("设置描边大小"), this);
     QAction *set_out_line_color = new QAction(tr("设置描边颜色"), this);
     QAction *clear_label = new QAction(tr("清空"), this);
-    WId winId;
     QSize image_size;
     QDBusConnection dbus = QDBusConnection::sessionBus();
     QString dbus_service = "";
@@ -43,7 +41,6 @@ private:
 private slots:
     void DBusMessageReceived(QDBusMessage message);
 private:
-    void X11_Rasie();
     void auto_set_font_size();
     void contextMenuEvent(QContextMenuEvent *event);
     QSize get_Image_Size(QString path);

@@ -105,7 +105,7 @@ void File_Widget::contextMenuEvent(QContextMenuEvent *event)
             filepath = QFileDialog::getExistingDirectory(nullptr, "获取文件夹", running_path);
             name = QDir(filepath).dirName();
         }
-        X11_Rasie();
+        My_X11_Libs::X11_Raise();
         if (filepath.isEmpty())
         {
             return;
@@ -395,7 +395,7 @@ void File_Widget::set_file_or_dir(bool file)
     {
         filepath = QFileDialog::getExistingDirectory(nullptr, "获取文件夹", running_path);
     }
-    X11_Rasie();
+    My_X11_Libs::X11_Raise();
     if (filepath.isEmpty())
     {
         return;

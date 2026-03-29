@@ -31,8 +31,6 @@ public:
     explicit My_Tree_View(QWidget *parent);
     QFileSystemModel *F_model;
     My_ProxyModel *proxyModel;
-    bool move_copying = false;
-    char m_padding[7];
     static My_Tree_View * catch_ptr;
 protected:
     void dropEvent(QDropEvent *event) override;
@@ -57,7 +55,6 @@ public:
     virtual void save(QSettings *settings);
     virtual void load(QSettings *settings);
 public:
-    WId m_WinId;
     QString *file_open_way_process;
     QString *file_open_path_process;
     QString *file_open_info_process;
@@ -92,17 +89,26 @@ protected:
     QAction *open_it = new QAction(tr("打开"), this);
     QAction *open_way = new QAction(tr("打开方式"), this);
     QAction *open_path_way = new QAction(tr("打开所在位置"), this);
+    QAction *set_as_path_way = new QAction(tr("设置为文件夹路径"), this);
     QAction *show_info = new QAction(tr("属性"), this);
     QAction *copy_action = new QAction(tr("复制"), this);
+    QAction *cut_action = new QAction(tr("剪切"), this);
+    QAction *paste_action = new QAction(tr("粘贴"), this);
+    QAction *rename_action = new QAction(tr("重命名"), this);
+    QAction *delete_action = new QAction(tr("删除"), this);
     QAction *shortcut_copy_action = new QAction(tr("复制"), this);
     QAction *shortcut_show_info = new QAction(tr("属性"), this);
     QAction *shortcut_enter = new QAction(tr("打开"), this);
+    QAction *shortcut_cut_action = new QAction(tr("剪切"), this);
+    QAction *shortcut_paste_action = new QAction(tr("粘贴"), this);
+    QAction *shortcut_delete_action = new QAction(tr("删除"), this);
+    QAction *shortcut_force_delete_action = new QAction(tr("删除"), this);
+    QAction *shortcut_find_action = new QAction(tr("搜索"), this);
 private:
     void contextMenuEvent(QContextMenuEvent *event);
     void dropEvent(QDropEvent *event);
     void dragEnterEvent(QDragEnterEvent *event);
     virtual void wheelEvent(QWheelEvent *event);
-    void X11_Raise();
     void Pressed(bool from_key = false);
 };
 

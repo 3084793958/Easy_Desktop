@@ -7,7 +7,6 @@ class Basic_TextEdit : public QTextEdit
     Q_OBJECT
 public:
     explicit Basic_TextEdit(QWidget *parent);
-    void set_WinId(WId m_winId);
     virtual void H_save(QSettings *settings);
     virtual void H_load(QSettings *settings);
     void set_icon(QString checked_icon_path);
@@ -43,7 +42,6 @@ private:
     QAction *window_control = new QAction(tr("窗口控制菜单"), this);
     QTextCharFormat basic_format;
     QImage save_image;
-    WId winId;
     bool had_selected = false;
     char m_padding[7];
     virtual void mouseMoveEvent(QMouseEvent *event);
@@ -55,7 +53,6 @@ private:
     void Added_Action_Func(QAction *action, QPoint pos);
     void insertFromMimeData(const QMimeData *source);
     void insertImage(const QImage &image);
-    void X11_Rasie();
     void self_copy();
     bool isSelectionImage();
     bool isSelectionTable();
@@ -69,7 +66,6 @@ class My_LineEdit : public Basic_Widget
 public:
     explicit My_LineEdit(QWidget *parent);
     ~My_LineEdit();
-    void set_WinId(WId m_winId);
     QList<My_LineEdit *> *my_lineedit_list;
     virtual void save(QSettings *settings);
     virtual void load(QSettings *settings);

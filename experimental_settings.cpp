@@ -1,18 +1,5 @@
 #include "experimental_settings.h"
-#include <QX11Info>
-#include <X11/Xlib.h>
-void Experimental_Settings::X11_Raise()
-{
-    if (!has_been_set)
-    {
-        return;
-    }
-    Window win_Id = static_cast<Window>(winId);
-    Display *display = QX11Info::display();
-    XRaiseWindow(display, win_Id);
-    XFlush(display);
-}
-#undef CursorShape
+#include "core/my_x11_libs.h"
 Experimental_Settings::Experimental_Settings(QWidget *parent)
     :QWidget(parent)
 {
@@ -81,7 +68,7 @@ Experimental_Settings::Experimental_Settings(QWidget *parent)
     connect(set_load_path, &QPushButton::clicked, this, [=]
     {
         QString filename = QFileDialog::getOpenFileName(nullptr, "获取配置文件", QDir::homePath(), "配置文件(*.ini);;所有文件(*.*)");
-        X11_Raise();
+        My_X11_Libs::X11_Raise();
         if (!filename.isEmpty())
         {
             load_path_edit->setText(filename);
@@ -92,7 +79,7 @@ Experimental_Settings::Experimental_Settings(QWidget *parent)
         set_theme_dialog->activateWindow();
         set_theme_dialog->show();
     });
-    connect(set_theme_dialog, &Theme_Set_Dialog::Call_X11_Raise, this, &Experimental_Settings::X11_Raise);
+    connect(set_theme_dialog, &Theme_Set_Dialog::Call_X11_Raise, this, [=]{My_X11_Libs::X11_Raise();});
 }
 void Experimental_Settings::resizeEvent(QResizeEvent *event)
 {

@@ -132,8 +132,6 @@ public:
     void update_plugin(PluginsItemInterface * const itemInter, const QString &itemKey);
     PluginsItemInterface *get_interface();
     bool is_Ext_plugin();
-    WId WinId;
-    void X11_Raise();
     QList<Plugin_Root *> *plugin_root_list;
     static bool Contains_Ext_Plugin(QString Ext_name, QString plugin_controller_name);
 public:

@@ -51,7 +51,9 @@ SOURCES += \
     experimental_settings.cpp \
     core/file_tree.cpp \
     core/plugin_widget.cpp \
-    interfaces/pluginsiteminterface.cpp
+    interfaces/pluginsiteminterface.cpp \
+    core/my_x11_libs.cpp \
+    core/file_control.cpp
 contains(DEFINES, USE_CHART) {
     SOURCES += \
         core/chart/basic_chart.cpp \
@@ -83,7 +85,9 @@ HEADERS += \
     core/plugin_widget.h \
     interfaces/constants.h \
     interfaces/pluginproxyinterface.h \
-    interfaces/pluginsiteminterface.h
+    interfaces/pluginsiteminterface.h \
+    core/my_x11_libs.h \
+    core/file_control.h
 
 contains(DEFINES, USE_CHART) {
     HEADERS += \

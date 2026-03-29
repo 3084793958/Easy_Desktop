@@ -1,15 +1,6 @@
 #include "file_tree.h"
-#include <QX11Info>
-#include <X11/Xlib.h>
+#include "file_control.h"
 My_Tree_View * My_Tree_View::catch_ptr;
-void File_Tree::X11_Raise()
-{
-    Window win_Id = static_cast<Window>(m_WinId);
-    Display *display = QX11Info::display();
-    XRaiseWindow(display, win_Id);
-    XFlush(display);
-}
-#undef CursorShape
 File_Tree::File_Tree(QWidget *parent)
     :Basic_Widget(parent)
 {
@@ -25,11 +16,20 @@ File_Tree::File_Tree(QWidget *parent)
     this->background_color = QColor(255,255,255,50);
     Update_Background();
     menu->addAction(open_it);
+    menu->addSeparator();
     menu->addAction(open_way);
     menu->addAction(open_path_way);
-    menu->addAction(show_info);
+    menu->addAction(set_as_path_way);
+    menu->addSeparator();
     menu->addAction(copy_action);
+    menu->addAction(cut_action);
+    menu->addAction(paste_action);
+    menu->addAction(rename_action);
+    menu->addAction(delete_action);
+    menu->addSeparator();
+    menu->addAction(show_info);
     menu->addAction(clean_selection_action);
+    menu->addSeparator();
     single_press_mode_action->setIcon(QIcon(":/base/this.svg"));
     single_press_mode_action->setIconVisibleInMenu(false);
     tree_setting->addAction(single_press_mode_action);
@@ -88,7 +88,7 @@ File_Tree::File_Tree(QWidget *parent)
                 }
                 for (int i = 0; i < selectedList.count(); i += 4)
                 {
-                    QString this_file_path = model->filePath(selectedList[i]);
+                    QString this_file_path = model->filePath(proxyModel->mapToSource(selectedList[i]));
                     m_process_str += " ";
                     m_process_str += '"';
                     m_process_str += this_file_path;
@@ -110,9 +110,240 @@ File_Tree::File_Tree(QWidget *parent)
             Pressed(true);
         }
     });
+    shortcut_cut_action->setShortcut(QKeySequence::Cut);
+    shortcut_cut_action->setShortcutContext(Qt::WidgetWithChildrenShortcut);
+    connect(shortcut_cut_action, &QAction::triggered, this, [=]
+    {
+        if (treeView->selectionModel() && treeView == My_Tree_View::catch_ptr)
+        {
+            QModelIndexList selectedList = treeView->selectionModel()->selectedIndexes();
+            if (!selectedList.isEmpty())
+            {
+                QList<QUrl> urls;
+                QByteArray gnomeData;
+                gnomeData.append("cut\n");
+                for (int i = 0; i < selectedList.count(); i += 4)
+                {
+                    QString this_file_path = model->filePath(proxyModel->mapToSource(selectedList[i]));
+                    urls.append(QUrl::fromLocalFile(this_file_path));
+                    gnomeData.append(QUrl::fromLocalFile(this_file_path).toEncoded() + "\n");
+                }
+                QMimeData *mimeData = new QMimeData;
+                mimeData->setUrls(urls);
+                mimeData->setData("x-special/gnome-copied-files", gnomeData);//添加此项用于激活dde-file-manager的"粘贴"
+                QApplication::clipboard()->setMimeData(mimeData, QClipboard::Mode::Clipboard);
+            }
+        }
+    });
+    shortcut_paste_action->setShortcut(QKeySequence::Paste);
+    shortcut_paste_action->setShortcutContext(Qt::WidgetWithChildrenShortcut);
+    connect(shortcut_paste_action, &QAction::triggered, this, [=]
+    {
+        if (treeView->selectionModel() && treeView == My_Tree_View::catch_ptr)
+        {
+            const QMimeData *mimeData = QApplication::clipboard()->mimeData();
+            QList<QUrl> urls = mimeData->urls();
+            if (urls.isEmpty())
+            {
+                return;
+            }
+            bool is_cut = false;
+            if (mimeData->hasFormat("x-special/gnome-copied-files"))
+            {
+                QByteArray gnomeData = mimeData->data("x-special/gnome-copied-files");
+                if (!gnomeData.isEmpty())
+                {
+                    QList<QByteArray> lines = gnomeData.split('\n');
+                    if (lines.size() > 0)
+                    {
+                        if (lines[0] == "cut")
+                        {
+                            is_cut = true;
+                        }
+                    }
+                }
+            }
+            QModelIndexList selectedList = treeView->selectionModel()->selectedIndexes();
+            QFileInfo to_file_info(root_path);
+            if (!selectedList.isEmpty())
+            {
+                for (int i = 0; i < selectedList.count(); i++)
+                {
+                    QFileInfo file_info(model->filePath(proxyModel->mapToSource(selectedList[i])));
+                    if (file_info.isDir())
+                    {
+                        to_file_info = file_info;
+                        break;
+                    }
+                }
+            }
+            QString targetDir = to_file_info.filePath();
+            std::function<bool(const QString &, const QString &)> copyRecursively = [&](const QString &src, const QString &dst) -> bool
+            {
+                QFileInfo srcInfo(src);
+                if (srcInfo.isDir())
+                {
+                    QDir dstDir(dst);
+                    if (!dstDir.exists() && !dstDir.mkpath("."))
+                    {
+                        return false;
+                    }
+                    QDir srcDir(src);
+                    QStringList entries = srcDir.entryList(QDir::Files | QDir::Dirs | QDir::NoDotAndDotDot);
+                    for (const QString& entry : entries)
+                    {
+                        QString newSrc = src + QDir::separator() + entry;
+                        QString newDst = dst + QDir::separator() + entry;
+                        if (!copyRecursively(newSrc, newDst))
+                        {
+                            return false;
+                        }
+                    }
+                    return true;
+                }
+                else
+                {
+                    return QFile::copy(src, dst);
+                }
+            };
+            for (const QUrl& url : urls)
+            {
+                QString srcPath = url.toLocalFile();
+                if (srcPath.isEmpty())
+                {
+                    continue;
+                }
+                QFileInfo srcInfo(srcPath);
+                QString destPath = targetDir + QDir::separator() + srcInfo.fileName();
+                if (is_cut)
+                {
+                    if (File_Control::CopyWithCopyFileRange(srcPath, destPath))
+                    {
+                        if (QFileInfo(destPath).exists())
+                        {
+                            if (srcInfo.isDir())
+                            {
+                                QDir(srcPath).removeRecursively();
+                            }
+                            else
+                            {
+                                QFile::remove(srcPath);
+                            }
+                        }
+                    }
+                    else
+                    {
+                        if (copyRecursively(srcPath, destPath))
+                        {
+                            if (QFileInfo(destPath).exists())
+                            {
+                                if (srcInfo.isDir())
+                                {
+                                    QDir(srcPath).removeRecursively();
+                                }
+                                else
+                                {
+                                    QFile::remove(srcPath);
+                                }
+                            }
+                        }
+                    }
+                }
+                else
+                {
+                    if (!File_Control::CopyWithCopyFileRange(srcPath, destPath))
+                    {
+                        copyRecursively(srcPath, destPath);
+                    }
+                }
+                QModelIndex idx = proxyModel->mapFromSource(model->index(destPath));
+                if (idx.isValid())
+                {
+                    model->data(idx, Qt::DisplayRole);
+                    treeView->update(idx);
+                }
+            }
+        }
+    });
+    shortcut_find_action->setShortcut(QKeySequence::Find);
+    shortcut_find_action->setShortcutContext(Qt::WidgetWithChildrenShortcut);
+    connect(shortcut_find_action, &QAction::triggered, this, [=]
+    {
+        if (treeView->selectionModel() && treeView == My_Tree_View::catch_ptr)
+        {
+            search_edit->setFocus();
+        }
+    });
+    shortcut_delete_action->setShortcut(Qt::Key_Delete);
+    shortcut_delete_action->setShortcutContext(Qt::WidgetWithChildrenShortcut);
+    connect(shortcut_delete_action, &QAction::triggered, this, [=]
+    {
+        if (treeView->selectionModel() && treeView == My_Tree_View::catch_ptr)
+        {
+            QModelIndexList selectedList = treeView->selectionModel()->selectedIndexes();
+            if (!selectedList.isEmpty())
+            {
+                QList<QUrl> urls;
+                for (int i = 0; i < selectedList.count(); i += 4)
+                {
+                    QString this_file_path = model->filePath(proxyModel->mapToSource(selectedList[i]));
+                    urls.append(QUrl::fromLocalFile(this_file_path));
+                }
+                for (const QUrl& url : urls)
+                {
+                    QString srcPath = url.toLocalFile();
+                    if (srcPath.isEmpty())
+                    {
+                        continue;
+                    }
+                    QFile::moveToTrash(srcPath);
+                }
+            }
+        }
+    });
+    shortcut_force_delete_action->setShortcut(QKeySequence("Shift+Del"));
+    shortcut_force_delete_action->setShortcutContext(Qt::WidgetWithChildrenShortcut);
+    connect(shortcut_force_delete_action, &QAction::triggered, this, [=]
+    {
+        if (treeView->selectionModel() && treeView == My_Tree_View::catch_ptr)
+        {
+            QModelIndexList selectedList = treeView->selectionModel()->selectedIndexes();
+            if (!selectedList.isEmpty())
+            {
+                QList<QUrl> urls;
+                for (int i = 0; i < selectedList.count(); i += 4)
+                {
+                    QString this_file_path = model->filePath(proxyModel->mapToSource(selectedList[i]));
+                    urls.append(QUrl::fromLocalFile(this_file_path));
+                }
+                for (const QUrl& url : urls)
+                {
+                    QString srcPath = url.toLocalFile();
+                    if (srcPath.isEmpty())
+                    {
+                        continue;
+                    }
+                    QFileInfo srcInfo(srcPath);
+                    if (srcInfo.isDir())
+                    {
+                        QDir(srcPath).removeRecursively();
+                    }
+                    else
+                    {
+                        QFile::remove(srcPath);
+                    }
+                }
+            }
+        }
+    });
     treeView->addAction(shortcut_copy_action);
     treeView->addAction(shortcut_show_info);
     treeView->addAction(shortcut_enter);
+    treeView->addAction(shortcut_cut_action);
+    treeView->addAction(shortcut_paste_action);
+    treeView->addAction(shortcut_delete_action);
+    treeView->addAction(shortcut_force_delete_action);
+    treeView->addAction(shortcut_find_action);
     carrier_widget->move(10, 10);
     search_edit->move(0, 5);
     treeView->move(0, 50);
@@ -577,7 +808,7 @@ void File_Tree::contextMenuEvent(QContextMenuEvent *event)
     else if (know_what == set_dir_path)
     {
         QString filename = QFileDialog::getExistingDirectory(nullptr, "获取文件夹", root_path);
-        X11_Raise();
+        My_X11_Libs::X11_Raise();
         if (filename.isEmpty() || filename.isNull())
         {
             return;
@@ -663,6 +894,211 @@ void File_Tree::contextMenuEvent(QContextMenuEvent *event)
             treeView->selectionModel()->clear();
         }
     }
+    else if (know_what == set_as_path_way)
+    {
+        if (treeView->selectionModel())
+        {
+            QModelIndexList selectedList = treeView->selectionModel()->selectedIndexes();
+            if (!selectedList.isEmpty())
+            {
+                for (int i = 0; i < selectedList.count(); i += 4)
+                {
+                    QString this_file_path = model->filePath(proxyModel->mapToSource(selectedList[i]));
+                    if (QFileInfo(this_file_path).isDir())
+                    {
+                        root_path = this_file_path;
+                        treeView->setRootIndex(proxyModel->mapFromSource(model->index(root_path)));
+                        if (treeView->selectionModel())
+                        {
+                            treeView->selectionModel()->clear();
+                        }
+                        break;
+                    }
+                }
+            }
+        }
+    }
+    else if (know_what == cut_action)
+    {
+        if (treeView->selectionModel())
+        {
+            QModelIndexList selectedList = treeView->selectionModel()->selectedIndexes();
+            QList<QUrl> urls;
+            QByteArray gnomeData;
+            gnomeData.append("cut\n");
+            if (!selectedList.isEmpty())
+            {
+                for (int i = 0; i < selectedList.count(); i += 4)
+                {
+                    QString this_file_path = model->filePath(proxyModel->mapToSource(selectedList[i]));
+                    urls.append(QUrl::fromLocalFile(this_file_path));
+                    gnomeData.append(QUrl::fromLocalFile(this_file_path).toEncoded() + "\n");
+                }
+            }
+            else
+            {
+                urls.append(QUrl::fromLocalFile(root_path));
+                gnomeData.append(urls.first().toEncoded() + "\n");
+            }
+            QMimeData *mimeData = new QMimeData;
+            mimeData->setUrls(urls);
+            mimeData->setData("x-special/gnome-copied-files", gnomeData);//添加此项用于激活dde-file-manager的"粘贴"
+            QApplication::clipboard()->setMimeData(mimeData, QClipboard::Mode::Clipboard);
+        }
+    }
+    else if (know_what == paste_action)
+    {
+        const QMimeData *mimeData = QApplication::clipboard()->mimeData();
+        QList<QUrl> urls = mimeData->urls();
+        if (urls.isEmpty())
+        {
+            return;
+        }
+        bool is_cut = false;
+        if (mimeData->hasFormat("x-special/gnome-copied-files"))
+        {
+            QByteArray gnomeData = mimeData->data("x-special/gnome-copied-files");
+            if (!gnomeData.isEmpty())
+            {
+                QList<QByteArray> lines = gnomeData.split('\n');
+                if (lines.size() > 0)
+                {
+                    if (lines[0] == "cut")
+                    {
+                        is_cut = true;
+                    }
+                }
+            }
+        }
+        QModelIndexList selectedList = treeView->selectionModel()->selectedIndexes();
+        QFileInfo to_file_info(root_path);
+        if (!selectedList.isEmpty())
+        {
+            for (int i = 0; i < selectedList.count(); i++)
+            {
+                QFileInfo file_info(model->filePath(proxyModel->mapToSource(selectedList[i])));
+                if (file_info.isDir())
+                {
+                    to_file_info = file_info;
+                    break;
+                }
+            }
+        }
+        QString targetDir = to_file_info.filePath();
+        std::function<bool(const QString &, const QString &)> copyRecursively = [&](const QString &src, const QString &dst) -> bool
+        {
+            QFileInfo srcInfo(src);
+            if (srcInfo.isDir())
+            {
+                QDir dstDir(dst);
+                if (!dstDir.exists() && !dstDir.mkpath("."))
+                {
+                    return false;
+                }
+                QDir srcDir(src);
+                QStringList entries = srcDir.entryList(QDir::Files | QDir::Dirs | QDir::NoDotAndDotDot);
+                for (const QString& entry : entries)
+                {
+                    QString newSrc = src + QDir::separator() + entry;
+                    QString newDst = dst + QDir::separator() + entry;
+                    if (!copyRecursively(newSrc, newDst))
+                    {
+                        return false;
+                    }
+                }
+                return true;
+            }
+            else
+            {
+                return QFile::copy(src, dst);
+            }
+        };
+        for (const QUrl& url : urls)
+        {
+            QString srcPath = url.toLocalFile();
+            if (srcPath.isEmpty())
+            {
+                continue;
+            }
+            QFileInfo srcInfo(srcPath);
+            QString destPath = targetDir + QDir::separator() + srcInfo.fileName();
+            if (is_cut)
+            {
+                if (File_Control::CopyWithCopyFileRange(srcPath, destPath))
+                {
+                    if (QFileInfo(destPath).exists())
+                    {
+                        if (srcInfo.isDir())
+                        {
+                            QDir(srcPath).removeRecursively();
+                        }
+                        else
+                        {
+                            QFile::remove(srcPath);
+                        }
+                    }
+                }
+                else
+                {
+                    if (copyRecursively(srcPath, destPath))
+                    {
+                        if (QFileInfo(destPath).exists())
+                        {
+                            if (srcInfo.isDir())
+                            {
+                                QDir(srcPath).removeRecursively();
+                            }
+                            else
+                            {
+                                QFile::remove(srcPath);
+                            }
+                        }
+
+                    }
+                }
+            }
+            else
+            {
+                if (!File_Control::CopyWithCopyFileRange(srcPath, destPath))
+                {
+                    copyRecursively(srcPath, destPath);
+                }
+            }
+            QModelIndex idx = proxyModel->mapFromSource(model->index(destPath));
+            if (idx.isValid())
+            {
+                model->data(idx, Qt::DisplayRole);
+                treeView->update(idx);
+            }
+        }
+    }
+    else if (know_what == rename_action)
+    {}
+    else if (know_what == delete_action)
+    {
+        if (treeView->selectionModel() && treeView == My_Tree_View::catch_ptr)
+        {
+            QModelIndexList selectedList = treeView->selectionModel()->selectedIndexes();
+            if (!selectedList.isEmpty())
+            {
+                QList<QUrl> urls;
+                for (int i = 0; i < selectedList.count(); i += 4)
+                {
+                    QString this_file_path = model->filePath(proxyModel->mapToSource(selectedList[i]));
+                    urls.append(QUrl::fromLocalFile(this_file_path));
+                }
+                for (const QUrl& url : urls)
+                {
+                    QString srcPath = url.toLocalFile();
+                    if (srcPath.isEmpty())
+                    {
+                        continue;
+                    }
+                    QFile::moveToTrash(srcPath);
+                }
+            }
+        }
+    }
     else
     {
         basic_action_func(know_what);
@@ -670,7 +1106,7 @@ void File_Tree::contextMenuEvent(QContextMenuEvent *event)
 }
 void File_Tree::dropEvent(QDropEvent *event)
 {
-    if (*m_allow_drop && event->mimeData()->hasUrls() && !treeView->move_copying)
+    if (*m_allow_drop && event->mimeData()->hasUrls() && event->source() != this->treeView)
     {
         QString filename;
         for (QUrl url : event->mimeData()->urls())
@@ -820,7 +1256,6 @@ void My_Tree_View::mouseMoveEvent(QMouseEvent *event)
             QModelIndexList selectedList = selectionModel()->selectedIndexes();
             if (!selectedList.isEmpty())
             {
-                move_copying = true;
                 QList<QUrl> urls;
                 for (int i = 0; i < selectedList.count(); i += 4)
                 {
@@ -828,7 +1263,7 @@ void My_Tree_View::mouseMoveEvent(QMouseEvent *event)
                 }
                 QMimeData *mimeData = new QMimeData;
                 mimeData->setUrls(urls);
-                QDrag *drag=new QDrag(this);
+                QDrag *drag = new QDrag(this);
                 drag->setMimeData(mimeData);
                 drag->setPixmap(F_model->fileIcon(proxyModel->mapToSource(selectedList[0])).pixmap(50, 50));
                 drag->setHotSpot(QPoint(13,13));

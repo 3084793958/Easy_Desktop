@@ -54,12 +54,23 @@ void Dock_Button::Update_Button()
 {
     if (*now_page == Button_Number)
     {
-        resize(50, 10);
+        if (is_towards_up_and_down && *is_towards_up_and_down)
+        {
+            resize(10, 50);
+        }
+        else
+        {
+            resize(50, 10);
+        }
     }
     else
     {
         resize(10 ,10);
     }
+}
+void Dock_Button::set_towards_ptr(bool *m_is_towards_up_and_down)
+{
+    is_towards_up_and_down = m_is_towards_up_and_down;
 }
 Desktop_Control_Dock::Desktop_Control_Dock(QWidget *parent)
     :QWidget(parent)
@@ -70,11 +81,22 @@ Desktop_Control_Dock::Desktop_Control_Dock(QWidget *parent)
     menu->addAction(to_center);
     menu->addAction(call_update);
     menu->addAction(hide_update);
+    control_towards_menu->addAction(towards_up_and_down_action);
+    control_towards_menu->addAction(towards_left_and_right_action);
+    menu->addMenu(control_towards_menu);
     show();
 }
 void Desktop_Control_Dock::Update_Widget()
 {
-    int basic_x = x() + width() / 2;
+    int basic_x;
+    if (is_towards_up_and_down && *is_towards_up_and_down)
+    {
+        basic_x = y() + height() / 2;
+    }
+    else
+    {
+        basic_x = x() + width() / 2;
+    }
     int delta_number = *Desktop_NUmber - Dock_Button_List.count();
     if (delta_number > 0)
     {
@@ -84,6 +106,7 @@ void Desktop_Control_Dock::Update_Widget()
             Dock_Button_List<<push_button;
             push_button->set_Now_Page(now_page);
             push_button->set_locking_desktop(locking_desktop);
+            push_button->set_towards_ptr(is_towards_up_and_down);
             push_button->setObjectName("button" + QString::number(i));
             push_button->show();
         }
@@ -105,11 +128,25 @@ void Desktop_Control_Dock::Update_Widget()
         Dock_Button_List[i]->Update_Button();
         if (i == 0)
         {
-            Dock_Button_List[i]->move(25, 10);
+            if (is_towards_up_and_down && *is_towards_up_and_down)
+            {
+                Dock_Button_List[i]->move(10, 25);
+            }
+            else
+            {
+                Dock_Button_List[i]->move(25, 10);
+            }
         }
         else
         {
-            Dock_Button_List[i]->move(Dock_Button_List[i - 1]->x() + Dock_Button_List[i - 1]->width() + 20, 10);
+            if (is_towards_up_and_down && *is_towards_up_and_down)
+            {
+                Dock_Button_List[i]->move(10, Dock_Button_List[i - 1]->y() + Dock_Button_List[i - 1]->height() + 20);
+            }
+            else
+            {
+                Dock_Button_List[i]->move(Dock_Button_List[i - 1]->x() + Dock_Button_List[i - 1]->width() + 20, 10);
+            }
         }
         Dock_Button_List[i]->raise();
     }
@@ -118,10 +155,25 @@ void Desktop_Control_Dock::Update_Widget()
         hide();
         return;
     }
-    resize(Dock_Button_List.back()->x() + Dock_Button_List.back()->width() + 25, 30);
+    if (is_towards_up_and_down && *is_towards_up_and_down)
+    {
+        resize(30, Dock_Button_List.back()->y() + Dock_Button_List.back()->height() + 25);
+    }
+    else
+    {
+        resize(Dock_Button_List.back()->x() + Dock_Button_List.back()->width() + 25, 30);
+    }
     background->resize(this->size());
-    basic_x -= width() / 2;
-    move(basic_x, y());
+    if (is_towards_up_and_down && *is_towards_up_and_down)
+    {
+        basic_x -= height() / 2;
+        move(x(), basic_x);
+    }
+    else
+    {
+        basic_x -= width() / 2;
+        move(basic_x, y());
+    }
     if (*allow_dock_show)
     {
         show();
@@ -166,6 +218,10 @@ void Desktop_Control_Dock::Set_Now_page(int *m_now_page)
 void Desktop_Control_Dock::set_locking_desktop(bool *m_locking_desktop)
 {
     locking_desktop = m_locking_desktop;
+}
+void Desktop_Control_Dock::set_towards_ptr(bool *m_is_towards_up_and_down)
+{
+    is_towards_up_and_down = m_is_towards_up_and_down;
 }
 void Desktop_Control_Dock::mousePressEvent(QMouseEvent *event)
 {
@@ -215,6 +271,24 @@ void Desktop_Control_Dock::contextMenuEvent(QContextMenuEvent *event)
         *allow_dock_show = false;
         hide();
     }
+    else if (know_what == towards_up_and_down_action)
+    {
+        if (is_towards_up_and_down)
+        {
+            *is_towards_up_and_down = true;
+        }
+        Desktop_Control_Dock::Update_Widget();
+        reinterpret_cast<Desktop_Main *>(this->parent())->Update_Basic_Desktop();
+    }
+    else if (know_what == towards_left_and_right_action)
+    {
+        if (is_towards_up_and_down)
+        {
+            *is_towards_up_and_down = false;
+        }
+        Desktop_Control_Dock::Update_Widget();
+        reinterpret_cast<Desktop_Main *>(this->parent())->Update_Basic_Desktop();
+    }
 }
 Desktop_Main::Desktop_Main(QWidget *parent)
     :QWidget(parent)
@@ -241,6 +315,7 @@ Desktop_Main::Desktop_Main(QWidget *parent)
     desktop_control_action->addAction(unlock_desktop);
     desktop_control_action->addAction(show_dock_action);
     desktop_control_action->addAction(hide_dock_action);
+    desktop_control_action->addAction(desktop_control_move_to_center_action);
     desktop_control_action->addAction(Add_new_desktop);
     desktop_control_action->addAction(delete_this_desktop);
     menu->addMenu(desktop_control_action);
@@ -447,6 +522,11 @@ void Desktop_Main::contextMenuEvent(QContextMenuEvent *event)
         allow_dock_show = false;
         control_Dock->hide();
     }
+    else if (know_what == desktop_control_move_to_center_action)
+    {
+        control_Dock->move(desktop_width / 2 - control_Dock->width() / 2, desktop_height / 2 - control_Dock->height() / 2);
+        control_Dock->Desktop_Control_Dock::Update_Widget();
+    }
     else if (know_what == lock_desktop)
     {
         locking_desktop = true;
@@ -479,7 +559,6 @@ void Desktop_Main::contextMenuEvent(QContextMenuEvent *event)
         my_lineedit->set_now_page(&now_page);
         my_lineedit->set_desktop_number(&Desktop_NUmber);
         my_lineedit->set_basic_list(reinterpret_cast<QList<QWidget *> *>(&desktop_core_dock_list));
-        my_lineedit->set_WinId(m_WinId);
         my_lineedit->move(event->globalPos() - basic_pos);
         my_lineedit_list.append(my_lineedit);
         my_lineedit->my_lineedit_list = &my_lineedit_list;
@@ -491,7 +570,6 @@ void Desktop_Main::contextMenuEvent(QContextMenuEvent *event)
         my_label->set_now_page(&now_page);
         my_label->set_desktop_number(&Desktop_NUmber);
         my_label->set_basic_list(reinterpret_cast<QList<QWidget *> *>(&desktop_core_dock_list));
-        my_label->set_WinId(m_WinId);
         my_label->move(event->globalPos() - basic_pos);
         my_label_list.append(my_label);
         my_label->my_label_list = &my_label_list;
@@ -510,14 +588,12 @@ void Desktop_Main::contextMenuEvent(QContextMenuEvent *event)
             my_process->set_now_page(&now_page);
             my_process->set_desktop_number(&Desktop_NUmber);
             my_process->set_basic_list(reinterpret_cast<QList<QWidget *> *>(&desktop_core_dock_list));
-            my_process->set_WinId(m_WinId);
             my_process->move(pos_);
             my_process->show();
         });
         my_process->set_now_page(&now_page);
         my_process->set_desktop_number(&Desktop_NUmber);
         my_process->set_basic_list(reinterpret_cast<QList<QWidget *> *>(&desktop_core_dock_list));
-        my_process->set_WinId(m_WinId);
         my_process->move(event->globalPos() - basic_pos);
         process_widget_list.append(my_process);
         my_process->process_widget_list = &process_widget_list;
@@ -536,14 +612,12 @@ void Desktop_Main::contextMenuEvent(QContextMenuEvent *event)
             my_file->set_now_page(&now_page);
             my_file->set_desktop_number(&Desktop_NUmber);
             my_file->set_basic_list(reinterpret_cast<QList<QWidget *> *>(&desktop_core_dock_list));
-            my_file->set_WinId(m_WinId);
             my_file->move(pos_);
             my_file->show();
         });
         my_file->set_now_page(&now_page);
         my_file->set_desktop_number(&Desktop_NUmber);
         my_file->set_basic_list(reinterpret_cast<QList<QWidget *> *>(&desktop_core_dock_list));
-        my_file->set_WinId(m_WinId);
         my_file->move(event->globalPos() - basic_pos);
         file_widget_list.append(my_file);
         my_file->file_widget_list = &file_widget_list;
@@ -557,7 +631,6 @@ void Desktop_Main::contextMenuEvent(QContextMenuEvent *event)
         my_process_Carrier->set_now_page(&now_page);
         my_process_Carrier->set_desktop_number(&Desktop_NUmber);
         my_process_Carrier->set_basic_list(reinterpret_cast<QList<QWidget *> *>(&desktop_core_dock_list));
-        my_process_Carrier->m_WinId = m_WinId;
         my_process_Carrier->process_widget_p = &process_widget_p;
         my_process_Carrier->move(event->globalPos() - basic_pos);
         my_process_carrier_list.append(my_process_Carrier);
@@ -637,7 +710,6 @@ void Desktop_Main::contextMenuEvent(QContextMenuEvent *event)
         file_tree->set_now_page(&now_page);
         file_tree->set_desktop_number(&Desktop_NUmber);
         file_tree->set_basic_list(reinterpret_cast<QList<QWidget *> *>(&desktop_core_dock_list));
-        file_tree->m_WinId = m_WinId;
         file_tree->move(event->globalPos() - basic_pos);
         file_tree_list.append(file_tree);
         file_tree->file_tree_list = &file_tree_list;
@@ -654,7 +726,6 @@ void Desktop_Main::contextMenuEvent(QContextMenuEvent *event)
         plugin_widget->set_basic_list(reinterpret_cast<QList<QWidget *> *>(&desktop_core_dock_list));
         plugin_widget->set_root_pos(event->globalPos() - basic_pos);
         plugin_widget->call_update_plugin_carrier();
-        plugin_widget->WinId = m_WinId;
         plugin_root_list.append(plugin_widget);
         plugin_widget->plugin_root_list = &plugin_root_list;
     }
@@ -739,14 +810,12 @@ void Desktop_Main::dropEvent(QDropEvent *event)
                 my_file->set_now_page(&now_page);
                 my_file->set_desktop_number(&Desktop_NUmber);
                 my_file->set_basic_list(reinterpret_cast<QList<QWidget *> *>(&desktop_core_dock_list));
-                my_file->set_WinId(m_WinId);
                 my_file->move(pos_);
                 my_file->show();
             });
             my_file->set_now_page(&now_page);
             my_file->set_desktop_number(&Desktop_NUmber);
             my_file->set_basic_list(reinterpret_cast<QList<QWidget *> *>(&desktop_core_dock_list));
-            my_file->set_WinId(m_WinId);
             my_file->Basic_Widget::resize(width, height);
             my_file->move(x + (width + delta_x) * (i % x_num), y + (height + delta_y) * (i / x_num));
             file_widget_list.append(my_file);
@@ -784,6 +853,7 @@ void Desktop_Main::Update_Widget()
     control_Dock->Set_Dock_Show_Bool(&allow_dock_show);
     control_Dock->set_locking_desktop(&locking_desktop);
     control_Dock->Set_Desktop_Number(&Desktop_NUmber);
+    control_Dock->set_towards_ptr(&is_towards_up_and_down);
     control_Dock->Set_Now_page(&now_page);
     control_Dock->First_Set();
     control_Dock->raise();
@@ -882,7 +952,14 @@ void Desktop_Main::wheelEvent(QWheelEvent *event)
             now_page--;
             move_Timer->stop();
             control_Dock->raise();
-            desktop_move_x += desktop_width;
+            if (is_towards_up_and_down)
+            {
+                desktop_move_x += desktop_height;
+            }
+            else
+            {
+                desktop_move_x += desktop_width;
+            }
             Desktop_Main::Call_Timer_Move();
         }
         else
@@ -894,7 +971,14 @@ void Desktop_Main::wheelEvent(QWheelEvent *event)
             now_page++;
             move_Timer->stop();
             control_Dock->raise();
-            desktop_move_x -= desktop_width;
+            if (is_towards_up_and_down)
+            {
+                desktop_move_x -= desktop_height;
+            }
+            else
+            {
+                desktop_move_x -= desktop_width;
+            }
             Desktop_Main::Call_Timer_Move();
         }
         control_Dock->Update_Widget();
@@ -905,7 +989,14 @@ void Desktop_Main::desktop_Move_Update(int delta_move)
 {
     move_Timer->stop();
     control_Dock->raise();
-    desktop_move_x -= delta_move * desktop_width;
+    if (is_towards_up_and_down)
+    {
+        desktop_move_x -= delta_move * desktop_height;
+    }
+    else
+    {
+        desktop_move_x -= delta_move * desktop_width;
+    }
     Desktop_Main::Call_Timer_Move();
 }
 void Desktop_Main::Call_Timer_Move()
@@ -933,14 +1024,28 @@ void Desktop_Main::Timer_End()
     desktop_move_x -= move_x;
     for (int i = 0; i < desktop_core_dock_list.count(); i++)
     {
-        desktop_core_dock_list[i]->move(desktop_core_dock_list[i]->x() + move_x, 0);
+        if (is_towards_up_and_down)
+        {
+            desktop_core_dock_list[i]->move(0, desktop_core_dock_list[i]->y() + move_x);
+        }
+        else
+        {
+            desktop_core_dock_list[i]->move(desktop_core_dock_list[i]->x() + move_x, 0);
+        }
     }
 }
 void Desktop_Main::Update_Basic_Desktop()
 {
     for (int i = 0; i < desktop_core_dock_list.count(); i++)
     {
-        desktop_core_dock_list[i]->move((i - now_page) * desktop_width, 0);
+        if (is_towards_up_and_down)
+        {
+            desktop_core_dock_list[i]->move(0, (i - now_page) * desktop_height);
+        }
+        else
+        {
+            desktop_core_dock_list[i]->move((i - now_page) * desktop_width, 0);
+        }
         if (i == now_page)
         {
             desktop_core_dock_list[i]->show();
@@ -978,6 +1083,7 @@ void Desktop_Main::save(QString path)
     settings.setValue("desktop_number", Desktop_NUmber);
     settings.setValue("now_page", now_page);
     settings.setValue("control_Dock_pos", control_Dock->pos());
+    settings.setValue("is_towards_up_and_down", is_towards_up_and_down);
     settings.setValue("file_widget_list_count", file_widget_list.count());
     settings.setValue("my_clock_list_count", my_clock_list.count());
     settings.setValue("my_label_list_count", my_label_list.count());
@@ -1127,6 +1233,7 @@ void Desktop_Main::load()
     settings.beginGroup("Desktop");
     locking_desktop = settings.value("locking_desktop", false).toBool();
     allow_dock_show = settings.value("allow_dock_show", true).toBool();
+    is_towards_up_and_down = settings.value("is_towards_up_and_down", false).toBool();
     control_Dock->setVisible(allow_dock_show);
     *stay_on_top = settings.value("stay_on_top", true).toBool();
     *on_top_time = settings.value("on_top_time", 5000).toInt();
@@ -1244,7 +1351,6 @@ void Desktop_Main::load()
         my_lineedit->set_now_page(&now_page);
         my_lineedit->set_desktop_number(&Desktop_NUmber);
         my_lineedit->set_basic_list(reinterpret_cast<QList<QWidget *> *>(&desktop_core_dock_list));
-        my_lineedit->set_WinId(m_WinId);
         my_lineedit->move(0, 0);
         my_lineedit_list.append(my_lineedit);
         my_lineedit->my_lineedit_list = &my_lineedit_list;
@@ -1259,7 +1365,6 @@ void Desktop_Main::load()
         my_label->set_now_page(&now_page);
         my_label->set_desktop_number(&Desktop_NUmber);
         my_label->set_basic_list(reinterpret_cast<QList<QWidget *> *>(&desktop_core_dock_list));
-        my_label->set_WinId(m_WinId);
         my_label->move(0, 0);
         my_label_list.append(my_label);
         my_label->my_label_list = &my_label_list;
@@ -1288,7 +1393,6 @@ void Desktop_Main::load()
         my_process_Carrier->set_now_page(&now_page);
         my_process_Carrier->set_desktop_number(&Desktop_NUmber);
         my_process_Carrier->set_basic_list(reinterpret_cast<QList<QWidget *> *>(&desktop_core_dock_list));
-        my_process_Carrier->m_WinId = m_WinId;
         my_process_Carrier->process_widget_p = &process_widget_p;
         my_process_Carrier->move(0, 0);
         my_process_carrier_list.append(my_process_Carrier);
@@ -1318,7 +1422,6 @@ void Desktop_Main::load()
             my_process->set_now_page(&now_page);
             my_process->set_desktop_number(&Desktop_NUmber);
             my_process->set_basic_list(reinterpret_cast<QList<QWidget *> *>(&desktop_core_dock_list));
-            my_process->set_WinId(m_WinId);
             my_process->move(pos_);
             my_process->show();
         });
@@ -1343,7 +1446,6 @@ void Desktop_Main::load()
             my_process->set_desktop_number(&Desktop_NUmber);
             my_process->set_basic_list(reinterpret_cast<QList<QWidget *> *>(&desktop_core_dock_list));
         }
-        my_process->set_WinId(m_WinId);
         my_process->move(0, 0);
         process_widget_list.append(my_process);
         my_process->process_widget_list = &process_widget_list;
@@ -1366,7 +1468,6 @@ void Desktop_Main::load()
             my_file->set_now_page(&now_page);
             my_file->set_desktop_number(&Desktop_NUmber);
             my_file->set_basic_list(reinterpret_cast<QList<QWidget *> *>(&desktop_core_dock_list));
-            my_file->set_WinId(m_WinId);
             my_file->move(pos_);
             my_file->show();
         });
@@ -1390,7 +1491,6 @@ void Desktop_Main::load()
             my_file->set_desktop_number(&Desktop_NUmber);
             my_file->set_basic_list(reinterpret_cast<QList<QWidget *> *>(&desktop_core_dock_list));
         }
-        my_file->set_WinId(m_WinId);
         my_file->move(0, 0);
         file_widget_list.append(my_file);
         my_file->file_widget_list = &file_widget_list;
@@ -1480,7 +1580,6 @@ void Desktop_Main::load()
         file_tree->set_now_page(&now_page);
         file_tree->set_desktop_number(&Desktop_NUmber);
         file_tree->set_basic_list(reinterpret_cast<QList<QWidget *> *>(&desktop_core_dock_list));
-        file_tree->m_WinId = m_WinId;
         file_tree->move(0, 0);
         file_tree_list.append(file_tree);
         file_tree->file_tree_list = &file_tree_list;
@@ -1501,7 +1600,6 @@ void Desktop_Main::load()
         plugin_widget->set_basic_list(reinterpret_cast<QList<QWidget *> *>(&desktop_core_dock_list));
         plugin_widget->set_root_pos(QPoint(0, 0));
         plugin_widget->call_update_plugin_carrier();
-        plugin_widget->WinId = m_WinId;
         plugin_root_list.append(plugin_widget);
         plugin_widget->plugin_root_list = &plugin_root_list;
         settings.beginGroup(QString("plugin_root%1").arg(i));

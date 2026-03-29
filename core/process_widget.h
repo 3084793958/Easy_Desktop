@@ -7,7 +7,6 @@ class Process_Widget : public Basic_Widget
 public:
     explicit Process_Widget(QWidget *parent);
     ~Process_Widget();
-    void set_WinId(WId m_winId);
     QList<Process_Widget *> *process_widget_list;
     virtual void save(QSettings *settings);
     virtual void load(QSettings *settings);
@@ -34,7 +33,6 @@ protected:
 private:
     bool left_mouse_on_press = false;
     bool moved = false;
-    WId winId;
     QColor press_color = QColor(255,255,255,75);
     QColor hover_color = QColor(255,255,255,75);
     QColor basic_color = QColor(255,255,255,50);
@@ -56,7 +54,6 @@ protected:
     QAction *set_by_desktop = new QAction(tr("通过.desktop设置"), this);
     QAction *break_out = new QAction(tr("移入/脱离"), this);
     QTimer *double_click_timer = new QTimer(this);
-    void X11_Rasie();
 private:
     virtual void mousePressEvent(QMouseEvent *event);
     virtual void mouseReleaseEvent(QMouseEvent *event);

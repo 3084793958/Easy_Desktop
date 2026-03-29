@@ -1,18 +1,4 @@
 #include "process_widget.h"
-#include <QX11Info>
-#include <X11/Xlib.h>
-void Process_Widget::X11_Rasie()
-{
-    Window win_Id = static_cast<Window>(winId);
-    Display *display = QX11Info::display();
-    XRaiseWindow(display, win_Id);
-    XFlush(display);
-}
-#undef CursorShape
-void Process_Widget::set_WinId(WId m_winId)
-{
-    winId = m_winId;
-}
 QSize Process_Widget::get_Image_Size(QString path)
 {
     QImageReader reader(path);
@@ -255,7 +241,7 @@ void Process_Widget::context_solution(QAction *know_what)
     else if (know_what == set_image)
     {
         QString filename = QFileDialog::getOpenFileName(nullptr, "获取图像", QDir::homePath(), "图像文件(*.png *.jpg *.jpeg *.svg *.gif *.bmp);;所有文件(*.*)");
-        X11_Rasie();
+        My_X11_Libs::X11_Raise();
         if (filename.isEmpty())
         {
             return;
@@ -347,7 +333,7 @@ void Process_Widget::context_solution(QAction *know_what)
         ok = false;
         QMessageBox::information(nullptr, "设置运行路径", "设置运行路径");
         QString filepath = QFileDialog::getExistingDirectory(nullptr, "获取运行路径", running_path);
-        X11_Rasie();
+        My_X11_Libs::X11_Raise();
         if (filepath.isEmpty())
         {
             filepath = QDir::homePath();
@@ -362,7 +348,7 @@ void Process_Widget::context_solution(QAction *know_what)
     else if (know_what == set_by_desktop)
     {
         QString final_process = QFileDialog::getOpenFileName(nullptr, "获取.desktop文件", running_path);
-        X11_Rasie();
+        My_X11_Libs::X11_Raise();
         if (!final_process.isEmpty())
         {
             if (QFile::exists(final_process))

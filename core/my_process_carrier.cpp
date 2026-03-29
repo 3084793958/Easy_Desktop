@@ -1,14 +1,4 @@
 #include "my_process_carrier.h"
-#include <QX11Info>
-#include <X11/Xlib.h>
-void My_Process_Carrier::X11_Raise()
-{
-    Window win_Id = static_cast<Window>(m_WinId);
-    Display *display = QX11Info::display();
-    XRaiseWindow(display, win_Id);
-    XFlush(display);
-}
-#undef CursorShape
 My_Process_Carrier::My_Process_Carrier(QWidget *parent)
     :Basic_Widget(parent)
 {
@@ -25,10 +15,16 @@ My_Process_Carrier::My_Process_Carrier(QWidget *parent)
     menu->addSeparator();
     menu->addAction(create_carrier_action);
     menu->addAction(delete_carrier_action);
+    set_control_dock_pos_menu->addAction(set_to_top_action);
+    set_control_dock_pos_menu->addAction(set_to_bottom_action);
+    set_control_dock_pos_menu->addAction(set_to_left_action);
+    set_control_dock_pos_menu->addAction(set_to_right_action);
+    menu->addMenu(set_control_dock_pos_menu);
     menu->addSeparator();
     basic_context(menu);
     control_Dock->Set_Now_page(&carrier_now_page);
     control_Dock->Set_Desktop_Number(&carrier_page_number);
+    control_Dock->Set_Dock_Pos(&control_dock_pos);
     control_Dock->show();
     connect(this, &Basic_Widget::size_changed, this, [=]
     {
@@ -87,7 +83,6 @@ void My_Process_Carrier::context_solution(QAction *know_what, QPoint pos)
         new_process_widget->set_now_page(&carrier_now_page);
         new_process_widget->set_desktop_number(&carrier_page_number);
         new_process_widget->set_basic_list(&carrier_widget_list);
-        new_process_widget->set_WinId(m_WinId);
         new_process_widget->move(Basic_Carrier->mapFromGlobal(pos));
         process_widget_list->append(new_process_widget);
         new_process_widget->process_widget_list = process_widget_list;
@@ -113,7 +108,6 @@ void My_Process_Carrier::context_solution(QAction *know_what, QPoint pos)
         new_process_widget->set_now_page(&carrier_now_page);
         new_process_widget->set_desktop_number(&carrier_page_number);
         new_process_widget->set_basic_list(&carrier_widget_list);
-        new_process_widget->set_WinId(m_WinId);
         new_process_widget->move(Basic_Carrier->mapFromGlobal(pos));
         file_widget_list->append(new_process_widget);
         new_process_widget->file_widget_list = file_widget_list;
@@ -136,7 +130,6 @@ void My_Process_Carrier::context_solution(QAction *know_what, QPoint pos)
         (*process_widget_p)->set_now_page(&carrier_now_page);
         (*process_widget_p)->set_desktop_number(&carrier_page_number);
         (*process_widget_p)->set_basic_list(&carrier_widget_list);
-        (*process_widget_p)->set_WinId(m_WinId);
         (*process_widget_p)->move(Basic_Carrier->mapFromGlobal(pos));
         (*process_widget_p)->show();
         (*process_widget_p) = nullptr;
@@ -152,7 +145,7 @@ void My_Process_Carrier::context_solution(QAction *know_what, QPoint pos)
         {
             filenames << QFileDialog::getExistingDirectory(nullptr, "获取文件夹", QDir::homePath());
         }
-        X11_Raise();
+        My_X11_Libs::X11_Raise();
         int x = pos.x(), y = pos.y(), width = 90, height = 90, delta_x = 5, delta_y = 5;
         bool ok = false;
         x = QInputDialog::getInt(nullptr, "获取数值", "位置坐标:(x,y),宽度:width,高度:height,横向间隔:delta_x,纵向间隔:delta_y\n设置x", x, -2147483647, 2147483647, 1, &ok);
@@ -226,7 +219,6 @@ void My_Process_Carrier::context_solution(QAction *know_what, QPoint pos)
             new_process_widget->set_now_page(&carrier_now_page);
             new_process_widget->set_desktop_number(&carrier_page_number);
             new_process_widget->set_basic_list(&carrier_widget_list);
-            new_process_widget->set_WinId(m_WinId);
             new_process_widget->Basic_Widget::resize(width, height);
             new_process_widget->move(x + (width + delta_x) * (i % x_num), y + (height + delta_y) * (i / x_num));
             file_widget_list->append(new_process_widget);
@@ -276,6 +268,30 @@ void My_Process_Carrier::context_solution(QAction *know_what, QPoint pos)
             control_Dock->Update_Widget();
         }
     }
+    else if (know_what == set_to_top_action)
+    {
+        control_dock_pos = Control_Dock_Pos::Top;
+        Update_Basic_Desktop();
+        control_Dock->Update_Widget();
+    }
+    else if (know_what == set_to_bottom_action)
+    {
+        control_dock_pos = Control_Dock_Pos::Bottom;
+        Update_Basic_Desktop();
+        control_Dock->Update_Widget();
+    }
+    else if (know_what == set_to_left_action)
+    {
+        control_dock_pos = Control_Dock_Pos::Left;
+        Update_Basic_Desktop();
+        control_Dock->Update_Widget();
+    }
+    else if (know_what == set_to_right_action)
+    {
+        control_dock_pos = Control_Dock_Pos::Right;
+        Update_Basic_Desktop();
+        control_Dock->Update_Widget();
+    }
     else
     {
         basic_action_func(know_what);
@@ -294,7 +310,14 @@ void My_Process_Carrier::wheelEvent(QWheelEvent *event)
             }
             carrier_now_page--;
             move_Timer->stop();
-            desktop_move_x += this->Basic_Carrier->width();
+            if (control_dock_pos == Control_Dock_Pos::Left || control_dock_pos == Control_Dock_Pos::Right)
+            {
+                desktop_move_x += this->Basic_Carrier->height();
+            }
+            else
+            {
+                desktop_move_x += this->Basic_Carrier->width();
+            }
             My_Process_Carrier::Call_Timer_Move();
         }
         else
@@ -305,7 +328,14 @@ void My_Process_Carrier::wheelEvent(QWheelEvent *event)
             }
             carrier_now_page++;
             move_Timer->stop();
-            desktop_move_x -= this->Basic_Carrier->width();
+            if (control_dock_pos == Control_Dock_Pos::Left || control_dock_pos == Control_Dock_Pos::Right)
+            {
+                desktop_move_x -= this->Basic_Carrier->height();
+            }
+            else
+            {
+                desktop_move_x -= this->Basic_Carrier->width();
+            }
             My_Process_Carrier::Call_Timer_Move();
         }
         control_Dock->Update_Widget();
@@ -405,7 +435,6 @@ void My_Process_Carrier::dropEvent(QDropEvent *event)
             new_process_widget->set_now_page(&carrier_now_page);
             new_process_widget->set_desktop_number(&carrier_page_number);
             new_process_widget->set_basic_list(&carrier_widget_list);
-            new_process_widget->set_WinId(m_WinId);
             new_process_widget->Basic_Widget::resize(width, height);
             new_process_widget->move(x + (width + delta_x) * (i % x_num), y + (height + delta_y) * (i / x_num));
             file_widget_list->append(new_process_widget);
@@ -422,7 +451,14 @@ void My_Process_Carrier::dropEvent(QDropEvent *event)
 void My_Process_Carrier::desktop_Move_Update(int delta_move)
 {
     move_Timer->stop();
-    desktop_move_x -= delta_move * this->Basic_Carrier->width();
+    if (control_dock_pos == Control_Dock_Pos::Left || control_dock_pos == Control_Dock_Pos::Right)
+    {
+        desktop_move_x -= delta_move * this->Basic_Carrier->height();
+    }
+    else
+    {
+        desktop_move_x -= delta_move * this->Basic_Carrier->width();
+    }
     My_Process_Carrier::Call_Timer_Move();
 }
 void My_Process_Carrier::Call_Timer_Move()
@@ -450,15 +486,63 @@ void My_Process_Carrier::Timer_End()
     desktop_move_x -= move_x;
     for (int i = 0; i < carrier_widget_list.count(); i++)
     {
-        carrier_widget_list[i]->move(carrier_widget_list[i]->x() + move_x, 0);
+        switch (control_dock_pos)
+        {
+        case Control_Dock_Pos::Top:
+        {
+            carrier_widget_list[i]->move(carrier_widget_list[i]->x() + move_x, 20);
+            break;
+        }
+        case Control_Dock_Pos::Bottom:
+        {
+            carrier_widget_list[i]->move(carrier_widget_list[i]->x() + move_x, 0);
+            break;
+        }
+        case Control_Dock_Pos::Left:
+        {
+            carrier_widget_list[i]->move(20, carrier_widget_list[i]->y() + move_x);
+            break;
+        }
+        case Control_Dock_Pos::Right:
+        {
+            carrier_widget_list[i]->move(0, carrier_widget_list[i]->y() + move_x);
+            break;
+        }
+        }
     }
 }
 void My_Process_Carrier::Update_Basic_Desktop()
 {
     for (int i = 0; i < carrier_widget_list.count(); i++)
     {
-        carrier_widget_list[i]->move((i - carrier_now_page) * Basic_Carrier->width(), 0);
-        carrier_widget_list[i]->resize(Basic_Carrier->size() - QSize(0, 20));
+        switch (control_dock_pos)
+        {
+        case Control_Dock_Pos::Top:
+        {
+            carrier_widget_list[i]->move((i - carrier_now_page) * Basic_Carrier->width(), 20);
+            carrier_widget_list[i]->resize(Basic_Carrier->size() - QSize(0, 20));
+            break;
+        }
+        case Control_Dock_Pos::Bottom:
+        {
+            carrier_widget_list[i]->move((i - carrier_now_page) * Basic_Carrier->width(), 0);
+            carrier_widget_list[i]->resize(Basic_Carrier->size() - QSize(0, 20));
+            break;
+        }
+        case Control_Dock_Pos::Left:
+        {
+            carrier_widget_list[i]->move(20, (i - carrier_now_page) * Basic_Carrier->height());
+            carrier_widget_list[i]->resize(Basic_Carrier->size() - QSize(20, 0));
+            break;
+        }
+        case Control_Dock_Pos::Right:
+        {
+            carrier_widget_list[i]->move(0, (i - carrier_now_page) * Basic_Carrier->height());
+            carrier_widget_list[i]->resize(Basic_Carrier->size() - QSize(20, 0));
+            break;
+            break;
+        }
+        }
         if (i == carrier_now_page)
         {
             carrier_widget_list[i]->show();
@@ -498,12 +582,23 @@ void Page_Dock_Button::Update_Button()
 {
     if (*now_page == Button_Number)
     {
-        resize(50, 10);
+        if (control_dock_pos && (*control_dock_pos == Control_Dock_Pos::Left || *control_dock_pos == Control_Dock_Pos::Right))
+        {
+            resize(10, 50);
+        }
+        else
+        {
+            resize(50, 10);
+        }
     }
     else
     {
         resize(10 ,10);
     }
+}
+void Page_Dock_Button::Set_Dock_Pos(Control_Dock_Pos *m_control_dock_pos)
+{
+    control_dock_pos = m_control_dock_pos;
 }
 Page_Control_Dock::Page_Control_Dock(QWidget *parent)
     :QWidget(parent)
@@ -512,7 +607,6 @@ Page_Control_Dock::Page_Control_Dock(QWidget *parent)
 }
 void Page_Control_Dock::Update_Widget()
 {
-    int basic_x = x() + width() / 2;
     int delta_number = *Desktop_NUmber - Dock_Button_List.count();
     if (delta_number > 0)
     {
@@ -522,6 +616,7 @@ void Page_Control_Dock::Update_Widget()
             Dock_Button_List<<push_button;
             push_button->setMouseTracking(true);
             push_button->set_Now_Page(now_page);
+            push_button->Set_Dock_Pos(control_dock_pos);
             push_button->setObjectName("button" + QString::number(i));
             push_button->show();
         }
@@ -543,11 +638,25 @@ void Page_Control_Dock::Update_Widget()
         Dock_Button_List[i]->Update_Button();
         if (i == 0)
         {
-            Dock_Button_List[i]->move(25, 5);
+            if (control_dock_pos && (*control_dock_pos == Control_Dock_Pos::Left || *control_dock_pos == Control_Dock_Pos::Right))
+            {
+                Dock_Button_List[i]->move(5, 25);
+            }
+            else
+            {
+                Dock_Button_List[i]->move(25, 5);
+            }
         }
         else
         {
-            Dock_Button_List[i]->move(Dock_Button_List[i - 1]->x() + Dock_Button_List[i - 1]->width() + 20, 5);
+            if (control_dock_pos && (*control_dock_pos == Control_Dock_Pos::Left || *control_dock_pos == Control_Dock_Pos::Right))
+            {
+                Dock_Button_List[i]->move(5, Dock_Button_List[i - 1]->y() + Dock_Button_List[i - 1]->height() + 20);
+            }
+            else
+            {
+                Dock_Button_List[i]->move(Dock_Button_List[i - 1]->x() + Dock_Button_List[i - 1]->width() + 20, 5);
+            }
         }
         Dock_Button_List[i]->raise();
     }
@@ -557,9 +666,55 @@ void Page_Control_Dock::Update_Widget()
         return;
     }
     show();
-    resize(Dock_Button_List.back()->x() + Dock_Button_List.back()->width() + 25, 20);
-    basic_x -= width() / 2;
-    move(basic_x, y());
+    if (control_dock_pos && (*control_dock_pos == Control_Dock_Pos::Left || *control_dock_pos == Control_Dock_Pos::Right))
+    {
+        resize(20, Dock_Button_List.back()->y() + Dock_Button_List.back()->height() + 25);
+    }
+    else
+    {
+        resize(Dock_Button_List.back()->x() + Dock_Button_List.back()->width() + 25, 20);
+    }
+    QSize parent_size = this->parentWidget()->size();
+    if (control_dock_pos)
+    {
+        switch (*control_dock_pos)
+        {
+        case Control_Dock_Pos::Top:
+        {
+            int move_x = (parent_size.width() - this->width()) / 2;
+            int move_y = 0;
+            move(move_x, move_y);
+            break;
+        }
+        case Control_Dock_Pos::Bottom:
+        {
+            int move_x = (parent_size.width() - this->width()) / 2;
+            int move_y = parent_size.height() - 20;
+            move(move_x, move_y);
+            break;
+        }
+        case Control_Dock_Pos::Left:
+        {
+            int move_x = 0;
+            int move_y = (parent_size.height() - this->height()) / 2;
+            move(move_x, move_y);
+            break;
+        }
+        case Control_Dock_Pos::Right:
+        {
+            int move_x = parent_size.width() - 20;
+            int move_y = (parent_size.height() - this->height()) / 2;
+            move(move_x, move_y);
+            break;
+        }
+        }
+    }
+    else
+    {
+        int move_x = (parent_size.width() - this->width()) / 2;
+        int move_y = parent_size.height() - 20;
+        move(move_x, move_y);
+    }
     raise();
 }
 void Page_Control_Dock::Changed_Signals()
@@ -569,6 +724,10 @@ void Page_Control_Dock::Changed_Signals()
         Dock_Button_List[i]->Update_Button();
     }
     Update_Widget();
+}
+void Page_Control_Dock::Set_Dock_Pos(Control_Dock_Pos *m_control_dock_pos)
+{
+    control_dock_pos = m_control_dock_pos;
 }
 void Page_Control_Dock::Set_Desktop_Number(int *number)
 {
@@ -583,6 +742,7 @@ void My_Process_Carrier::save(QSettings *settings)
     Basic_Widget::save(settings);
     settings->setValue("carrier_now_page", carrier_now_page);
     settings->setValue("carrier_page_number", carrier_page_number);
+    settings->setValue("control_dock_pos", static_cast<int>(control_dock_pos));
     for (int i = 0; i < carrier_widget_list.count(); i++)
     {
         for (int j = 0; j < carrier_widget_list[i]->children().count(); j++)
@@ -596,6 +756,7 @@ void My_Process_Carrier::load(QSettings *settings)
     Basic_Widget::load(settings);
     carrier_now_page = settings->value("carrier_now_page", 0).toInt();
     carrier_page_number = settings->value("carrier_page_number", 1).toInt();
+    control_dock_pos = static_cast<Control_Dock_Pos>(settings->value("control_dock_pos", 1).toInt());
     if (carrier_now_page < 0)
     {
         carrier_now_page = 0;

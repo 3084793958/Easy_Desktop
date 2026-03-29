@@ -1,6 +1,7 @@
 #ifndef BASIC_WIDGET_H
 #define BASIC_WIDGET_H
 #include <QtWidgets>
+#include "my_x11_libs.h"
 enum class Towards
 {
     No,

@@ -32,7 +32,7 @@ Path_Info::Path_Info(uint m_id)
 }
 Path_Info::Path_Info(uint m_id, QString m_name, bool m_is_image, QString m_path, Scale_Type m_scale_type, bool m_center, bool m_mouse_effect,
                      qreal m_k_mouse_move_width, qreal m_k_mouse_move_height, int m_delta_x, int m_delta_y,
-                     bool m_on_Antialiasing)
+                     bool m_on_Antialiasing, Mouse_Control_Type m_mouse_control_type, int m_wallpaper_width, int m_wallpaper_height)
 {
     Empty = false;
     id = m_id;
@@ -47,6 +47,9 @@ Path_Info::Path_Info(uint m_id, QString m_name, bool m_is_image, QString m_path,
     delta_x = m_delta_x;
     delta_y = m_delta_y;
     on_Antialiasing = m_on_Antialiasing;
+    mouse_control_type = m_mouse_control_type;
+    wallpaper_width = m_wallpaper_width;
+    wallpaper_height = m_wallpaper_height;
 }
 void Path_List::Sort()
 {
@@ -62,8 +65,23 @@ void Desktop_Background::mouse_move_event(int mouse_x, int mouse_y)
     {
         return;
     }
-    int move_x = int(path_list[Path_List_Index].k_mouse_move_width * (mouse_x - (QApplication::desktop()->width() / 2)) * (static_cast<double>(desktop_width) / QApplication::desktop()->width()));
-    int move_y = int(path_list[Path_List_Index].k_mouse_move_height * (mouse_y - (QApplication::desktop()->height() / 2)) */*我真是天才*/ (static_cast<double>(desktop_height) / QApplication::desktop()->height()));
+    int move_x;
+    int move_y;
+    switch (path_list[Path_List_Index].mouse_control_type)
+    {
+    case Mouse_Control_Type::Follow_Desktop:
+    {
+        move_x = int(path_list[Path_List_Index].k_mouse_move_width * (mouse_x - (QApplication::desktop()->width() / 2)) * (static_cast<double>(desktop_width) / QApplication::desktop()->width()));
+        move_y = int(path_list[Path_List_Index].k_mouse_move_height * (mouse_y - (QApplication::desktop()->height() / 2)) * (static_cast<double>(desktop_height) / QApplication::desktop()->height()));
+        break;
+    }
+    case Mouse_Control_Type::Follow_Wallpaper:
+    {
+        move_x = static_cast<int>((save_final_size.width() * (1 + abs(path_list[Path_List_Index].k_mouse_move_width)) - desktop_width) / 2 * (static_cast<double>(mouse_x * 2) / QApplication::desktop()->width() - 1) * (path_list[Path_List_Index].k_mouse_move_width >= 0 ? 1 : -1));
+        move_y = static_cast<int>((save_final_size.height() * (1 + abs(path_list[Path_List_Index].k_mouse_move_height)) - desktop_height) / 2 * (static_cast<double>(mouse_y * 2) / QApplication::desktop()->height() - 1) * (path_list[Path_List_Index].k_mouse_move_height >= 0 ? 1 : -1));
+        break;
+    }
+    }
     if (path_list[Path_List_Index].is_image)
     {
         image_background->move(base_point.x() + move_x, base_point.y() + move_y);//频繁执行占用低
@@ -235,7 +253,13 @@ void Desktop_Background::Second_Update_Widget()
         }
         break;
     }
+    case Scale_Type::User:
+    {
+        final_size = QSize(path_list[Path_List_Index].wallpaper_width, path_list[Path_List_Index].wallpaper_height);
+        break;
     }
+    }
+    save_final_size = final_size;
     if (path_list[Path_List_Index].mouse_effect)
     {
         final_size = QSizeF(final_size.width() * (1 + abs(path_list[Path_List_Index].k_mouse_move_width)),
@@ -282,8 +306,23 @@ void Desktop_Background::Second_Update_Widget()
     }
     if (path_list[Path_List_Index].mouse_effect)
     {
-        int move_x = static_cast<int>(path_list[Path_List_Index].k_mouse_move_width * (QCursor::pos().x() - (QApplication::desktop()->width() / 2)) * (static_cast<double>(desktop_width) / QApplication::desktop()->width()));
-        int move_y = static_cast<int>(path_list[Path_List_Index].k_mouse_move_height * (QCursor::pos().y() - (QApplication::desktop()->height() / 2)) * (static_cast<double>(desktop_height) / QApplication::desktop()->height()));
+        int move_x;
+        int move_y;
+        switch (path_list[Path_List_Index].mouse_control_type)
+        {
+        case Mouse_Control_Type::Follow_Desktop:
+        {
+            move_x = int(path_list[Path_List_Index].k_mouse_move_width * (QCursor::pos().x() - (QApplication::desktop()->width() / 2)) * (static_cast<double>(desktop_width) / QApplication::desktop()->width()));
+            move_y = int(path_list[Path_List_Index].k_mouse_move_height * (QCursor::pos().y() - (QApplication::desktop()->height() / 2)) * (static_cast<double>(desktop_height) / QApplication::desktop()->height()));
+            break;
+        }
+        case Mouse_Control_Type::Follow_Wallpaper:
+        {
+            move_x = static_cast<int>((save_final_size.width() * (1 + abs(path_list[Path_List_Index].k_mouse_move_width)) - desktop_width) / 2 * (static_cast<double>(QCursor::pos().x() * 2) / QApplication::desktop()->width() - 1) * (path_list[Path_List_Index].k_mouse_move_width >= 0 ? 1 : -1));
+            move_y = static_cast<int>((save_final_size.height() * (1 + abs(path_list[Path_List_Index].k_mouse_move_height)) - desktop_height) / 2 * (static_cast<double>(QCursor::pos().y() * 2) / QApplication::desktop()->height() - 1) * (path_list[Path_List_Index].k_mouse_move_height >= 0 ? 1 : -1));
+            break;
+        }
+        }
         if (path_list[Path_List_Index].is_image)
         {
             image_background->move(base_point + QPoint(move_x, move_y));
@@ -561,6 +600,11 @@ void Desktop_Background::save(QSettings *settings)
             index = 6;
             break;
         }
+        case Scale_Type::User:
+        {
+            index = 7;
+            break;
+        }
         }
         settings->setValue("scale_type", index);
         settings->setValue("center", path_list[i].center);
@@ -570,6 +614,23 @@ void Desktop_Background::save(QSettings *settings)
         settings->setValue("delta_x", path_list[i].delta_x);
         settings->setValue("delta_y", path_list[i].delta_y);
         settings->setValue("on_Antialiasing", path_list[i].on_Antialiasing);
+        index = 0;
+        switch (path_list[i].mouse_control_type)
+        {
+        case Mouse_Control_Type::Follow_Desktop:
+        {
+            index = 0;
+            break;
+        }
+        case Mouse_Control_Type::Follow_Wallpaper:
+        {
+            index = 1;
+            break;
+        }
+        }
+        settings->setValue("mouse_control_type", index);
+        settings->setValue("wallpaper_width", path_list[i].wallpaper_width);
+        settings->setValue("wallpaper_height", path_list[i].wallpaper_height);
         settings->endGroup();
     }
 }
@@ -604,6 +665,7 @@ void Desktop_Background::load(QSettings *settings)
                             <<Scale_Type::Short
                             <<Scale_Type::Long
                             <<Scale_Type::Full
+                            <<Scale_Type::User
                             )[settings->value("scale_type", 6).toInt()],
                            settings->value("center", true).toBool(),
                            settings->value("mouse_effect", false).toBool(),
@@ -611,7 +673,13 @@ void Desktop_Background::load(QSettings *settings)
                            settings->value("k_mouse_move_height", 0).toDouble(),
                            settings->value("delta_x", 0).toInt(),
                            settings->value("delta_y", 0).toInt(),
-                           settings->value("on_Antialiasing", true).toBool()
+                           settings->value("on_Antialiasing", true).toBool(),
+                           (QList<Mouse_Control_Type>()
+                            <<Mouse_Control_Type::Follow_Desktop
+                            <<Mouse_Control_Type::Follow_Wallpaper
+                            )[settings->value("mouse_control_type", 0).toInt()],
+                           settings->value("wallpaper_width", 0).toInt(),
+                           settings->value("wallpaper_height", 0).toInt()
                            );
         }
         settings->endGroup();

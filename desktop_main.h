@@ -25,10 +25,12 @@ public:
     void set_Now_Page(int *m_now_page);
     void set_locking_desktop(bool *m_locking_desktop);
     void Update_Button();
+    void set_towards_ptr(bool *m_is_towards_up_and_down);
 private:
     int Button_Number;
-    int *now_page;
-    bool *locking_desktop;
+    int *now_page = nullptr;
+    bool *locking_desktop = nullptr;
+    bool *is_towards_up_and_down = nullptr;
 };
 class Desktop_Control_Dock : public QWidget
 {
@@ -43,14 +45,16 @@ public:
     void Changed_Signals();
     void Set_Dock_Show_Bool(bool *m_allow_dock_show);
     void set_locking_desktop(bool *m_locking_desktop);
-    QPoint *basic_pos;
+    void set_towards_ptr(bool *m_is_towards_up_and_down);
+    QPoint *basic_pos = nullptr;
 private:
     int desktop_width;
     int desktop_height;
-    int *Desktop_NUmber;
-    int *now_page;
-    bool *allow_dock_show;
-    bool *locking_desktop;
+    int *Desktop_NUmber = nullptr;
+    int *now_page = nullptr;
+    bool *allow_dock_show = nullptr;
+    bool *locking_desktop = nullptr;
+    bool *is_towards_up_and_down = nullptr;
     QList<Dock_Button *> Dock_Button_List;
     QWidget *background = new QWidget(this);
     QPoint press_point;
@@ -60,6 +64,9 @@ private:
     QAction *to_center = new QAction(tr("居中"), this);
     QAction *call_update = new QAction(tr("更新"), this);
     QAction *hide_update = new QAction(tr("隐藏"), this);
+    QMenu *control_towards_menu = new QMenu(tr("窗口朝向"), this);
+    QAction *towards_up_and_down_action = new QAction(tr("上下"), this);
+    QAction *towards_left_and_right_action = new QAction(tr("左右"), this);
 private:
     virtual void mousePressEvent(QMouseEvent *event);
     virtual void mouseReleaseEvent(QMouseEvent *event);
@@ -90,26 +97,26 @@ public:
     Setting_Widget *setting_widget;
     Experimental_Settings *experimental_settings;
     Desktop_Background *desktop_background;
-    WId m_WinId;
     Process_Widget *process_widget_p = nullptr;
     QString load_path = QDir::homePath() + "/.local/lib/easy_desktop/config.ini";
-    bool *stay_on_top;
-    int *on_top_time;
-    int *keyscan_timer;
-    bool *allow_drop;
-    QString *file_open_way_process;
-    QString *file_open_path_process;
-    QString *file_open_info_process;
-    QColor *theme_color;
-    QColor *theme_background_color;
-    QColor *theme_text_color;
-    QColor *select_text_color;
-    QColor *disabled_text_color;
-    QString *checked_icon_path;
+    bool *stay_on_top = nullptr;
+    int *on_top_time = nullptr;
+    int *keyscan_timer = nullptr;
+    bool *allow_drop = nullptr;
+    QString *file_open_way_process = nullptr;
+    QString *file_open_path_process = nullptr;
+    QString *file_open_info_process = nullptr;
+    QColor *theme_color = nullptr;
+    QColor *theme_background_color = nullptr;
+    QColor *theme_text_color = nullptr;
+    QColor *select_text_color = nullptr;
+    QColor *disabled_text_color = nullptr;
+    QString *checked_icon_path = nullptr;
     QPoint basic_pos = QPoint(0, 0);
 private:
     int desktop_width;
     int desktop_height;
+    bool is_towards_up_and_down = false;
     QList<File_Widget *> file_widget_list;
     QList<My_Clock *> my_clock_list;
     QList<My_Label *> my_label_list;
@@ -154,6 +161,7 @@ private:
     QAction *unlock_desktop = new QAction(tr("取消锚定"),this);
     QAction *show_dock_action = new QAction(tr("显示控制窗口"),this);
     QAction *hide_dock_action = new QAction(tr("隐藏控制窗口"),this);
+    QAction *desktop_control_move_to_center_action = new QAction(tr("控制窗口归中"),this);
     QAction *Add_new_desktop = new QAction(tr("新建桌面"),this);
     QAction *delete_this_desktop = new QAction(tr("移除桌面"),this);
     QMenu *mouse_menu = new QMenu(tr("鼠标控制"),this);
@@ -164,7 +172,7 @@ private:
     QAction *save_Action = new QAction(tr("储存"),this);
     QAction *load_Action = new QAction(tr("读取"),this);
     QAction *background_setting_Action = new QAction(tr("壁纸设置"),this);
-    QAction *debugging_setting_Action = new QAction(tr("实验设置"), this);
+    QAction *debugging_setting_Action = new QAction(tr("高级设置"), this);
     QAction *Quit_Action = new QAction(tr("退出"),this);
     //ACTION
     QList<Basic_Desktop *> desktop_core_dock_list;

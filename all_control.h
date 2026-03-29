@@ -30,7 +30,6 @@ public:
     QString file_open_way_process = "dde-file-manager -d -o";
     QString file_open_path_process = "dde-file-manager --show-item";
     QString file_open_info_process = "dde-file-manager -p";
-    void X11_Rasie();
     void Move_To_Workspace(int human_index);
     void Refresh_geometry(QRect geometry);
 private:
