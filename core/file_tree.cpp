@@ -189,27 +189,30 @@ File_Tree::File_Tree(QWidget *parent)
                     if (file_info.isDir())
                     {
                         to_file_info = file_info;
-                        break;
                     }
-                }
-            }
-            QString targetDir = to_file_info.filePath();
-            for (const QUrl& url : urls)
-            {
-                QString srcPath = url.toLocalFile();
-                if (srcPath.isEmpty())
-                {
-                    continue;
-                }
-                QFileInfo srcInfo(srcPath);
-                QString destPath = targetDir + QDir::separator() + srcInfo.fileName();
-                int copy_file_asking = -1;
-                File_Control::Copy_File(srcPath, destPath, is_cut, &copy_file_asking);
-                QModelIndex idx = proxyModel->mapFromSource(model->index(destPath));
-                if (idx.isValid())
-                {
-                    model->data(idx, Qt::DisplayRole);
-                    treeView->update(idx);
+                    else
+                    {
+                        to_file_info = QFileInfo(file_info.dir().path());
+                    }
+                    QString targetDir = to_file_info.filePath();
+                    for (const QUrl& url : urls)
+                    {
+                        QString srcPath = url.toLocalFile();
+                        if (srcPath.isEmpty())
+                        {
+                            continue;
+                        }
+                        QFileInfo srcInfo(srcPath);
+                        QString destPath = targetDir + QDir::separator() + srcInfo.fileName();
+                        int copy_file_asking = -1;
+                        File_Control::Copy_File(srcPath, destPath, is_cut, &copy_file_asking);
+                        QModelIndex idx = proxyModel->mapFromSource(model->index(destPath));
+                        if (idx.isValid())
+                        {
+                            model->data(idx, Qt::DisplayRole);
+                            treeView->update(idx);
+                        }
+                    }
                 }
             }
         }
@@ -320,6 +323,12 @@ File_Tree::File_Tree(QWidget *parent)
                 dialog.setTextValue(name_list_str);
                 dialog.setInputMode(QInputDialog::TextInput);
                 dialog.setOption(QInputDialog::UsePlainTextEditForTextInput);
+                dialog.setFont(QFontDatabase::systemFont(QFontDatabase::FixedFont));
+                QPlainTextEdit *textEdit = dialog.findChild<QPlainTextEdit*>();
+                if (textEdit)
+                {
+                    textEdit->setTextInteractionFlags(Qt::TextSelectableByMouse | Qt::TextSelectableByKeyboard | Qt::TextEditable);
+                }
                 if (dialog.exec() != QDialog::Accepted)
                 {
                     return;
@@ -744,6 +753,12 @@ void File_Tree::contextMenuEvent(QContextMenuEvent *event)
             dialog.setTextValue("new_file");
             dialog.setInputMode(QInputDialog::TextInput);
             dialog.setOption(QInputDialog::UsePlainTextEditForTextInput);
+            dialog.setFont(QFontDatabase::systemFont(QFontDatabase::FixedFont));
+            QPlainTextEdit *textEdit = dialog.findChild<QPlainTextEdit*>();
+            if (textEdit)
+            {
+                textEdit->setTextInteractionFlags(Qt::TextSelectableByMouse | Qt::TextSelectableByKeyboard | Qt::TextEditable);
+            }
             if (dialog.exec() != QDialog::Accepted)
             {
                 return;
@@ -805,6 +820,12 @@ void File_Tree::contextMenuEvent(QContextMenuEvent *event)
             dialog.setTextValue("new_folder");
             dialog.setInputMode(QInputDialog::TextInput);
             dialog.setOption(QInputDialog::UsePlainTextEditForTextInput);
+            dialog.setFont(QFontDatabase::systemFont(QFontDatabase::FixedFont));
+            QPlainTextEdit *textEdit = dialog.findChild<QPlainTextEdit*>();
+            if (textEdit)
+            {
+                textEdit->setTextInteractionFlags(Qt::TextSelectableByMouse | Qt::TextSelectableByKeyboard | Qt::TextEditable);
+            }
             if (dialog.exec() != QDialog::Accepted)
             {
                 return;
@@ -1017,27 +1038,30 @@ void File_Tree::contextMenuEvent(QContextMenuEvent *event)
                 if (file_info.isDir())
                 {
                     to_file_info = file_info;
-                    break;
                 }
-            }
-        }
-        QString targetDir = to_file_info.filePath();
-        for (const QUrl& url : urls)
-        {
-            QString srcPath = url.toLocalFile();
-            if (srcPath.isEmpty())
-            {
-                continue;
-            }
-            QFileInfo srcInfo(srcPath);
-            QString destPath = targetDir + QDir::separator() + srcInfo.fileName();
-            int copy_file_asking = -1;
-            File_Control::Copy_File(srcPath, destPath, is_cut, &copy_file_asking);
-            QModelIndex idx = proxyModel->mapFromSource(model->index(destPath));
-            if (idx.isValid())
-            {
-                model->data(idx, Qt::DisplayRole);
-                treeView->update(idx);
+                else
+                {
+                    to_file_info = QFileInfo(file_info.dir().path());
+                }
+                QString targetDir = to_file_info.filePath();
+                for (const QUrl& url : urls)
+                {
+                    QString srcPath = url.toLocalFile();
+                    if (srcPath.isEmpty())
+                    {
+                        continue;
+                    }
+                    QFileInfo srcInfo(srcPath);
+                    QString destPath = targetDir + QDir::separator() + srcInfo.fileName();
+                    int copy_file_asking = -1;
+                    File_Control::Copy_File(srcPath, destPath, is_cut, &copy_file_asking);
+                    QModelIndex idx = proxyModel->mapFromSource(model->index(destPath));
+                    if (idx.isValid())
+                    {
+                        model->data(idx, Qt::DisplayRole);
+                        treeView->update(idx);
+                    }
+                }
             }
         }
     }
@@ -1064,6 +1088,12 @@ void File_Tree::contextMenuEvent(QContextMenuEvent *event)
                 dialog.setTextValue(name_list_str);
                 dialog.setInputMode(QInputDialog::TextInput);
                 dialog.setOption(QInputDialog::UsePlainTextEditForTextInput);
+                dialog.setFont(QFontDatabase::systemFont(QFontDatabase::FixedFont));
+                QPlainTextEdit *textEdit = dialog.findChild<QPlainTextEdit*>();
+                if (textEdit)
+                {
+                    textEdit->setTextInteractionFlags(Qt::TextSelectableByMouse | Qt::TextSelectableByKeyboard | Qt::TextEditable);
+                }
                 if (dialog.exec() != QDialog::Accepted)
                 {
                     return;
@@ -1268,6 +1298,10 @@ void File_Tree::dropEvent(QDropEvent *event)
                 if (file_info.isDir())
                 {
                     to_file_info = file_info;
+                }
+                else
+                {
+                    to_file_info = QFileInfo(file_info.dir().path());
                 }
             }
             QString targetDir = to_file_info.filePath();
