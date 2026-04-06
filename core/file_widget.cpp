@@ -1,4 +1,5 @@
 #include "file_widget.h"
+#include "tools/file_control.h"
 void File_Widget::Set_Base_Icon()
 {
     movie_size = get_Image_Size(":/base/folder.svg");
@@ -31,7 +32,7 @@ File_Widget::File_Widget(QWidget *parent)
     setting_menu->insertMenu(set_process, set_file_process);
     menu->addSeparator();
     menu->addAction(show_info);
-    process_string = "dde-file-manager --show-item " + file_path;
+    process_string = "dde-file-manager --show-item " + File_Control::FilenameForBash(file_path);
     Extra_Pressed_Do();
 }
 File_Widget::~File_Widget()
@@ -63,7 +64,7 @@ void File_Widget::contextMenuEvent(QContextMenuEvent *event)
             m_process_str = *file_open_way_process;
         }
         m_process_str += " ";
-        m_process_str += file_path;
+        m_process_str += File_Control::FilenameForBash(file_path);
         process.setArguments(QStringList() << "-c" << m_process_str);
         process.setStandardOutputFile("/dev/null");
         process.setStandardErrorFile("/dev/null");
@@ -84,7 +85,7 @@ void File_Widget::contextMenuEvent(QContextMenuEvent *event)
             m_process_str = *file_open_path_process;
         }
         m_process_str += " ";
-        m_process_str += file_path;
+        m_process_str += File_Control::FilenameForBash(file_path);
         process.setArguments(QStringList() << "-c" << m_process_str);
         process.setStandardOutputFile("/dev/null");
         process.setStandardErrorFile("/dev/null");
@@ -220,7 +221,7 @@ void File_Widget::contextMenuEvent(QContextMenuEvent *event)
             m_process_str = *file_open_info_process;
         }
         m_process_str += " ";
-        m_process_str += file_path;
+        m_process_str += File_Control::FilenameForBash(file_path);
         process.setArguments(QStringList() << "-c" << m_process_str);
         process.setStandardOutputFile("/dev/null");
         process.setStandardErrorFile("/dev/null");
@@ -354,10 +355,10 @@ QString File_Widget::get_running_process(QString m_file_path)
     }
     else
     {
-        m_running_process.replace("%f", QDir::toNativeSeparators(file_path));
-        m_running_process.replace("%F", QDir::toNativeSeparators(file_path));
-        m_running_process.replace("%u", QDir::toNativeSeparators(file_path));
-        m_running_process.replace("%U", QDir::toNativeSeparators(file_path));
+        m_running_process.replace("%f", File_Control::FilenameForBash(QDir::toNativeSeparators(file_path)));
+        m_running_process.replace("%F", File_Control::FilenameForBash(QDir::toNativeSeparators(file_path)));
+        m_running_process.replace("%u", File_Control::FilenameForBash(QDir::toNativeSeparators(file_path)));
+        m_running_process.replace("%U", File_Control::FilenameForBash(QDir::toNativeSeparators(file_path)));
         QRegularExpression placeholderRegex("%[a-zA-Z]");
         m_running_process.replace(placeholderRegex, "");
     }

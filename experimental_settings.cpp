@@ -1,5 +1,5 @@
 #include "experimental_settings.h"
-#include "core/my_x11_libs.h"
+#include "core/tools/my_x11_libs.h"
 Experimental_Settings::Experimental_Settings(QWidget *parent)
     :QWidget(parent)
 {

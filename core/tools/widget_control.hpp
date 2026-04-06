@@ -7,8 +7,8 @@
 #include "core/file_widget.h"
 #include "core/my_process_carrier.h"
 #include "core/my_program_container.h"
-#include "file_tree.h"
-#include "plugin_widget.h"
+#include "core/file_tree.h"
+#include "core/plugin_widget.h"
 #ifdef USE_CHART
 #include "core/chart/basic_chart.h"
 #include "core/chart/cpu_chart.h"

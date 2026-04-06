@@ -52,8 +52,8 @@ SOURCES += \
     core/file_tree.cpp \
     core/plugin_widget.cpp \
     interfaces/pluginsiteminterface.cpp \
-    core/my_x11_libs.cpp \
-    core/file_control.cpp
+    core/tools/my_x11_libs.cpp \
+    core/tools/file_control.cpp
 contains(DEFINES, USE_CHART) {
     SOURCES += \
         core/chart/basic_chart.cpp \
@@ -73,7 +73,7 @@ HEADERS += \
     media_widgetaction.h \
     core/my_clock.h \
     core/basic_widget.h \
-    core/widget_control.hpp \
+    core/tools/widget_control.hpp \
     core/my_lineedit.h \
     core/my_label.h \
     core/process_widget.h \
@@ -86,8 +86,8 @@ HEADERS += \
     interfaces/constants.h \
     interfaces/pluginproxyinterface.h \
     interfaces/pluginsiteminterface.h \
-    core/my_x11_libs.h \
-    core/file_control.h
+    core/tools/my_x11_libs.h \
+    core/tools/file_control.h
 
 contains(DEFINES, USE_CHART) {
     HEADERS += \

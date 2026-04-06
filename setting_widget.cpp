@@ -1,6 +1,6 @@
 #include "setting_widget.h"
 #include <QComboBox>
-#include "core/my_x11_libs.h"
+#include "core/tools/my_x11_libs.h"
 Setting_Widget::Setting_Widget(QWidget *parent)
     :QWidget(parent)
 {

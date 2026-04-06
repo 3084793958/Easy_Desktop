@@ -4,7 +4,7 @@
 #include "setting_widget.h"
 #include "experimental_settings.h"
 #include "media_widgetaction.h"
-#include "core/widget_control.hpp"
+#include "core/tools/widget_control.hpp"
 class Basic_Desktop : public QWidget
 {
     Q_OBJECT
