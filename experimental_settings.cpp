@@ -53,17 +53,36 @@ Experimental_Settings::Experimental_Settings(QWidget *parent)
     file_info_way_label->resize(150, 40);
     file_info_way_edit->move(160, 290);
     file_info_way_edit->resize(190 ,40);
-    geometry_label->move(5, 340);
+
+    open_terminal_label->move(5, 340);
+    open_terminal_label->resize(150, 40);
+    open_terminal_edit->move(160, 340);
+    open_terminal_edit->resize(190 ,40);
+    compressor_label->move(5, 390);
+    compressor_label->resize(150, 40);
+    compressor_edit->move(160, 390);
+    compressor_edit->resize(190 ,40);
+    compressor_zip_label->move(5, 440);
+    compressor_zip_label->resize(150, 40);
+    compressor_zip_edit->move(160, 440);
+    compressor_zip_edit->resize(190 ,40);
+    compressor_7z_label->move(5, 490);
+    compressor_7z_label->resize(150, 40);
+    compressor_7z_edit->move(160, 490);
+    compressor_7z_edit->resize(190 ,40);
+
+    //+50+50+50+50
+    geometry_label->move(5, 540);
     geometry_label->resize(70, 40);
-    always_refresh->move(80, 340);
+    always_refresh->move(80, 540);
     always_refresh->resize(90, 40);
-    geometry_edit->move(175, 340);
+    geometry_edit->move(175, 540);
     geometry_edit->resize(170, 40);
     set_theme_color_button->move(310, 290);
     set_theme_color_button->resize(85, 40);
-    update_button->move(310, 340);
+    update_button->move(310, 540);
     update_button->resize(85, 40);
-    resize(450, 385);
+    resize(450, 585);
     connect(update_button, &QPushButton::clicked, this, &Experimental_Settings::send_data);
     connect(set_load_path, &QPushButton::clicked, this, [=]
     {
@@ -85,7 +104,7 @@ void Experimental_Settings::resizeEvent(QResizeEvent *event)
 {
     set_load_path->move(event->size().width() - 90, 5);
     load_path_edit->resize(event->size().width() - 170, 40);
-    update_button->move(event->size().width() - 90, 340);
+    update_button->move(event->size().width() - 90, 540);
     set_theme_color_button->move(event->size().width() - 90, 290);
     dbus_id_label->move(event->size().width() / 2 + 5, 50);
     dbus_id_edit->move(event->size().width() / 2 + 65, 50);
@@ -98,6 +117,10 @@ void Experimental_Settings::resizeEvent(QResizeEvent *event)
     file_open_way_edit->resize(event->size().width() - 165, 40);
     file_path_way_edit->resize(event->size().width() - 165, 40);
     file_info_way_edit->resize(event->size().width() - 260, 40);
+    open_terminal_edit->resize(event->size().width() - 260, 40);
+    compressor_edit->resize(event->size().width() - 260, 40);
+    compressor_zip_edit->resize(event->size().width() - 260, 40);
+    compressor_7z_edit->resize(event->size().width() - 260, 40);
 }
 void Experimental_Settings::update_data()
 {
@@ -113,6 +136,10 @@ void Experimental_Settings::update_data()
     file_open_way_edit->setText(*file_open_way_process);
     file_path_way_edit->setText(*file_open_path_process);
     file_info_way_edit->setText(*file_open_info_process);
+    open_terminal_edit->setText(*terminal_process);
+    compressor_edit->setText(*compressor_process);
+    compressor_zip_edit->setText(*compressor_zip_process);
+    compressor_7z_edit->setText(*compressor_7z_process);
     m_theme_color = *theme_color;
     m_theme_background_color = *theme_background_color;
     m_theme_text_color = *theme_text_color;
@@ -160,6 +187,10 @@ void Experimental_Settings::send_data()
     *file_open_way_process = file_open_way_edit->text();
     *file_open_path_process = file_path_way_edit->text();
     *file_open_info_process = file_info_way_edit->text();
+    *terminal_process = open_terminal_edit->text();
+    *compressor_process = compressor_edit->text();
+    *compressor_zip_process = compressor_zip_edit->text();
+    *compressor_7z_process = compressor_7z_edit->text();
     *theme_color = m_theme_color;
     *theme_background_color = m_theme_background_color;
     *theme_text_color = m_theme_text_color;

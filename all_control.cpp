@@ -70,6 +70,10 @@ All_Control::All_Control(QWidget *parent, QString m_load_path, int m_workspace, 
     experimental_settings->file_open_way_process = &file_open_way_process;
     experimental_settings->file_open_info_process = &file_open_info_process;
     experimental_settings->file_open_path_process = &file_open_path_process;
+    experimental_settings->terminal_process = &terminal_process;
+    experimental_settings->compressor_process = &compressor_process;
+    experimental_settings->compressor_zip_process = &compressor_zip_process;
+    experimental_settings->compressor_7z_process = &compressor_7z_process;
     experimental_settings->theme_color = &theme_color;
     experimental_settings->theme_background_color = &theme_background_color;
     experimental_settings->theme_text_color = &theme_text_color;
@@ -84,6 +88,10 @@ All_Control::All_Control(QWidget *parent, QString m_load_path, int m_workspace, 
     main_desktop->file_open_way_process = &file_open_way_process;
     main_desktop->file_open_info_process = &file_open_info_process;
     main_desktop->file_open_path_process = &file_open_path_process;
+    main_desktop->terminal_process = &terminal_process;
+    main_desktop->compressor_process = &compressor_process;
+    main_desktop->compressor_zip_process = &compressor_zip_process;
+    main_desktop->compressor_7z_process = &compressor_7z_process;
     main_desktop->theme_color = &theme_color;
     main_desktop->theme_background_color = &theme_background_color;
     main_desktop->theme_text_color = &theme_text_color;

@@ -11,11 +11,6 @@ File_Tree::File_Tree(QWidget *parent)
     :Basic_Widget(parent)
 {
     setAcceptDrops(true);
-    treeView->setAcceptDrops(true);
-    treeView->setDragEnabled(true);
-    treeView->setMouseTracking(true);
-    treeView->setTabletTracking(true);
-    treeView->setDragDropMode(QAbstractItemView::DragDrop);
     treeView->F_model = model;
     treeView->proxyModel = proxyModel;
     show();
@@ -25,6 +20,12 @@ File_Tree::File_Tree(QWidget *parent)
     menu->addSeparator();
     menu->addAction(open_way);
     menu->addAction(open_path_way);
+    menu->addSeparator();
+    menu->addAction(open_in_Terminal_action);
+    compress_menu->addAction(compressor_action);
+    compress_menu->addAction(save_as_zip_action);
+    compress_menu->addAction(save_as_7z_action);
+    menu->addMenu(compress_menu);
     menu->addSeparator();
     create_menu->addAction(create_new_file);
     create_menu->addAction(create_new_folder);
@@ -566,6 +567,18 @@ File_Tree::~File_Tree()
 }
 void File_Tree::contextMenuEvent(QContextMenuEvent *event)
 {
+    paste_action->setEnabled(!QApplication::clipboard()->mimeData()->urls().isEmpty());
+    if (treeView->selectionModel())
+    {
+        bool has_selected = treeView->selectionModel()->selectedIndexes().isEmpty();
+        cut_action->setEnabled(!has_selected);
+        clean_selection_action->setEnabled(!has_selected);
+        rename_action->setEnabled(!has_selected);
+        delete_action->setEnabled(!has_selected);
+        set_as_path_way->setEnabled(!has_selected);
+        compress_menu->setEnabled(!has_selected);
+    }
+    set_parent_as_path_way->setEnabled(!QDir(root_path).isRoot());
     QAction *know_what = menu->exec(mapToGlobal(event->pos()));
     if (know_what == open_it)
     {
@@ -883,19 +896,17 @@ void File_Tree::contextMenuEvent(QContextMenuEvent *event)
             QModelIndexList selectedList = treeView->selectionModel()->selectedIndexes();
             if (!selectedList.isEmpty())
             {
-                for (int i = 0; i < selectedList.count(); i += 4)
+                QString this_file_path = model->filePath(proxyModel->mapToSource(selectedList.first()));
+                QFileInfo fileinfo(this_file_path);
+                if (!fileinfo.isDir())
                 {
-                    QString this_file_path = model->filePath(proxyModel->mapToSource(selectedList[i]));
-                    if (QFileInfo(this_file_path).isDir())
-                    {
-                        root_path = this_file_path;
-                        treeView->setRootIndex(proxyModel->mapFromSource(model->index(root_path)));
-                        if (treeView->selectionModel())
-                        {
-                            treeView->selectionModel()->clear();
-                        }
-                        break;
-                    }
+                    fileinfo = QFileInfo(fileinfo.dir().path());
+                }
+                root_path = fileinfo.filePath();
+                treeView->setRootIndex(proxyModel->mapFromSource(model->index(root_path)));
+                if (treeView->selectionModel())
+                {
+                    treeView->selectionModel()->clear();
                 }
             }
         }
@@ -913,6 +924,210 @@ void File_Tree::contextMenuEvent(QContextMenuEvent *event)
                 {
                     treeView->selectionModel()->clear();
                 }
+            }
+        }
+    }
+    else if (know_what == open_in_Terminal_action)
+    {
+        if (treeView->selectionModel())
+        {
+            QModelIndexList selectedList = treeView->selectionModel()->selectedIndexes();
+            if (!selectedList.isEmpty())
+            {
+                QString this_file_path = model->filePath(proxyModel->mapToSource(selectedList.first()));
+                QFileInfo file_path_info(this_file_path);
+                if (file_path_info.isFile())
+                {
+                    this_file_path = file_path_info.dir().path();
+                }
+                QProcess process;
+                process.setProgram("/bin/bash");
+                process.setWorkingDirectory(this_file_path);
+                QString m_process_str = "deepin-terminal -w";
+                if (terminal_process)
+                {
+                    m_process_str = *terminal_process;
+                }
+                m_process_str += " ";
+                m_process_str += File_Control::FilenameForBash(this_file_path);
+                process.setArguments(QStringList() << "-c" << m_process_str);
+                process.setStandardOutputFile("/dev/null");
+                process.setStandardErrorFile("/dev/null");
+                process.startDetached();
+            }
+            else
+            {
+                QString this_file_path = root_path;
+                QProcess process;
+                process.setProgram("/bin/bash");
+                process.setWorkingDirectory(this_file_path);
+                QString m_process_str = "deepin-terminal -w";
+                if (terminal_process)
+                {
+                    m_process_str = *terminal_process;
+                }
+                m_process_str += " ";
+                m_process_str += File_Control::FilenameForBash(this_file_path);
+                process.setArguments(QStringList() << "-c" << m_process_str);
+                process.setStandardOutputFile("/dev/null");
+                process.setStandardErrorFile("/dev/null");
+                process.startDetached();
+            }
+        }
+    }
+    else if (know_what == compressor_action)
+    {
+        if (treeView->selectionModel())
+        {
+            QModelIndexList selectedList = treeView->selectionModel()->selectedIndexes();
+            if (!selectedList.isEmpty())
+            {
+                QString this_file_path = model->filePath(proxyModel->mapToSource(selectedList.first()));
+                QFileInfo file_path_info(this_file_path);
+                if (file_path_info.isFile())
+                {
+                    this_file_path = file_path_info.dir().path();
+                }
+                QProcess process;
+                process.setProgram("/bin/bash");
+                process.setWorkingDirectory(this_file_path);
+                QString m_process_str = "deepin-compressor %F compress";
+                if (compressor_process)
+                {
+                    m_process_str = *compressor_process;
+                }
+                QString files_str = "";
+                for (int i = 0; i < selectedList.count(); i++)
+                {
+                    files_str += " ";
+                    files_str += File_Control::FilenameForBash(model->filePath(proxyModel->mapToSource(selectedList[i])));
+                }
+                m_process_str.replace("%F", files_str);
+                process.setArguments(QStringList() << "-c" << m_process_str);
+                process.setStandardOutputFile("/dev/null");
+                process.setStandardErrorFile("/dev/null");
+                process.startDetached();
+            }
+            else
+            {
+                QString this_file_path = root_path;
+                QProcess process;
+                process.setProgram("/bin/bash");
+                process.setWorkingDirectory(this_file_path);
+                QString m_process_str = "deepin-compressor %F compress";
+                if (compressor_process)
+                {
+                    m_process_str = *compressor_process;
+                }
+                m_process_str.replace("%F", File_Control::FilenameForBash(this_file_path));
+                process.setArguments(QStringList() << "-c" << m_process_str);
+                process.setStandardOutputFile("/dev/null");
+                process.setStandardErrorFile("/dev/null");
+                process.startDetached();
+            }
+        }
+    }
+    else if (know_what == save_as_zip_action)
+    {
+        if (treeView->selectionModel())
+        {
+            QModelIndexList selectedList = treeView->selectionModel()->selectedIndexes();
+            if (!selectedList.isEmpty())
+            {
+                QString this_file_path = model->filePath(proxyModel->mapToSource(selectedList.first()));
+                QFileInfo file_path_info(this_file_path);
+                if (file_path_info.isFile())
+                {
+                    this_file_path = file_path_info.dir().path();
+                }
+                QProcess process;
+                process.setProgram("/bin/bash");
+                process.setWorkingDirectory(this_file_path);
+                QString m_process_str = "deepin-compressor %F compress_to_zip";
+                if (compressor_zip_process)
+                {
+                    m_process_str = *compressor_zip_process;
+                }
+                QString files_str = "";
+                for (int i = 0; i < selectedList.count(); i++)
+                {
+                    files_str += " ";
+                    files_str += File_Control::FilenameForBash(model->filePath(proxyModel->mapToSource(selectedList[i])));
+                }
+                m_process_str.replace("%F", files_str);
+                process.setArguments(QStringList() << "-c" << m_process_str);
+                process.setStandardOutputFile("/dev/null");
+                process.setStandardErrorFile("/dev/null");
+                process.startDetached();
+            }
+            else
+            {
+                QString this_file_path = root_path;
+                QProcess process;
+                process.setProgram("/bin/bash");
+                process.setWorkingDirectory(this_file_path);
+                QString m_process_str = "deepin-compressor %F compress_to_zip";
+                if (compressor_zip_process)
+                {
+                    m_process_str = *compressor_zip_process;
+                }
+                m_process_str.replace("%F", File_Control::FilenameForBash(this_file_path));
+                process.setArguments(QStringList() << "-c" << m_process_str);
+                process.setStandardOutputFile("/dev/null");
+                process.setStandardErrorFile("/dev/null");
+                process.startDetached();
+            }
+        }
+    }
+    else if (know_what == save_as_7z_action)
+    {
+        if (treeView->selectionModel())
+        {
+            QModelIndexList selectedList = treeView->selectionModel()->selectedIndexes();
+            if (!selectedList.isEmpty())
+            {
+                QString this_file_path = model->filePath(proxyModel->mapToSource(selectedList.first()));
+                QFileInfo file_path_info(this_file_path);
+                if (file_path_info.isFile())
+                {
+                    this_file_path = file_path_info.dir().path();
+                }
+                QProcess process;
+                process.setProgram("/bin/bash");
+                process.setWorkingDirectory(this_file_path);
+                QString m_process_str = "deepin-compressor %F compress_to_7z";
+                if (compressor_7z_process)
+                {
+                    m_process_str = *compressor_7z_process;
+                }
+                QString files_str = "";
+                for (int i = 0; i < selectedList.count(); i++)
+                {
+                    files_str += " ";
+                    files_str += File_Control::FilenameForBash(model->filePath(proxyModel->mapToSource(selectedList[i])));
+                }
+                m_process_str.replace("%F", files_str);
+                process.setArguments(QStringList() << "-c" << m_process_str);
+                process.setStandardOutputFile("/dev/null");
+                process.setStandardErrorFile("/dev/null");
+                process.startDetached();
+            }
+            else
+            {
+                QString this_file_path = root_path;
+                QProcess process;
+                process.setProgram("/bin/bash");
+                process.setWorkingDirectory(this_file_path);
+                QString m_process_str = "deepin-compressor %F compress_to_7z";
+                if (compressor_7z_process)
+                {
+                    m_process_str = *compressor_7z_process;
+                }
+                m_process_str.replace("%F", File_Control::FilenameForBash(this_file_path));
+                process.setArguments(QStringList() << "-c" << m_process_str);
+                process.setStandardOutputFile("/dev/null");
+                process.setStandardErrorFile("/dev/null");
+                process.startDetached();
             }
         }
     }
@@ -1259,7 +1474,7 @@ void File_Tree::contextMenuEvent(QContextMenuEvent *event)
 void File_Tree::dropEvent(QDropEvent *event)
 {
     proposed_action_index = QModelIndex();
-    QPoint pos = event->pos() - treeView->pos() - carrier_widget->pos() - this->get_self()->pos() - QPoint(0, 13);
+    QPoint pos = event->pos() - treeView->pos() - carrier_widget->pos() - this->get_self()->pos() - QPoint(0, 25);
     if (*m_allow_drop && event->mimeData()->hasUrls())
     {
         if (pos.y() <= 0)
@@ -1314,6 +1529,10 @@ void File_Tree::dropEvent(QDropEvent *event)
                 }
                 QFileInfo srcInfo(srcPath);
                 QString destPath = targetDir + QDir::separator() + srcInfo.fileName();
+                if (srcPath == destPath)
+                {
+                    continue;
+                }
                 int copy_file_asking = -1;
                 File_Control::Copy_File(srcPath, destPath, event->source() == this->treeView, &copy_file_asking);
                 QModelIndex idx = proxyModel->mapFromSource(model->index(destPath));
@@ -1331,17 +1550,25 @@ void File_Tree::dragMoveEvent(QDragMoveEvent *event)
     proposed_action_index = QModelIndex();
     if (*m_allow_drop && event->mimeData()->hasUrls())
     {
-        QPoint pos = event->pos() - treeView->pos() - carrier_widget->pos() - this->get_self()->pos() - QPoint(0, 13);
+        QPoint pos = event->pos() - treeView->pos() - carrier_widget->pos() - this->get_self()->pos() - QPoint(0, 25);
         proposed_action_index = treeView->indexAt(pos);
         event->accept();
     }
 }
 void File_Tree::dragEnterEvent(QDragEnterEvent *event)
 {
+    if (event->source() == this->treeView)
+    {
+        event->setDropAction(Qt::MoveAction);
+    }
+    else
+    {
+        event->setDropAction(Qt::CopyAction);
+    }
     proposed_action_index = QModelIndex();
     if (*m_allow_drop && event->mimeData()->hasUrls())
     {
-        QPoint pos = event->pos() - treeView->pos() - carrier_widget->pos() - this->get_self()->pos() - QPoint(0, 13);
+        QPoint pos = event->pos() - treeView->pos() - carrier_widget->pos() - this->get_self()->pos() - QPoint(0, 25);
         proposed_action_index = treeView->indexAt(pos);
         event->accept();
     }
@@ -1449,9 +1676,9 @@ QIcon My_Icon_Provider::icon(const QFileInfo &info) const
 My_Tree_View::My_Tree_View(QWidget *parent)
     :QTreeView(parent)
 {
-    setAcceptDrops(true);
-    setDragEnabled(true);
-    setDragDropMode(QAbstractItemView::DragDrop);
+    setDragDropMode(QAbstractItemView::NoDragDrop);
+    setMouseTracking(true);
+    setTabletTracking(true);
 }
 void My_Tree_View::dropEvent(QDropEvent *event)
 {
@@ -1469,11 +1696,70 @@ void My_Tree_View::dragLeaveEvent(QDragLeaveEvent *event)
 {
     QWidget::dragLeaveEvent(event);
 }
+void My_Tree_View::mousePressEvent(QMouseEvent *event)
+{
+    if (!indexAt(event->pos()).isValid() && !(QApplication::keyboardModifiers() & Qt::ControlModifier || QApplication::keyboardModifiers() & Qt::ShiftModifier))
+    {
+        this->selectionModel()->clear();
+    }
+    QTreeView::mousePressEvent(event);
+    if (event->button() == Qt::LeftButton)
+    {
+        if (indexAt(event->pos()) != indexAt(event->pos() + QPoint(0, 3)) || indexAt(event->pos()) != indexAt(event->pos() - QPoint(0, 3))|| selectionModel()->selectedIndexes().isEmpty() || (QApplication::keyboardModifiers() & Qt::ControlModifier || QApplication::keyboardModifiers() & Qt::ShiftModifier))
+        {
+            setup_rubber = true;
+            origin_pos = event->pos();
+            m_rubberBand->setGeometry(QRect(origin_pos + QPoint(0, 25), QSize()));
+            m_rubberBand->show();
+        }
+        else
+        {
+            setup_rubber = false;
+            m_rubberBand->hide();
+        }
+    }
+}
+void My_Tree_View::mouseReleaseEvent(QMouseEvent *event)
+{
+    QTreeView::mouseReleaseEvent(event);
+    if (event->button() == Qt::LeftButton && setup_rubber)
+    {
+        setup_rubber = false;
+        m_rubberBand->hide();
+    }
+}
 void My_Tree_View::mouseMoveEvent(QMouseEvent *event)
 {
-    if (event->buttons() & Qt::LeftButton && F_model && proxyModel)
+    if (event->buttons() & Qt::LeftButton && F_model && proxyModel && selectionModel())
     {
-        if (selectionModel())
+        if (setup_rubber && m_rubberBand->isVisible())
+        {
+            QRect rect = QRect(origin_pos + QPoint(0, 25), event->pos() + QPoint(0, 25)).normalized();
+            m_rubberBand->setGeometry(rect);
+            QItemSelection selection;
+            QModelIndex topLeft = indexAt(rect.topLeft());
+            QModelIndex bottomRight = indexAt(rect.bottomRight());
+            if (topLeft.isValid() && bottomRight.isValid())
+            {
+                selection.select(topLeft, bottomRight);
+            }
+            QItemSelectionModel::SelectionFlags flags = QItemSelectionModel::ClearAndSelect;
+            if (QApplication::keyboardModifiers() & Qt::ControlModifier)
+            {
+                flags = QItemSelectionModel::Select;
+            }
+            else if (QApplication::keyboardModifiers() & Qt::ShiftModifier)
+            {
+                flags = QItemSelectionModel::SelectCurrent;
+            }
+            else
+            {
+                flags = QItemSelectionModel::ClearAndSelect;
+            }
+            this->selectionModel()->select(selection, flags);
+            QTreeView::mouseMoveEvent(event);
+        }
+        else
         {
             QModelIndexList selectedList = selectionModel()->selectedIndexes();
             if (!selectedList.isEmpty())
@@ -1488,12 +1774,12 @@ void My_Tree_View::mouseMoveEvent(QMouseEvent *event)
                 QDrag *drag = new QDrag(this);
                 drag->setMimeData(mimeData);
                 drag->setPixmap(F_model->fileIcon(proxyModel->mapToSource(selectedList[0])).pixmap(50, 50));
-                drag->setHotSpot(QPoint(13,13));
-                drag->exec(Qt::CopyAction, Qt::CopyAction);
+                drag->setHotSpot(QPoint(25,25));
+                drag->exec(Qt::MoveAction | Qt::CopyAction, Qt::CopyAction);
             }
         }
     }
-    QWidget::mouseMoveEvent(event);
+    QWidget::mouseMoveEvent(event);//不喜欢QTreeView自实现的移动
 }
 void My_Tree_View::enterEvent(QEvent *event)
 {

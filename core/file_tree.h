@@ -45,8 +45,15 @@ protected:
     void dragEnterEvent(QDragEnterEvent *event) override;
     void dragLeaveEvent(QDragLeaveEvent *event) override;
     void mouseMoveEvent(QMouseEvent *event) override;
+    void mousePressEvent(QMouseEvent *event) override;
+    void mouseReleaseEvent(QMouseEvent *event) override;
     virtual void enterEvent(QEvent *event) override;
     virtual void wheelEvent(QWheelEvent *event) override;
+private:
+    QRubberBand *m_rubberBand = new QRubberBand(QRubberBand::Rectangle, this);
+    QPoint origin_pos = QPoint();
+    bool setup_rubber = false;
+    char my_padding[7];
 };
 class My_Icon_Provider : public QFileIconProvider
 {
@@ -69,6 +76,10 @@ public:
     QString *file_open_way_process = nullptr;
     QString *file_open_path_process = nullptr;
     QString *file_open_info_process = nullptr;
+    QString *terminal_process = nullptr;
+    QString *compressor_process = nullptr;
+    QString *compressor_zip_process = nullptr;
+    QString *compressor_7z_process = nullptr;
     bool *m_allow_drop = nullptr;
     QString root_path = QDir::rootPath();
 protected:
@@ -91,6 +102,13 @@ protected:
     QAction *open_it = new QAction(tr("打开"), this);
     QAction *open_way = new QAction(tr("打开方式"), this);
     QAction *open_path_way = new QAction(tr("打开所在位置"), this);
+
+    QAction *open_in_Terminal_action = new QAction(tr("在终端中打开"), this);
+
+    QMenu *compress_menu = new QMenu("压缩", this);
+    QAction *compressor_action = new QAction(tr("压缩"), this);
+    QAction *save_as_zip_action = new QAction(tr("压缩到zip"), this);
+    QAction *save_as_7z_action = new QAction(tr("压缩到7z"), this);
 
     QMenu *create_menu = new QMenu(tr("新建"), this);
     QAction *create_new_file = new QAction(tr("新建文件"), this);

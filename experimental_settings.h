@@ -59,6 +59,16 @@ public:
     QLineEdit *file_path_way_edit = new QLineEdit(this);
     QLabel *file_info_way_label = new QLabel(tr("[属性]进程:"), this);
     QLineEdit *file_info_way_edit = new QLineEdit(this);
+
+    QLabel *open_terminal_label = new QLabel(tr("[终端]进程:"), this);
+    QLineEdit *open_terminal_edit = new QLineEdit(this);
+    QLabel *compressor_label = new QLabel(tr("[压缩](%F模式):"), this);
+    QLineEdit *compressor_edit = new QLineEdit(this);
+    QLabel *compressor_zip_label = new QLabel(tr("[压缩为zip](%F模式):"), this);
+    QLineEdit *compressor_zip_edit = new QLineEdit(this);
+    QLabel *compressor_7z_label = new QLabel(tr("[压缩为7z](%F模式):"), this);
+    QLineEdit *compressor_7z_edit = new QLineEdit(this);
+
     QPushButton *set_theme_color_button = new QPushButton(tr("颜色设置"), this);
     QPushButton *update_button = new QPushButton(tr("更新"), this);
     void update_data();
@@ -79,6 +89,10 @@ public:
     QString *file_open_way_process;
     QString *file_open_path_process;
     QString *file_open_info_process;
+    QString *terminal_process = nullptr;
+    QString *compressor_process = nullptr;
+    QString *compressor_zip_process = nullptr;
+    QString *compressor_7z_process = nullptr;
     QColor *theme_color;
     QColor *theme_background_color;
     QColor *theme_text_color;

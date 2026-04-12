@@ -716,6 +716,10 @@ void Desktop_Main::contextMenuEvent(QContextMenuEvent *event)
         file_tree->file_open_way_process = file_open_way_process;
         file_tree->file_open_info_process = file_open_info_process;
         file_tree->file_open_path_process = file_open_path_process;
+        file_tree->terminal_process = terminal_process;
+        file_tree->compressor_process = compressor_process;
+        file_tree->compressor_zip_process = compressor_zip_process;
+        file_tree->compressor_7z_process = compressor_7z_process;
         file_tree->m_allow_drop = allow_drop;
     }
     else if (know_what == plugin_widget_action)
@@ -1107,6 +1111,10 @@ void Desktop_Main::save(QString path)
     settings.setValue("file_open_way_process", *file_open_way_process);
     settings.setValue("file_open_path_process", *file_open_path_process);
     settings.setValue("file_open_info_process", *file_open_info_process);
+    settings.setValue("terminal_process", *terminal_process);
+    settings.setValue("compressor_process", *compressor_process);
+    settings.setValue("compressor_zip_process", *compressor_zip_process);
+    settings.setValue("compressor_7z_process", *compressor_7z_process);
     settings.setValue("theme_color", theme_color->rgba());
     settings.setValue("theme_background_color", theme_background_color->rgba());
     settings.setValue("theme_text_color", theme_text_color->rgba());
@@ -1242,6 +1250,10 @@ void Desktop_Main::load()
     *file_open_way_process = settings.value("file_open_way_process", "dde-file-manager -d -o").toString();
     *file_open_path_process = settings.value("file_open_path_process", "dde-file-manager --show-item").toString();
     *file_open_info_process = settings.value("file_open_info_process", "dde-file-manager -p").toString();
+    *terminal_process = settings.value("terminal_process", "deepin-terminal -w").toString();
+    *compressor_process = settings.value("compressor_process", "deepin-compressor %F compress").toString();
+    *compressor_zip_process = settings.value("compressor_zip_process", "deepin-compressor %F compress_to_zip").toString();
+    *compressor_7z_process = settings.value("compressor_7z_process", "deepin-compressor %F compress_to_7z").toString();
     *theme_color = QColor::fromRgba(settings.value("theme_color", QColor(0,129,255,255).rgba()).toUInt());
     *theme_background_color = QColor::fromRgba(settings.value("theme_background_color", QColor(255,255,255,75).rgba()).toUInt());
     *theme_text_color = QColor::fromRgba(settings.value("theme_text_color", QColor(0,0,0,255).rgba()).toUInt());
@@ -1586,6 +1598,10 @@ void Desktop_Main::load()
         file_tree->file_open_way_process = file_open_way_process;
         file_tree->file_open_info_process = file_open_info_process;
         file_tree->file_open_path_process = file_open_path_process;
+        file_tree->terminal_process = terminal_process;
+        file_tree->compressor_process = compressor_process;
+        file_tree->compressor_zip_process = compressor_zip_process;
+        file_tree->compressor_7z_process = compressor_7z_process;
         file_tree->m_allow_drop = allow_drop;
         settings.beginGroup(QString("file_tree%1").arg(i));
         file_tree->load(&settings);

@@ -25,16 +25,7 @@ Setting_Widget::Setting_Widget(QWidget *parent)
                            name_box_list[i]->text(),
                            !image_box_list[i]->currentIndex(),
                            path_box_list[i]->text(),
-                           (QList<Scale_Type>()
-                            <<Scale_Type::No
-                            <<Scale_Type::Each
-                            <<Scale_Type::Width
-                            <<Scale_Type::Height
-                            <<Scale_Type::Short
-                            <<Scale_Type::Long
-                            <<Scale_Type::Full
-                            <<Scale_Type::User
-                            )[scale_box_list[i]->currentIndex()],
+                           static_cast<Scale_Type>(scale_box_list[i]->currentIndex()),
                            !center_box_list[i]->currentIndex(),
                            !mouse_effect_box_list[i]->currentIndex(),
                            mouse_width_box_list[i]->value(),
@@ -42,10 +33,7 @@ Setting_Widget::Setting_Widget(QWidget *parent)
                            delta_x_box_list[i]->value(),
                            delta_y_box_list[i]->value(),
                            !on_Antialiasing_box_list[i]->currentIndex(),
-                           (QList<Mouse_Control_Type>()
-                            <<Mouse_Control_Type::Follow_Desktop
-                            <<Mouse_Control_Type::Follow_Wallpaper
-                            )[mouse_control_type_box_list[i]->currentIndex()],
+                           static_cast<Mouse_Control_Type>(mouse_control_type_box_list[i]->currentIndex()),
                            wallpaper_width_box_list[i]->value(),
                            wallpaper_height_box_list[i]->value()
                            );
@@ -143,16 +131,7 @@ Setting_Widget::Setting_Widget(QWidget *parent)
                            name_box_list[i]->text(),
                            !image_box_list[i]->currentIndex(),
                            path_box_list[i]->text(),
-                           (QList<Scale_Type>()
-                            <<Scale_Type::No
-                            <<Scale_Type::Each
-                            <<Scale_Type::Width
-                            <<Scale_Type::Height
-                            <<Scale_Type::Short
-                            <<Scale_Type::Long
-                            <<Scale_Type::Full
-                            <<Scale_Type::User
-                            )[scale_box_list[i]->currentIndex()],
+                           static_cast<Scale_Type>(scale_box_list[i]->currentIndex()),
                            !center_box_list[i]->currentIndex(),
                            !mouse_effect_box_list[i]->currentIndex(),
                            mouse_width_box_list[i]->value(),
@@ -160,10 +139,7 @@ Setting_Widget::Setting_Widget(QWidget *parent)
                            delta_x_box_list[i]->value(),
                            delta_y_box_list[i]->value(),
                            !on_Antialiasing_box_list[i]->currentIndex(),
-                           (QList<Mouse_Control_Type>()
-                            <<Mouse_Control_Type::Follow_Desktop
-                            <<Mouse_Control_Type::Follow_Wallpaper
-                            )[mouse_control_type_box_list[i]->currentIndex()],
+                           static_cast<Mouse_Control_Type>(mouse_control_type_box_list[i]->currentIndex()),
                            wallpaper_width_box_list[i]->value(),
                            wallpaper_height_box_list[i]->value()
                            );
@@ -189,16 +165,7 @@ Setting_Widget::Setting_Widget(QWidget *parent)
                            name_box_list[i]->text(),
                            !image_box_list[i]->currentIndex(),
                            path_box_list[i]->text(),
-                           (QList<Scale_Type>()
-                            <<Scale_Type::No
-                            <<Scale_Type::Each
-                            <<Scale_Type::Width
-                            <<Scale_Type::Height
-                            <<Scale_Type::Short
-                            <<Scale_Type::Long
-                            <<Scale_Type::Full
-                            <<Scale_Type::User
-                            )[scale_box_list[i]->currentIndex()],
+                           static_cast<Scale_Type>(scale_box_list[i]->currentIndex()),
                            !center_box_list[i]->currentIndex(),
                            !mouse_effect_box_list[i]->currentIndex(),
                            mouse_width_box_list[i]->value(),
@@ -206,10 +173,7 @@ Setting_Widget::Setting_Widget(QWidget *parent)
                            delta_x_box_list[i]->value(),
                            delta_y_box_list[i]->value(),
                            !on_Antialiasing_box_list[i]->currentIndex(),
-                           (QList<Mouse_Control_Type>()
-                            <<Mouse_Control_Type::Follow_Desktop
-                            <<Mouse_Control_Type::Follow_Wallpaper
-                            )[mouse_control_type_box_list[i]->currentIndex()],
+                           static_cast<Mouse_Control_Type>(mouse_control_type_box_list[i]->currentIndex()),
                            wallpaper_width_box_list[i]->value(),
                            wallpaper_height_box_list[i]->value()
                            );
@@ -279,16 +243,7 @@ Setting_Widget::Setting_Widget(QWidget *parent)
                            name_box_list[i]->text(),
                            !image_box_list[i]->currentIndex(),
                            path_box_list[i]->text(),
-                           (QList<Scale_Type>()
-                            <<Scale_Type::No
-                            <<Scale_Type::Each
-                            <<Scale_Type::Width
-                            <<Scale_Type::Height
-                            <<Scale_Type::Short
-                            <<Scale_Type::Long
-                            <<Scale_Type::Full
-                            <<Scale_Type::User
-                            )[scale_box_list[i]->currentIndex()],
+                           static_cast<Scale_Type>(scale_box_list[i]->currentIndex()),
                            !center_box_list[i]->currentIndex(),
                            !mouse_effect_box_list[i]->currentIndex(),
                            mouse_width_box_list[i]->value(),
@@ -296,10 +251,7 @@ Setting_Widget::Setting_Widget(QWidget *parent)
                            delta_x_box_list[i]->value(),
                            delta_y_box_list[i]->value(),
                            !on_Antialiasing_box_list[i]->currentIndex(),
-                           (QList<Mouse_Control_Type>()
-                            <<Mouse_Control_Type::Follow_Desktop
-                            <<Mouse_Control_Type::Follow_Wallpaper
-                            )[mouse_control_type_box_list[i]->currentIndex()],
+                           static_cast<Mouse_Control_Type>(mouse_control_type_box_list[i]->currentIndex()),
                            wallpaper_width_box_list[i]->value(),
                            wallpaper_height_box_list[i]->value()
                            );
@@ -330,16 +282,7 @@ Setting_Widget::Setting_Widget(QWidget *parent)
                            name_box_list[i]->text(),
                            !image_box_list[i]->currentIndex(),
                            path_box_list[i]->text(),
-                           (QList<Scale_Type>()
-                            <<Scale_Type::No
-                            <<Scale_Type::Each
-                            <<Scale_Type::Width
-                            <<Scale_Type::Height
-                            <<Scale_Type::Short
-                            <<Scale_Type::Long
-                            <<Scale_Type::Full
-                            <<Scale_Type::User
-                            )[scale_box_list[i]->currentIndex()],
+                           static_cast<Scale_Type>(scale_box_list[i]->currentIndex()),
                            !center_box_list[i]->currentIndex(),
                            !mouse_effect_box_list[i]->currentIndex(),
                            mouse_width_box_list[i]->value(),
@@ -347,10 +290,7 @@ Setting_Widget::Setting_Widget(QWidget *parent)
                            delta_x_box_list[i]->value(),
                            delta_y_box_list[i]->value(),
                            !on_Antialiasing_box_list[i]->currentIndex(),
-                           (QList<Mouse_Control_Type>()
-                            <<Mouse_Control_Type::Follow_Desktop
-                            <<Mouse_Control_Type::Follow_Wallpaper
-                            )[mouse_control_type_box_list[i]->currentIndex()],
+                           static_cast<Mouse_Control_Type>(mouse_control_type_box_list[i]->currentIndex()),
                            wallpaper_width_box_list[i]->value(),
                            wallpaper_height_box_list[i]->value()
                            );
@@ -755,16 +695,7 @@ void Setting_Widget::List_Update()
                        name_box_list[i]->text(),
                        !image_box_list[i]->currentIndex(),
                        path_box_list[i]->text(),
-                       (QList<Scale_Type>()
-                        <<Scale_Type::No
-                        <<Scale_Type::Each
-                        <<Scale_Type::Width
-                        <<Scale_Type::Height
-                        <<Scale_Type::Short
-                        <<Scale_Type::Long
-                        <<Scale_Type::Full
-                        <<Scale_Type::User
-                        )[scale_box_list[i]->currentIndex()],
+                       static_cast<Scale_Type>(scale_box_list[i]->currentIndex()),
                        !center_box_list[i]->currentIndex(),
                        !mouse_effect_box_list[i]->currentIndex(),
                        mouse_width_box_list[i]->value(),
@@ -772,10 +703,7 @@ void Setting_Widget::List_Update()
                        delta_x_box_list[i]->value(),
                        delta_y_box_list[i]->value(),
                        !on_Antialiasing_box_list[i]->currentIndex(),
-                       (QList<Mouse_Control_Type>()
-                        <<Mouse_Control_Type::Follow_Desktop
-                        <<Mouse_Control_Type::Follow_Wallpaper
-                        )[mouse_control_type_box_list[i]->currentIndex()],
+                       static_cast<Mouse_Control_Type>(mouse_control_type_box_list[i]->currentIndex()),
                        wallpaper_width_box_list[i]->value(),
                        wallpaper_height_box_list[i]->value()
                        );
@@ -807,16 +735,7 @@ void Setting_Widget::remove_wallpaper(int wallpaper_id)
                        name_box_list[i]->text(),
                        !image_box_list[i]->currentIndex(),
                        path_box_list[i]->text(),
-                       (QList<Scale_Type>()
-                        <<Scale_Type::No
-                        <<Scale_Type::Each
-                        <<Scale_Type::Width
-                        <<Scale_Type::Height
-                        <<Scale_Type::Short
-                        <<Scale_Type::Long
-                        <<Scale_Type::Full
-                        <<Scale_Type::User
-                        )[scale_box_list[i]->currentIndex()],
+                       static_cast<Scale_Type>(scale_box_list[i]->currentIndex()),
                        !center_box_list[i]->currentIndex(),
                        !mouse_effect_box_list[i]->currentIndex(),
                        mouse_width_box_list[i]->value(),
@@ -824,10 +743,7 @@ void Setting_Widget::remove_wallpaper(int wallpaper_id)
                        delta_x_box_list[i]->value(),
                        delta_y_box_list[i]->value(),
                        !on_Antialiasing_box_list[i]->currentIndex(),
-                       (QList<Mouse_Control_Type>()
-                        <<Mouse_Control_Type::Follow_Desktop
-                        <<Mouse_Control_Type::Follow_Wallpaper
-                        )[mouse_control_type_box_list[i]->currentIndex()],
+                       static_cast<Mouse_Control_Type>(mouse_control_type_box_list[i]->currentIndex()),
                        wallpaper_width_box_list[i]->value(),
                        wallpaper_height_box_list[i]->value()
                        );
@@ -864,16 +780,7 @@ void Setting_Widget::add_wallpaper(uint m_id, QString m_name, bool m_is_image, Q
                        name_box_list[i]->text(),
                        !image_box_list[i]->currentIndex(),
                        path_box_list[i]->text(),
-                       (QList<Scale_Type>()
-                        <<Scale_Type::No
-                        <<Scale_Type::Each
-                        <<Scale_Type::Width
-                        <<Scale_Type::Height
-                        <<Scale_Type::Short
-                        <<Scale_Type::Long
-                        <<Scale_Type::Full
-                        <<Scale_Type::User
-                        )[scale_box_list[i]->currentIndex()],
+                       static_cast<Scale_Type>(scale_box_list[i]->currentIndex()),
                        !center_box_list[i]->currentIndex(),
                        !mouse_effect_box_list[i]->currentIndex(),
                        mouse_width_box_list[i]->value(),
@@ -881,10 +788,7 @@ void Setting_Widget::add_wallpaper(uint m_id, QString m_name, bool m_is_image, Q
                        delta_x_box_list[i]->value(),
                        delta_y_box_list[i]->value(),
                        !on_Antialiasing_box_list[i]->currentIndex(),
-                       (QList<Mouse_Control_Type>()
-                        <<Mouse_Control_Type::Follow_Desktop
-                        <<Mouse_Control_Type::Follow_Wallpaper
-                        )[mouse_control_type_box_list[i]->currentIndex()],
+                       static_cast<Mouse_Control_Type>(mouse_control_type_box_list[i]->currentIndex()),
                        wallpaper_width_box_list[i]->value(),
                        wallpaper_height_box_list[i]->value()
                        );
@@ -953,16 +857,7 @@ void Setting_Widget::dropEvent(QDropEvent *event)
                            name_box_list[i]->text(),
                            !image_box_list[i]->currentIndex(),
                            path_box_list[i]->text(),
-                           (QList<Scale_Type>()
-                            <<Scale_Type::No
-                            <<Scale_Type::Each
-                            <<Scale_Type::Width
-                            <<Scale_Type::Height
-                            <<Scale_Type::Short
-                            <<Scale_Type::Long
-                            <<Scale_Type::Full
-                            <<Scale_Type::User
-                            )[scale_box_list[i]->currentIndex()],
+                           static_cast<Scale_Type>(scale_box_list[i]->currentIndex()),
                            !center_box_list[i]->currentIndex(),
                            !mouse_effect_box_list[i]->currentIndex(),
                            mouse_width_box_list[i]->value(),
@@ -970,10 +865,7 @@ void Setting_Widget::dropEvent(QDropEvent *event)
                            delta_x_box_list[i]->value(),
                            delta_y_box_list[i]->value(),
                            !on_Antialiasing_box_list[i]->currentIndex(),
-                           (QList<Mouse_Control_Type>()
-                            <<Mouse_Control_Type::Follow_Desktop
-                            <<Mouse_Control_Type::Follow_Wallpaper
-                            )[mouse_control_type_box_list[i]->currentIndex()],
+                           static_cast<Mouse_Control_Type>(mouse_control_type_box_list[i]->currentIndex()),
                            wallpaper_width_box_list[i]->value(),
                            wallpaper_height_box_list[i]->value()
                            );

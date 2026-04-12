@@ -47,7 +47,7 @@ bool File_Control::CopyRecursively(const QString &src, const QString &dst)
             return false;
         }
         QDir srcDir(src);
-        QStringList entries = srcDir.entryList(QDir::Files | QDir::Dirs | QDir::NoDotAndDotDot);
+        QStringList entries = srcDir.entryList(QDir::Files | QDir::Dirs | QDir::NoDotAndDotDot | QDir::Hidden);
         for (const QString& entry : entries)
         {
             QString newSrc = src + QDir::separator() + entry;
@@ -66,6 +66,18 @@ bool File_Control::CopyRecursively(const QString &src, const QString &dst)
 }
 void File_Control::Copy_File(const QString &srcPath, QString dstPath, const bool &cut, int *autoConflictStrategy)
 {
+    QFileInfo srcInfo(srcPath);
+    if (srcInfo.isDir())
+    {
+        QString absSrc = srcInfo.absoluteFilePath();
+        QString absDst = QFileInfo(dstPath).absoluteFilePath();
+        absSrc = QDir::cleanPath(absSrc);
+        absDst = QDir::cleanPath(absDst);
+        if (absDst.startsWith(absSrc + QDir::separator()))
+        {
+            return;
+        }
+    }
     QFileInfo dstInfo;
     dstInfo.setFile(dstPath);
     if (dstInfo.exists())

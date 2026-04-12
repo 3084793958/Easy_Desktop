@@ -106,6 +106,10 @@ public:
     QString *file_open_way_process = nullptr;
     QString *file_open_path_process = nullptr;
     QString *file_open_info_process = nullptr;
+    QString *terminal_process = nullptr;
+    QString *compressor_process = nullptr;
+    QString *compressor_zip_process = nullptr;
+    QString *compressor_7z_process = nullptr;
     QColor *theme_color = nullptr;
     QColor *theme_background_color = nullptr;
     QColor *theme_text_color = nullptr;
