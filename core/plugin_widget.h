@@ -20,6 +20,9 @@ public:
     virtual void saveValue(PluginsItemInterface * const itemInter, const QString &key, const QVariant &value) override;
     virtual const QVariant getValue(PluginsItemInterface *const itemInter, const QString &key, const QVariant& fallback = QVariant()) override;
     virtual void removeValue(PluginsItemInterface *const itemInter, const QStringList &keyList) override;
+
+    virtual void updateDockInfo(PluginsItemInterface *const, const DockPart &) override;//ADD
+    virtual void requestContextMenu(PluginsItemInterface * const itemInter, const QString &itemKey) override;//OPEN
 private:
     Plugin_Root *root = nullptr;
     QSettings *m_settings = nullptr;
@@ -51,8 +54,9 @@ public:
     P_Sender *carrier_action_sender = new P_Sender(this);
     P_Sender *plugin_action_sender = nullptr;
     QAction *plugin_menu_ptr = nullptr;
-protected:
+public:
     QMenu *menu = new QMenu(tr("载体菜单"), this);
+protected:
     QAction *set_distance_action = new QAction(tr("设置间距"), this);
     QAction *set_delta_action = new QAction(tr("设置偏移"), this);
     virtual void contextMenuEvent(QContextMenuEvent *event);

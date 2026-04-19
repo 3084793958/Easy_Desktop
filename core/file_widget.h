@@ -1,7 +1,6 @@
 #ifndef FILE_WIDGET_H
 #define FILE_WIDGET_H
 #include "process_widget.h"
-
 class File_Widget : public Process_Widget
 {
     Q_OBJECT
@@ -17,9 +16,11 @@ public:
     QString *file_open_way_process;
     QString *file_open_path_process;
     QString *file_open_info_process;
+    QString *terminal_process = nullptr;
 private:
     QAction *open_way = new QAction(tr("打开方式"), this);
     QAction *open_path_way = new QAction(tr("打开所在位置"), this);
+    QAction *open_in_Terminal_action = new QAction(tr("在终端中打开"), this);
     QMenu *set_file_process = new QMenu(tr("设置文件信息"), this);
     QAction *set_file_as_file = new QAction(tr("文件"), this);
     QAction *set_file_as_dir = new QAction(tr("文件夹"), this);

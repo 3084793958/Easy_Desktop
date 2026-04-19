@@ -61,6 +61,7 @@ public:
     My_Icon_Provider() = default;
     QIcon icon(IconType type) const override;
     QIcon icon(const QFileInfo &info) const override;
+    QSize get_Image_Size(QString path) const;
 };
 class File_Tree : public Basic_Widget
 {

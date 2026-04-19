@@ -1630,6 +1630,24 @@ QIcon My_Icon_Provider::icon(QFileIconProvider::IconType type) const
 {
     return QFileIconProvider::icon(type);
 }
+QSize My_Icon_Provider::get_Image_Size(QString path) const
+{
+    QImageReader reader(path);
+    if (!reader.canRead())
+    {
+        return QSize(0,0);
+    }
+    QSize size = reader.size();
+    if (!size.isValid())
+    {
+        QImage image =reader.read();
+        if (!image.isNull())
+        {
+            size = image.size();
+        }
+    }
+    return size;
+}
 QIcon My_Icon_Provider::icon(const QFileInfo &info) const
 {
     if (info.isFile())
@@ -1640,7 +1658,26 @@ QIcon My_Icon_Provider::icon(const QFileInfo &info) const
         QString mimeName = mimeType.name();
         if (mimeName.startsWith("image/"))
         {
-            return QIcon::fromTheme(info.filePath());//应使用filePath而不是filename;
+            QIcon icon = QIcon::fromTheme(info.filePath());
+            if (!icon.isNull() && My_Icon_Provider::get_Image_Size(info.filePath()) != QSize(0, 0))
+            {
+                return icon;//应使用filePath而不是filename;
+            }
+            else
+            {
+                QIcon icon = QIcon::fromTheme(mimeType.iconName());
+                QString theme_name = mimeType.iconName();
+                if (icon.isNull())
+                {
+                    icon = QIcon::fromTheme(mimeType.genericIconName());
+                    theme_name = mimeType.genericIconName();
+                }
+                if (icon.isNull())
+                {
+                    theme_name = "unknown";
+                }
+                return QIcon::fromTheme(theme_name);
+            }
         }
         else if (mimeName == "application/x-desktop")
         {

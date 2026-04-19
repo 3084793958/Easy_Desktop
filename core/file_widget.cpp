@@ -26,6 +26,8 @@ File_Widget::File_Widget(QWidget *parent)
     }
     menu->insertAction(break_out, open_way);
     menu->insertAction(break_out, open_path_way);
+    menu->insertAction(break_out, open_in_Terminal_action);
+    menu->insertSeparator(open_in_Terminal_action);
     menu->insertSeparator(break_out);
     set_file_process->addAction(set_file_as_file);
     set_file_process->addAction(set_file_as_dir);
@@ -91,6 +93,34 @@ void File_Widget::contextMenuEvent(QContextMenuEvent *event)
         process.setStandardErrorFile("/dev/null");
         process.startDetached();
     }
+    else if (know_what == open_in_Terminal_action)
+    {
+        if (file_path.isEmpty())
+        {
+            return;
+        }
+        QProcess process;
+        process.setProgram("/bin/bash");
+        process.setWorkingDirectory(running_path);
+        QString m_process_str = "deepin-terminal -w";
+        if (terminal_process)
+        {
+            m_process_str = *terminal_process;
+        }
+        m_process_str += " ";
+        if (QFileInfo(file_path).isDir())
+        {
+            m_process_str += File_Control::FilenameForBash(file_path);
+        }
+        else
+        {
+            m_process_str += File_Control::FilenameForBash(QFileInfo(file_path).absolutePath());
+        }
+        process.setArguments(QStringList() << "-c" << m_process_str);
+        process.setStandardOutputFile("/dev/null");
+        process.setStandardErrorFile("/dev/null");
+        process.startDetached();
+    }
     else if (know_what == set_file_as_file || know_what == set_file_as_dir)
     {
         update_running_path();
@@ -138,6 +168,27 @@ void File_Widget::contextMenuEvent(QContextMenuEvent *event)
                     {
                         theme_image = false;
                         movie->setFileName(file_path);
+                        emit Basic_Widget::size_changed(Carrier->size());
+                    }
+                    else
+                    {
+                        theme_image = true;
+                        QIcon icon = QIcon::fromTheme(mimeType.iconName());
+                        theme_name = mimeType.iconName();
+                        if (icon.isNull())
+                        {
+                            icon = QIcon::fromTheme(mimeType.genericIconName());
+                            theme_name = mimeType.genericIconName();
+                        }
+                        if (icon.isNull())
+                        {
+                            theme_name = "unknown";
+                        }
+                        just_show_image->setIcon(QIcon::fromTheme(theme_name));
+                        just_show_image->setIconSize(QSize(128, 128));
+                        just_show_image->show();
+                        movie->setFileName("");
+                        movie_size = QSize(128, 128);
                         emit Basic_Widget::size_changed(Carrier->size());
                     }
                 }
@@ -254,10 +305,31 @@ void File_Widget::quickly_set(QString filepath)
         if (mimeName.startsWith("image/"))
         {
             movie_size = get_Image_Size(file_path);
-            if (movie_size.isValid())
+            if (movie_size.isValid() && movie_size != QSize(0, 0))
             {
                 theme_image = false;
                 movie->setFileName(file_path);
+                emit Basic_Widget::size_changed(Carrier->size());
+            }
+            else
+            {
+                theme_image = true;
+                QIcon icon = QIcon::fromTheme(mimeType.iconName());
+                theme_name = mimeType.iconName();
+                if (icon.isNull())
+                {
+                    icon = QIcon::fromTheme(mimeType.genericIconName());
+                    theme_name = mimeType.genericIconName();
+                }
+                if (icon.isNull())
+                {
+                    theme_name = "unknown";
+                }
+                just_show_image->setIcon(QIcon::fromTheme(theme_name));
+                just_show_image->setIconSize(QSize(128, 128));
+                just_show_image->show();
+                movie->setFileName("");
+                movie_size = QSize(128, 128);
                 emit Basic_Widget::size_changed(Carrier->size());
             }
         }

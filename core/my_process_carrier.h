@@ -2,6 +2,16 @@
 #define MY_PROCESS_CARRIER_H
 #include "basic_widget.h"
 #include "file_widget.h"
+struct File_Widget_CreateData
+{
+    QString filePath;
+    int x = 0;
+    int y = 0;
+    int w = 0;
+    int h = 0;
+    bool showCloseBtn = true;
+    File_Widget_CreateData(QString filePath, int x, int y, int w, int h, bool showCloseBtn);
+};
 enum class Control_Dock_Pos
 {
     Top = 0,
@@ -60,6 +70,7 @@ public:
     QString *file_open_way_process;
     QString *file_open_path_process;
     QString *file_open_info_process;
+    QString *terminal_process = nullptr;
 private:
     QWidget *Basic_Carrier = new QWidget(this);
 public:
@@ -88,6 +99,12 @@ protected:
     QAction *set_to_left_action = new QAction(tr("左侧"), this);
     QAction *set_to_right_action = new QAction(tr("右侧"), this);
     void context_solution(QAction *know_what, QPoint pos);
+private:
+    QList<File_Widget_CreateData> m_pendingItems;
+    int m_currentIndex = 0;
+    QTimer *m_createTimer = nullptr;
+private slots:
+    void createNextBatch();
 private:
     void Call_Timer_Move();
     void Timer_End();

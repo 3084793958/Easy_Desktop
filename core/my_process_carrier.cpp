@@ -114,6 +114,7 @@ void My_Process_Carrier::context_solution(QAction *know_what, QPoint pos)
         new_process_widget->file_open_way_process = file_open_way_process;
         new_process_widget->file_open_info_process = file_open_info_process;
         new_process_widget->file_open_path_process = file_open_path_process;
+        new_process_widget->terminal_process = terminal_process;
     }
     else if (know_what == get_process_widget_action)
     {
@@ -198,38 +199,19 @@ void My_Process_Carrier::context_solution(QAction *know_what, QPoint pos)
         {
             show_close_button_bool = true;
         }
-        for (int i = 0; i < filenames.size(); i++)
+        QList<File_Widget_CreateData> items;
+        for (int i = 0; i < filenames.size(); ++i)
         {
-            File_Widget *new_process_widget = new File_Widget(carrier_widget_list[carrier_now_page]);
-            connect(new_process_widget, &Process_Widget::set_to_Carrier_Sig, this, [=]
-            {
-                (*process_widget_p) = new_process_widget;
-            });
-            connect(new_process_widget, &Process_Widget::move_To_Desktop_Sig, this, [=](QPoint pos_)
-            {
-                new_process_widget->in_carrier = false;
-                new_process_widget->setParent(this->parentWidget());
-                new_process_widget->set_now_page(now_page);
-                new_process_widget->set_desktop_number(desktop_number);
-                new_process_widget->set_basic_list(basic_list);
-                new_process_widget->move(pos_);
-                new_process_widget->show();
-            });
-            new_process_widget->in_carrier = true;
-            new_process_widget->set_now_page(&carrier_now_page);
-            new_process_widget->set_desktop_number(&carrier_page_number);
-            new_process_widget->set_basic_list(&carrier_widget_list);
-            new_process_widget->Basic_Widget::resize(width, height);
-            new_process_widget->move(x + (width + delta_x) * (i % x_num), y + (height + delta_y) * (i / x_num));
-            file_widget_list->append(new_process_widget);
-            new_process_widget->file_widget_list = file_widget_list;
-            new_process_widget->quickly_set(filenames[i]);
-            new_process_widget->show_close_button->setChecked(show_close_button_bool);
-            new_process_widget->close_button->setVisible(show_close_button_bool);
-            new_process_widget->file_open_way_process = file_open_way_process;
-            new_process_widget->file_open_info_process = file_open_info_process;
-            new_process_widget->file_open_path_process = file_open_path_process;
+            int posX = x + (width + delta_x) * (i % x_num);
+            int posY = y + (height + delta_y) * (i / x_num);
+            items.append({filenames[i], posX, posY, width, height, show_close_button_bool});
         }
+        m_pendingItems = items;
+        m_currentIndex = 0;
+        m_createTimer = new QTimer(this);
+        m_createTimer->setInterval(30);
+        connect(m_createTimer, &QTimer::timeout, this, &My_Process_Carrier::createNextBatch);
+        m_createTimer->start();
     }
     else if (know_what == create_carrier_action)
     {
@@ -414,38 +396,63 @@ void My_Process_Carrier::dropEvent(QDropEvent *event)
         {
             show_close_button_bool = true;
         }
-        for (int i = 0; i < filenames.size(); i++)
+        QList<File_Widget_CreateData> items;
+        for (int i = 0; i < filenames.size(); ++i)
         {
-            File_Widget *new_process_widget = new File_Widget(carrier_widget_list[carrier_now_page]);
-            connect(new_process_widget, &Process_Widget::set_to_Carrier_Sig, this, [=]
-            {
-                (*process_widget_p) = new_process_widget;
-            });
-            connect(new_process_widget, &Process_Widget::move_To_Desktop_Sig, this, [=](QPoint pos_)
-            {
-                new_process_widget->in_carrier = false;
-                new_process_widget->setParent(this->parentWidget());
-                new_process_widget->set_now_page(now_page);
-                new_process_widget->set_desktop_number(desktop_number);
-                new_process_widget->set_basic_list(basic_list);
-                new_process_widget->move(pos_);
-                new_process_widget->show();
-            });
-            new_process_widget->in_carrier = true;
-            new_process_widget->set_now_page(&carrier_now_page);
-            new_process_widget->set_desktop_number(&carrier_page_number);
-            new_process_widget->set_basic_list(&carrier_widget_list);
-            new_process_widget->Basic_Widget::resize(width, height);
-            new_process_widget->move(x + (width + delta_x) * (i % x_num), y + (height + delta_y) * (i / x_num));
-            file_widget_list->append(new_process_widget);
-            new_process_widget->file_widget_list = file_widget_list;
-            new_process_widget->quickly_set(filenames[i]);
-            new_process_widget->show_close_button->setChecked(show_close_button_bool);
-            new_process_widget->close_button->setVisible(show_close_button_bool);
-            new_process_widget->file_open_way_process = file_open_way_process;
-            new_process_widget->file_open_info_process = file_open_info_process;
-            new_process_widget->file_open_path_process = file_open_path_process;
+            int posX = x + (width + delta_x) * (i % x_num);
+            int posY = y + (height + delta_y) * (i / x_num);
+            items.append({filenames[i], posX, posY, width, height, show_close_button_bool});
         }
+        m_pendingItems = items;
+        m_currentIndex = 0;
+        m_createTimer = new QTimer(this);
+        m_createTimer->setInterval(30);
+        connect(m_createTimer, &QTimer::timeout, this, &My_Process_Carrier::createNextBatch);
+        m_createTimer->start();
+    }
+}
+void My_Process_Carrier::createNextBatch()
+{
+    const int BATCH_SIZE = 3; //每批3个
+    int end = qMin(m_currentIndex + BATCH_SIZE, m_pendingItems.size());
+    for (int i = m_currentIndex; i < end; ++i)
+    {
+        const File_Widget_CreateData &data = m_pendingItems[i];
+        File_Widget *new_process_widget = new File_Widget(carrier_widget_list[carrier_now_page]);
+        connect(new_process_widget, &Process_Widget::set_to_Carrier_Sig, this, [=]
+        {
+            (*process_widget_p) = new_process_widget;
+        });
+        connect(new_process_widget, &Process_Widget::move_To_Desktop_Sig, this, [=](QPoint pos_)
+        {
+            new_process_widget->in_carrier = false;
+            new_process_widget->setParent(this->parentWidget());
+            new_process_widget->set_now_page(now_page);
+            new_process_widget->set_desktop_number(desktop_number);
+            new_process_widget->set_basic_list(basic_list);
+            new_process_widget->move(pos_);
+            new_process_widget->show();
+        });
+        new_process_widget->in_carrier = true;
+        new_process_widget->set_now_page(&carrier_now_page);
+        new_process_widget->set_desktop_number(&carrier_page_number);
+        new_process_widget->set_basic_list(&carrier_widget_list);
+        new_process_widget->Basic_Widget::resize(data.w, data.h);
+        new_process_widget->move(data.x, data.y);
+        file_widget_list->append(new_process_widget);
+        new_process_widget->file_widget_list = file_widget_list;
+        new_process_widget->quickly_set(data.filePath);
+        new_process_widget->close_button->setVisible(data.showCloseBtn);
+        new_process_widget->show_close_button->setIconVisibleInMenu(data.showCloseBtn);
+        new_process_widget->file_open_way_process = file_open_way_process;
+        new_process_widget->file_open_info_process = file_open_info_process;
+        new_process_widget->file_open_path_process = file_open_path_process;
+        new_process_widget->terminal_process = terminal_process;
+    }
+    m_currentIndex = end;
+    if (m_currentIndex >= m_pendingItems.size())
+    {
+        sender()->deleteLater();
     }
 }
 void My_Process_Carrier::desktop_Move_Update(int delta_move)
@@ -785,4 +792,13 @@ void My_Process_Carrier::load(QSettings *settings)
     }
     Update_Basic_Desktop();
     control_Dock->Update_Widget();
+}
+File_Widget_CreateData::File_Widget_CreateData(QString filePath, int x, int y, int w, int h, bool showCloseBtn)
+{
+    this->filePath = filePath;
+    this->x = x;
+    this->y = y;
+    this->w = w;
+    this->h = h;
+    this->showCloseBtn = showCloseBtn;
 }

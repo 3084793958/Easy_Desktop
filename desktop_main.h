@@ -190,6 +190,12 @@ private:
     int timer_move_x = 0;
     bool locking_desktop = false;
 private:
+    QList<File_Widget_CreateData> m_pendingItems;
+    int m_currentIndex = 0;
+    QTimer *m_createTimer = nullptr;
+private slots:
+    void createNextBatch();
+private:
     void Call_Timer_Move();
     void Timer_End();
     void contextMenuEvent(QContextMenuEvent *event);

@@ -624,6 +624,7 @@ void Desktop_Main::contextMenuEvent(QContextMenuEvent *event)
         my_file->file_open_way_process = file_open_way_process;
         my_file->file_open_info_process = file_open_info_process;
         my_file->file_open_path_process = file_open_path_process;
+        my_file->terminal_process = terminal_process;
     }
     else if (know_what == my_process_Carrier_action)
     {
@@ -641,6 +642,7 @@ void Desktop_Main::contextMenuEvent(QContextMenuEvent *event)
         my_process_Carrier->file_open_way_process = file_open_way_process;
         my_process_Carrier->file_open_info_process = file_open_info_process;
         my_process_Carrier->file_open_path_process = file_open_path_process;
+        my_process_Carrier->terminal_process = terminal_process;
     }
     else if (know_what == my_program_INNER_action)
     {
@@ -800,37 +802,19 @@ void Desktop_Main::dropEvent(QDropEvent *event)
         {
             show_close_button_bool = true;
         }
-        for (int i = 0; i < filenames.size(); i++)
+        QList<File_Widget_CreateData> items;
+        for (int i = 0; i < filenames.size(); ++i)
         {
-            File_Widget *my_file = new File_Widget(desktop_core_dock_list[now_page]);
-            connect(my_file, &Process_Widget::set_to_Carrier_Sig, this, [=]
-            {
-                process_widget_p = my_file;
-            });
-            connect(my_file, &Process_Widget::move_To_Desktop_Sig, this, [=](QPoint pos_)
-            {
-                my_file->in_carrier = false;
-                my_file->setParent(desktop_core_dock_list[now_page]);
-                my_file->set_now_page(&now_page);
-                my_file->set_desktop_number(&Desktop_NUmber);
-                my_file->set_basic_list(reinterpret_cast<QList<QWidget *> *>(&desktop_core_dock_list));
-                my_file->move(pos_);
-                my_file->show();
-            });
-            my_file->set_now_page(&now_page);
-            my_file->set_desktop_number(&Desktop_NUmber);
-            my_file->set_basic_list(reinterpret_cast<QList<QWidget *> *>(&desktop_core_dock_list));
-            my_file->Basic_Widget::resize(width, height);
-            my_file->move(x + (width + delta_x) * (i % x_num), y + (height + delta_y) * (i / x_num));
-            file_widget_list.append(my_file);
-            my_file->file_widget_list = &file_widget_list;
-            my_file->quickly_set(filenames[i]);
-            my_file->show_close_button->setChecked(show_close_button_bool);
-            my_file->close_button->setVisible(show_close_button_bool);
-            my_file->file_open_way_process = file_open_way_process;
-            my_file->file_open_info_process = file_open_info_process;
-            my_file->file_open_path_process = file_open_path_process;
+            int posX = x + (width + delta_x) * (i % x_num);
+            int posY = y + (height + delta_y) * (i / x_num);
+            items.append({filenames[i], posX, posY, width, height, show_close_button_bool});
         }
+        m_pendingItems = items;
+        m_currentIndex = 0;
+        m_createTimer = new QTimer(this);
+        m_createTimer->setInterval(30);
+        connect(m_createTimer, &QTimer::timeout, this, &Desktop_Main::createNextBatch);
+        m_createTimer->start();
     }
 }
 void Desktop_Main::dragEnterEvent(QDragEnterEvent *event)
@@ -1071,6 +1055,49 @@ void Desktop_Main::slider_set_position(int value)
 void Desktop_Main::slider_set_speed(int value)
 {
     slider_action->slider_set_speed(value);
+}
+void Desktop_Main::createNextBatch()
+{
+    const int BATCH_SIZE = 3; //每批3个
+    int end = qMin(m_currentIndex + BATCH_SIZE, m_pendingItems.size());
+    for (int i = m_currentIndex; i < end; ++i)
+    {
+        const File_Widget_CreateData &data = m_pendingItems[i];
+        File_Widget *my_file = new File_Widget(desktop_core_dock_list[now_page]);
+        connect(my_file, &Process_Widget::set_to_Carrier_Sig, this, [=]
+        {
+            process_widget_p = my_file;
+        });
+        connect(my_file, &Process_Widget::move_To_Desktop_Sig, this, [=](QPoint pos_)
+        {
+            my_file->in_carrier = false;
+            my_file->setParent(desktop_core_dock_list[now_page]);
+            my_file->set_now_page(&now_page);
+            my_file->set_desktop_number(&Desktop_NUmber);
+            my_file->set_basic_list(reinterpret_cast<QList<QWidget *> *>(&desktop_core_dock_list));
+            my_file->move(pos_);
+            my_file->show();
+        });
+        my_file->set_now_page(&now_page);
+        my_file->set_desktop_number(&Desktop_NUmber);
+        my_file->set_basic_list(reinterpret_cast<QList<QWidget *> *>(&desktop_core_dock_list));
+        my_file->Basic_Widget::resize(data.w, data.h);
+        my_file->move(data.x, data.y);
+        file_widget_list.append(my_file);
+        my_file->file_widget_list = &file_widget_list;
+        my_file->quickly_set(data.filePath);
+        my_file->close_button->setVisible(data.showCloseBtn);
+        my_file->show_close_button->setIconVisibleInMenu(data.showCloseBtn);
+        my_file->file_open_way_process = file_open_way_process;
+        my_file->file_open_info_process = file_open_info_process;
+        my_file->file_open_path_process = file_open_path_process;
+        my_file->terminal_process = terminal_process;
+    }
+    m_currentIndex = end;
+    if (m_currentIndex >= m_pendingItems.size())
+    {
+        sender()->deleteLater();
+    }
 }
 void Desktop_Main::save(QString path)
 {
@@ -1415,6 +1442,7 @@ void Desktop_Main::load()
         my_process_Carrier->file_open_way_process = file_open_way_process;
         my_process_Carrier->file_open_info_process = file_open_info_process;
         my_process_Carrier->file_open_path_process = file_open_path_process;
+        my_process_Carrier->terminal_process = terminal_process;
         settings.beginGroup(QString("my_process_carrier%1").arg(i));
         my_process_Carrier->load(&settings);
         settings.endGroup();
@@ -1509,6 +1537,7 @@ void Desktop_Main::load()
         my_file->file_open_way_process = file_open_way_process;
         my_file->file_open_info_process = file_open_info_process;
         my_file->file_open_path_process = file_open_path_process;
+        my_file->terminal_process = terminal_process;
         settings.beginGroup(QString("file_widget%1").arg(i));
         my_file->load(&settings);
         settings.endGroup();

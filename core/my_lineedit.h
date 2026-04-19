@@ -38,16 +38,12 @@ private:
     QMenu *extra_mode = new QMenu(tr("模式"), this);
     QAction *auto_turn_line_action = new QAction(tr("自动换行"), this);
     QAction *read_only_action = new QAction(tr("只读"), this);
+    QAction *wheel_change_size_action = new QAction(tr("Ctrl+滚轮修改大小"), this);
     QAction *center_paste_action = new QAction(tr("鼠标中键粘贴"), this);
     QAction *window_control = new QAction(tr("窗口控制菜单"), this);
     QTextCharFormat basic_format;
     QImage save_image;
     bool had_selected = false;
-    char m_padding[7];
-    virtual void mouseMoveEvent(QMouseEvent *event);
-    virtual void mousePressEvent(QMouseEvent *event);
-    virtual void mouseReleaseEvent(QMouseEvent *event);
-    virtual void keyPressEvent(QKeyEvent *event);
     void self_contextMenuEvent(const QPoint &pos);
     void Add_Action(QMenu *menu);
     void Added_Action_Func(QAction *action, QPoint pos);
@@ -59,6 +55,24 @@ private:
     void first_cut();
     void second_cut();
     QTextCharFormat Basic_format_Set(QTextCharFormat format);
+    void ZoomIn();
+    void ZoomOut();
+private:
+    virtual void mouseMoveEvent(QMouseEvent *event);
+    virtual void mousePressEvent(QMouseEvent *event);
+    virtual void mouseReleaseEvent(QMouseEvent *event);
+    virtual void keyPressEvent(QKeyEvent *event);
+    virtual void wheelEvent(QWheelEvent *event);
+    virtual void inputMethodEvent(QInputMethodEvent *event);
+private:
+    void updateColumnSelection();
+    void clearColumnSelection();
+    void NormalSelection();
+    char m_padding[7];
+    QTextCursor Column_start_cursor;
+    QTextCursor Column_end_cursor;
+    QVector<QTextCursor> m_columnCursors;
+    QList<QTextEdit::ExtraSelection> extraSelections_list;
 };
 class My_LineEdit : public Basic_Widget
 {

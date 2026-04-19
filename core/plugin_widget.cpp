@@ -59,16 +59,43 @@ void PluginController::itemRemoved(PluginsItemInterface * const itemInter, const
 void PluginController::requestWindowAutoHide(PluginsItemInterface * const itemInter, const QString &itemKey, const bool autoHide)
 {
     PluginController::itemUpdate(itemInter, itemKey);
-    (void)autoHide;
+    if (autoHide)
+    {
+        root->item_carrier->call_to_show();
+        if (!root->tips_always_show)
+        {
+            root->tips_carrier->hide();
+        }
+        if (!root->popup_always_show)
+        {
+            root->popup_carrier->hide();
+        }
+    }
 }
 void PluginController::requestRefreshWindowVisible(PluginsItemInterface * const itemInter, const QString &itemKey)
 {
     PluginController::itemUpdate(itemInter, itemKey);
+    root->item_carrier->call_to_show();
+    if (!root->tips_always_show)
+    {
+        root->tips_carrier->hide();
+    }
+    if (!root->popup_always_show)
+    {
+        root->popup_carrier->hide();
+    }
 }
 void PluginController::requestSetAppletVisible(PluginsItemInterface * const itemInter, const QString &itemKey, const bool visible)
 {
     PluginController::itemUpdate(itemInter, itemKey);
-    (void)visible;
+    if (visible)
+    {
+        root->popup_carrier->call_to_show();
+    }
+    else
+    {
+        root->popup_carrier->hide();
+    }
 }
 void PluginController::saveValue(PluginsItemInterface * const itemInter, const QString &key, const QVariant &value)
 {
@@ -88,6 +115,17 @@ void PluginController::removeValue(PluginsItemInterface * const itemInter, const
         QString fullKey = buildKey(itemInter, key);
         m_settings->remove(fullKey);
     }
+}
+void PluginController::updateDockInfo(PluginsItemInterface * const itemInter, const DockPart &)
+{
+    PluginController::itemUpdate(itemInter, root->plugin_itemKey);//DockPart对于Easy_Desktop没有意义
+}
+void PluginController::requestContextMenu(PluginsItemInterface * const itemInter, const QString &itemKey)
+{
+    PluginController::itemUpdate(itemInter, itemKey);
+    //由于不知道需要使用谁的ContextMenu,故默认使用item_carrier的
+    QAction *know_what = root->item_carrier->menu->exec(root->item_carrier->rect().center());
+    root->item_carrier->context_menu_event(know_what);
 }
 Plugin_Root::Plugin_Root(QWidget *parent)
     :QObject(parent)
