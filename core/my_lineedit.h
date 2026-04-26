@@ -38,16 +38,25 @@ private:
     QMenu *extra_mode = new QMenu(tr("模式"), this);
     QAction *auto_turn_line_action = new QAction(tr("自动换行"), this);
     QAction *read_only_action = new QAction(tr("只读"), this);
+    QAction *insert_mode_action = new QAction(tr("插入模式"), this);
+    QAction *show_line_num_action = new QAction(tr("显示行数"), this);
     QAction *wheel_change_size_action = new QAction(tr("Ctrl+滚轮修改大小"), this);
     QAction *center_paste_action = new QAction(tr("鼠标中键粘贴"), this);
+    QMenu *set_color_menu = new QMenu(tr("设置外观颜色"), this);
+    QAction *set_selection_color = new QAction(tr("Alt列选择颜色"), this);
+    QAction *set_search_color = new QAction(tr("查找与替换颜色"), this);
+    QAction *search_for_text_action = new QAction(tr("查找与替换"), this);
+    QAction *jump_to_line = new QAction(tr("跳到行"), this);
     QAction *window_control = new QAction(tr("窗口控制菜单"), this);
     QTextCharFormat basic_format;
     QImage save_image;
+    QColor selection_color = QColor(0, 100, 255, 80);
+    QColor search_color = QColor(255, 255, 0, 255);
     bool had_selected = false;
     void self_contextMenuEvent(const QPoint &pos);
     void Add_Action(QMenu *menu);
     void Added_Action_Func(QAction *action, QPoint pos);
-    void insertFromMimeData(const QMimeData *source);
+    void insertFromMimeData(const QMimeData *source) override;
     void insertImage(const QImage &image);
     void self_copy();
     bool isSelectionImage();
@@ -58,12 +67,12 @@ private:
     void ZoomIn();
     void ZoomOut();
 private:
-    virtual void mouseMoveEvent(QMouseEvent *event);
-    virtual void mousePressEvent(QMouseEvent *event);
-    virtual void mouseReleaseEvent(QMouseEvent *event);
-    virtual void keyPressEvent(QKeyEvent *event);
-    virtual void wheelEvent(QWheelEvent *event);
-    virtual void inputMethodEvent(QInputMethodEvent *event);
+    virtual void mouseMoveEvent(QMouseEvent *event) override;
+    virtual void mousePressEvent(QMouseEvent *event) override;
+    virtual void mouseReleaseEvent(QMouseEvent *event) override;
+    virtual void keyPressEvent(QKeyEvent *event) override;
+    virtual void wheelEvent(QWheelEvent *event) override;
+    virtual void inputMethodEvent(QInputMethodEvent *event) override;
 private:
     void updateColumnSelection();
     void clearColumnSelection();
@@ -73,6 +82,25 @@ private:
     QTextCursor Column_end_cursor;
     QVector<QTextCursor> m_columnCursors;
     QList<QTextEdit::ExtraSelection> extraSelections_list;
+private:
+    class LineNumberArea : public QWidget
+    {
+    public:
+        LineNumberArea(Basic_TextEdit *editor);
+        QSize sizeHint() const override;
+    protected:
+        void paintEvent(QPaintEvent *event) override;
+    private:
+        Basic_TextEdit *textEdit;
+    };
+    friend class LineNumberArea;
+private:
+    void updateLineNumberAreaWidth();
+    int lineNumberAreaWidth() const;
+    void lineNumberAreaPaintEvent(QPaintEvent *event);
+    LineNumberArea *lineNumberArea = new LineNumberArea(this);
+protected:
+    virtual void resizeEvent(QResizeEvent *event) override;
 };
 class My_LineEdit : public Basic_Widget
 {

@@ -24,6 +24,12 @@ Basic_TextEdit::Basic_TextEdit(QWidget *parent)
     extra_mode->addAction(wheel_change_size_action);
     wheel_change_size_action->setIconVisibleInMenu(true);
     wheel_change_size_action->setIcon(QIcon(":/base/this.svg"));
+    extra_mode->addAction(insert_mode_action);
+    insert_mode_action->setIconVisibleInMenu(false);
+    insert_mode_action->setIcon(QIcon(":/base/this.svg"));
+    extra_mode->addAction(show_line_num_action);
+    show_line_num_action->setIconVisibleInMenu(false);
+    show_line_num_action->setIcon(QIcon(":/base/this.svg"));
     extra_mode->addAction(center_paste_action);
     center_paste_action->setIconVisibleInMenu(true);
     center_paste_action->setIcon(QIcon(":/base/this.svg"));
@@ -61,6 +67,78 @@ Basic_TextEdit::Basic_TextEdit(QWidget *parent)
     set_font_I->setIcon(QIcon(":/base/this.svg"));
     extra_menu->addAction(set_font_I);
     extra_menu->addAction(set_font_B);
+    set_color_menu->addAction(set_selection_color);
+    set_color_menu->addAction(set_search_color);
+    lineNumberArea->setVisible(false);
+    connect(this, &QTextEdit::textChanged, this, &Basic_TextEdit::updateLineNumberAreaWidth);
+    connect(document(), &QTextDocument::blockCountChanged, this, &Basic_TextEdit::updateLineNumberAreaWidth);
+    connect(verticalScrollBar(), &QScrollBar::valueChanged, this, [=]
+    {
+        if (lineNumberArea->isVisible())
+        {
+            lineNumberArea->update();
+        }
+    });
+}
+int Basic_TextEdit::lineNumberAreaWidth() const
+{
+    if (!show_line_num_action->isIconVisibleInMenu())
+    {
+        return 0;
+    }
+    int digits = 1;
+    int maxLines = document()->blockCount();
+    while (maxLines >= 10)
+    {
+        maxLines /= 10;
+        ++digits;
+    }
+    return 8 + fontMetrics().horizontalAdvance(QLatin1Char('9')) * digits;
+}
+void Basic_TextEdit::updateLineNumberAreaWidth()
+{
+    if (!show_line_num_action->isIconVisibleInMenu())
+    {
+        setViewportMargins(0, 0, 0, 0);
+        lineNumberArea->setVisible(false);
+        return;
+    }
+    int space = lineNumberAreaWidth();
+    setViewportMargins(space, 0, 0, 0);
+    lineNumberArea->setVisible(true);
+    lineNumberArea->setGeometry(QRect(0, 0, space, height()));
+}
+void Basic_TextEdit::lineNumberAreaPaintEvent(QPaintEvent *event)
+{
+    (void) event;
+    if (!show_line_num_action->isIconVisibleInMenu())
+    {
+        return;
+    }
+    QPainter painter(lineNumberArea);
+    int scrollOffset = verticalScrollBar()->value();
+    QTextBlock block = document()->firstBlock();
+    int blockNumber = 0;
+    while (block.isValid())
+    {
+        QRectF blockRect = document()->documentLayout()->blockBoundingRect(block);
+        double topInViewport = blockRect.top() - scrollOffset;
+        double bottomInViewport = blockRect.bottom() - scrollOffset;
+        if (bottomInViewport >= 0 && topInViewport <= lineNumberArea->height())
+        {
+            QString number = QString::number(blockNumber + 1);
+            painter.setPen(Qt::black);
+            int y = qRound(topInViewport);
+            painter.drawText(0, y, lineNumberArea->width(), fontMetrics().height(), Qt::AlignRight, number);
+        }
+        block = block.next();
+        ++blockNumber;
+    }
+}
+void Basic_TextEdit::resizeEvent(QResizeEvent *event)
+{
+    QTextEdit::resizeEvent(event);
+    updateLineNumberAreaWidth();
 }
 void Basic_TextEdit::mouseMoveEvent(QMouseEvent *event)
 {
@@ -124,17 +202,6 @@ void Basic_TextEdit::self_contextMenuEvent(const QPoint &pos)
 }
 void Basic_TextEdit::Add_Action(QMenu *menu)
 {
-    menu->insertMenu(menu->actions()[0], extra_menu);
-    menu->insertMenu(menu->actions()[1], set_control_menu);
-    menu->insertMenu(menu->actions()[2], insert_menu);
-    menu->insertMenu(menu->actions()[3], extra_mode);
-    menu->insertSeparator(menu->actions()[4]);
-    menu->addSeparator();
-    menu->addAction(window_control);
-    extra_menu->setEnabled(textCursor().hasSelection() && !isReadOnly());
-    set_image_size_action->setEnabled(isSelectionImage());
-    set_table->setEnabled(isSelectionTable());
-    set_control_menu->setEnabled(set_image_size_action->isEnabled() || set_table->isEnabled());
     if (QApplication::clipboard()->mimeData()->hasImage())
     {
         for (int i = 0; i < menu->actions().size(); i++)
@@ -146,6 +213,37 @@ void Basic_TextEdit::Add_Action(QMenu *menu)
             }
         }
     }
+    if (!extraSelections_list.isEmpty() && extraSelections_list[0].cursor.hasSelection())
+    {
+        for (int i = 0; i < menu->actions().size(); i++)
+        {
+            if (menu->actions()[i]->objectName() == "edit-cut")
+            {
+                menu->actions()[i]->setEnabled(true);
+            }
+            if (menu->actions()[i]->objectName() == "edit-copy")
+            {
+                menu->actions()[i]->setEnabled(true);
+            }
+        }
+    }
+    menu->insertMenu(menu->actions()[0], extra_menu);
+    menu->insertMenu(menu->actions()[1], set_control_menu);
+    menu->insertMenu(menu->actions()[2], insert_menu);
+    menu->insertSeparator(menu->actions()[3]);
+    menu->insertMenu(menu->actions()[4], extra_mode);
+    menu->insertMenu(menu->actions()[5], set_color_menu);
+    menu->insertSeparator(menu->actions()[6]);
+    menu->insertAction(menu->actions()[7], search_for_text_action);
+    menu->insertAction(menu->actions()[8], jump_to_line);
+    menu->insertSeparator(menu->actions()[9]);
+    menu->addSeparator();
+    menu->addAction(window_control);
+    extra_menu->setEnabled((textCursor().hasSelection() || (!extraSelections_list.isEmpty() && extraSelections_list[0].cursor.hasSelection())) && !isReadOnly());
+    set_image_size_action->setEnabled(isSelectionImage());
+    set_table->setEnabled(isSelectionTable());
+    set_control_menu->setEnabled(set_image_size_action->isEnabled() || set_table->isEnabled());
+
     if (isSelectionImage())
     {
         had_selected = true;
@@ -157,8 +255,17 @@ void Basic_TextEdit::Add_Action(QMenu *menu)
     }
     if (extra_menu->isEnabled())
     {
-        QTextCursor help_cursor = QTextCursor(this->textCursor());
-        help_cursor.setPosition(textCursor().selectionStart() + 1);
+        QTextCursor help_cursor;
+        if (extraSelections_list.isEmpty())
+        {
+            help_cursor = QTextCursor(this->textCursor());
+            help_cursor.setPosition(textCursor().selectionStart() + 1);
+        }
+        else
+        {
+            help_cursor = QTextCursor(extraSelections_list[0].cursor);
+            help_cursor.setPosition(extraSelections_list[0].cursor.selectionStart() + 1);
+        }
         QTextCharFormat fmt = help_cursor.charFormat();
         fmt = Basic_format_Set(fmt);
         set_font_B->setIconVisibleInMenu(fmt.fontWeight() == QFont::Bold);
@@ -167,6 +274,18 @@ void Basic_TextEdit::Add_Action(QMenu *menu)
 }
 void Basic_TextEdit::keyPressEvent(QKeyEvent *event)
 {
+    if (event->key() == Qt::Key_Insert)
+    {
+        insert_mode_action->setIconVisibleInMenu(!insert_mode_action->isIconVisibleInMenu());
+        setCursorWidth(insert_mode_action->isIconVisibleInMenu() ? 8 : 2);
+        event->accept();
+        return;
+    }
+    if (event->matches(QKeySequence::Find))
+    {
+        ;
+        return;
+    }
     if (!extraSelections_list.isEmpty())
     {
         std::sort(extraSelections_list.begin(), extraSelections_list.end(), [](const QTextEdit::ExtraSelection &a, const QTextEdit::ExtraSelection &b)
@@ -187,9 +306,23 @@ void Basic_TextEdit::keyPressEvent(QKeyEvent *event)
         }
         else if (event->matches(QKeySequence::Cut))
         {
+            if (isReadOnly())
+            {
+                QString text;
+                for (const auto &sel : extraSelections_list)
+                {
+                    text += sel.cursor.selectedText() + QChar::LineFeed;
+                }
+                text.chop(1);
+                QApplication::clipboard()->setText(text);
+                event->accept();
+                return;
+            }
             QString text;
             for (const auto &sel : extraSelections_list)
+            {
                 text += sel.cursor.selectedText() + QChar::LineFeed;
+            }
             text.chop(1);
             QApplication::clipboard()->setText(text);
             QTextCursor cursor = textCursor();
@@ -209,8 +342,18 @@ void Basic_TextEdit::keyPressEvent(QKeyEvent *event)
             event->accept();
             return;
         }
+        else if (event->key() == Qt::Key_Up || event->key() == Qt::Key_Down || event->key() == Qt::Key_Left || event->key() == Qt::Key_Right)
+        {
+            clearColumnSelection();
+            event->accept();
+            return;
+        }
         else if (event->key() == Qt::Key_Backspace)
         {
+            if (isReadOnly())
+            {
+                return;
+            }
             QTextCursor cursor = textCursor();
             cursor.beginEditBlock();
             for (auto it = extraSelections_list.rbegin(); it != extraSelections_list.rend(); ++it)
@@ -238,6 +381,10 @@ void Basic_TextEdit::keyPressEvent(QKeyEvent *event)
         }
         else if (event->key() == Qt::Key_Delete)
         {
+            if (isReadOnly())
+            {
+                return;
+            }
             QTextCursor cursor = textCursor();
             cursor.beginEditBlock();
             int docLen = document()->characterCount() - 1;
@@ -266,24 +413,88 @@ void Basic_TextEdit::keyPressEvent(QKeyEvent *event)
         }
         else if (!event->text().isEmpty() && event->text()[0].isPrint())
         {
-            QString text = event->text();
-            QTextCursor cursor = textCursor();
-            cursor.beginEditBlock();
-            for (auto it = extraSelections_list.rbegin(); it != extraSelections_list.rend(); ++it)
+            if (isReadOnly())
             {
-                QTextCursor editCursor = it->cursor;
-                if (editCursor.hasSelection())
-                {
-                    editCursor.removeSelectedText();
-                }
-
-                editCursor.insertText(text);
+                return;
             }
-            cursor.endEditBlock();
-            updateColumnSelection();
-            event->accept();
-            return;
+            if (insert_mode_action->isIconVisibleInMenu())
+            {
+                QString text = event->text();
+                textCursor().beginEditBlock();
+                for (auto &selection : extraSelections_list)
+                {
+                    QTextCursor cursor = selection.cursor;
+                    if (cursor.hasSelection())
+                    {
+                        cursor.insertText(text);
+                    }
+                    else
+                    {
+                        int pos = cursor.position();
+                        int docLen = document()->characterCount() - 1;
+                        if (pos < docLen)
+                        {
+                            QChar nextChar = document()->characterAt(pos);
+                            if (nextChar != QChar::ParagraphSeparator && nextChar != QChar::LineSeparator)
+                            {
+                                cursor.movePosition(QTextCursor::Right, QTextCursor::KeepAnchor, 1);
+                                cursor.insertText(text);
+                            }
+                        }
+                    }
+                }
+                textCursor().endEditBlock();
+                event->accept();
+                return;
+            }
+            else
+            {
+                QString text = event->text();
+                QTextCursor cursor = textCursor();
+                cursor.beginEditBlock();
+                for (auto it = extraSelections_list.rbegin(); it != extraSelections_list.rend(); ++it)
+                {
+                    QTextCursor editCursor = it->cursor;
+                    if (editCursor.hasSelection())
+                    {
+                        editCursor.removeSelectedText();
+                    }
+
+                    editCursor.insertText(text);
+                }
+                cursor.endEditBlock();
+                updateColumnSelection();
+                event->accept();
+                return;
+            }
         }
+    }
+    if (!event->text().isEmpty() && event->text()[0].isPrint())//非列编辑
+    {
+        QString text = event->text();
+        QTextCursor cursor = textCursor();
+        cursor.beginEditBlock();
+        if (insert_mode_action->isIconVisibleInMenu() && !cursor.hasSelection())
+        {
+            int pos = cursor.position();
+            int docLen = document()->characterCount() - 1;
+            if (pos < docLen)
+            {
+                QChar nextChar = document()->characterAt(pos);
+                if (nextChar != QChar::ParagraphSeparator && nextChar != QChar::LineSeparator)
+                {
+                    cursor.movePosition(QTextCursor::Right, QTextCursor::KeepAnchor, 1);
+                    cursor.insertText(text);
+                    cursor.endEditBlock();
+                    event->accept();
+                    return;
+                }
+            }
+        }
+        cursor.insertText(text);
+        cursor.endEditBlock();
+        event->accept();
+        return;
     }
     if (event->matches(QKeySequence::Copy))
     {
@@ -382,7 +593,7 @@ void Basic_TextEdit::updateColumnSelection()
             cursor.setPosition(block.position() + selEnd, QTextCursor::KeepAnchor);
             QTextEdit::ExtraSelection extra;
             extra.cursor = cursor;
-            extra.format.setBackground(QColor(0, 100, 255, 80));
+            extra.format.setBackground(selection_color);
             extraSelections_list.append(extra);
             QTextCursor insertCursor(block);
             insertCursor.setPosition(block.position() + selStart);
@@ -393,6 +604,13 @@ void Basic_TextEdit::updateColumnSelection()
             break;
         }
         block = block.next();
+    }
+    if (!m_columnCursors.isEmpty())
+    {
+        std::sort(extraSelections_list.begin(), extraSelections_list.end(), [](const QTextEdit::ExtraSelection &a, const QTextEdit::ExtraSelection &b)
+        {
+            return a.cursor.selectionStart() < b.cursor.selectionStart();
+        });
     }
     setExtraSelections(extraSelections_list);
 }
@@ -408,6 +626,7 @@ void Basic_TextEdit::clearColumnSelection()
 void Basic_TextEdit::NormalSelection()
 {
     extraSelections_list.clear();
+    m_columnCursors.clear();
     if (!Column_start_cursor.isNull() && !Column_end_cursor.isNull())
     {
         QTextCursor selectionCursor = Column_start_cursor;
@@ -452,9 +671,9 @@ void Basic_TextEdit::ZoomIn()
             {
                 QTextCharFormat format = fragment.charFormat();
                 QFont font = format.font();
-                int newSize = qRound(font.pointSizeF() * 1.05);
-                newSize = qMax(4, newSize);
-                font.setPointSize(newSize);
+                double newSize = font.pointSizeF() * 1.05;
+                newSize = qMax(1.0, newSize);
+                font.setPointSizeF(newSize);
                 format.setFont(font);
                 cursor.setPosition(fragment.position());
                 cursor.setPosition(fragment.position() + fragment.length(), QTextCursor::KeepAnchor);
@@ -463,6 +682,8 @@ void Basic_TextEdit::ZoomIn()
         }
     }
     cursor.endEditBlock();
+    updateLineNumberAreaWidth();
+    lineNumberArea->update();
 }
 void Basic_TextEdit::ZoomOut()
 {
@@ -504,9 +725,9 @@ void Basic_TextEdit::ZoomOut()
             {
                 QTextCharFormat format = fragment.charFormat();
                 QFont font = format.font();
-                int newSize = qRound(font.pointSizeF() * 0.95);
-                newSize = qMax(4, newSize);
-                font.setPointSize(newSize);
+                double newSize = font.pointSizeF() * 0.95;
+                newSize = qMax(1.0, newSize);
+                font.setPointSizeF(newSize);
                 format.setFont(font);
                 cursor.setPosition(fragment.position());
                 cursor.setPosition(fragment.position() + fragment.length(), QTextCursor::KeepAnchor);
@@ -515,14 +736,34 @@ void Basic_TextEdit::ZoomOut()
         }
     }
     cursor.endEditBlock();
+    updateLineNumberAreaWidth();
+    lineNumberArea->update();
 }
 bool Basic_TextEdit::isSelectionImage()
 {
-    if (!this->textCursor().hasSelection())
+    QString selectedText;
+    QTextCharFormat charFormat;
+    if (extraSelections_list.isEmpty())
     {
-        return false;
+        if (!this->textCursor().hasSelection())
+        {
+            return false;
+        }
+        selectedText = this->textCursor().selectedText();
+        charFormat = this->textCursor().charFormat();
     }
-    QString selectedText = this->textCursor().selectedText();
+    else
+    {
+        for (auto &selection : extraSelections_list)
+        {
+            if (selection.cursor.hasSelection())
+            {
+                selectedText = selection.cursor.selectedText();
+                charFormat = this->textCursor().charFormat();
+                break;
+            }
+        }
+    }
     for (int i = 0; i < selectedText.length(); i++)
     {
         if (selectedText.at(i) != QChar::ObjectReplacementCharacter && selectedText.at(i) != "\u2029")
@@ -530,12 +771,27 @@ bool Basic_TextEdit::isSelectionImage()
             return false;
         }
     }
-    QTextCharFormat charFormat = this->textCursor().charFormat();
     return charFormat.isImageFormat();
 }
 bool Basic_TextEdit::isSelectionTable()
 {
-    return this->textCursor().currentTable() != nullptr;
+    if (extraSelections_list.isEmpty())
+    {
+        return this->textCursor().currentTable() != nullptr;
+    }
+    else
+    {
+        for (auto &selection : extraSelections_list)
+        {
+            QTextTable *table = selection.cursor.currentTable();
+            if (table)
+            {
+                return true;
+            }
+        }
+    }
+    return false;
+
 }
 void Basic_TextEdit::Added_Action_Func(QAction *action, QPoint pos)
 {
@@ -566,13 +822,45 @@ void Basic_TextEdit::Added_Action_Func(QAction *action, QPoint pos)
         if (isSelectionImage())
         {
             Basic_TextEdit::self_copy();
+            return;
+        }
+        if (!extraSelections_list.isEmpty())
+        {
+            QString text;
+            for (const auto &sel : extraSelections_list)
+            {
+                text += sel.cursor.selectedText() + QChar::LineFeed;
+            }
+            text.chop(1);
+            QApplication::clipboard()->setText(text);
+            return;
         }
     }
     else if (action != nullptr && action->objectName() == "edit-cut")
     {
-        if (had_selected)
+        if (had_selected)//该bool仅为image存在的标记
         {
             Basic_TextEdit::second_cut();
+            return;
+        }
+        if (!extraSelections_list.isEmpty())
+        {
+            QString text;
+            for (const auto &sel : extraSelections_list)
+            {
+                text += sel.cursor.selectedText() + QChar::LineFeed;
+            }
+            text.chop(1);
+            QApplication::clipboard()->setText(text);
+            QTextCursor cursor = textCursor();
+            cursor.beginEditBlock();
+            for (auto it = extraSelections_list.rbegin(); it != extraSelections_list.rend(); ++it)
+            {
+                it->cursor.removeSelectedText();
+            }
+            cursor.endEditBlock();
+            clearColumnSelection();
+            return;
         }
     }
     else if (action == insert_image_action)
@@ -614,11 +902,33 @@ void Basic_TextEdit::Added_Action_Func(QAction *action, QPoint pos)
         }
         QTextTableFormat tableFormat;
         tableFormat.setBorderStyle(QTextTableFormat::BorderStyle::BorderStyle_Double);
-        this->textCursor().insertTable(rows, cols, tableFormat);
+        if (extraSelections_list.isEmpty())
+        {
+            this->textCursor().insertTable(rows, cols, tableFormat);
+        }
+        else
+        {
+            extraSelections_list.first().cursor.insertTable(rows, cols, tableFormat);
+        }
     }
     else if (action == set_image_size_action)
     {
-        QTextImageFormat imageFormat = this->textCursor().charFormat().toImageFormat();
+        QTextImageFormat imageFormat;
+        if (extraSelections_list.isEmpty())
+        {
+            imageFormat = this->textCursor().charFormat().toImageFormat();
+        }
+        else
+        {
+            for (auto &selection : extraSelections_list)
+            {
+                imageFormat = selection.cursor.charFormat().toImageFormat();
+                if (!imageFormat.isValid())
+                {
+                    break;
+                }
+            }
+        }
         if (imageFormat.width() <= 1 || imageFormat.height() <= 1)
         {
             if (imageFormat.isValid())
@@ -649,7 +959,22 @@ void Basic_TextEdit::Added_Action_Func(QAction *action, QPoint pos)
     }
     else if (action == set_table_size_action)
     {
-        QTextTable *table = this->textCursor().currentTable();
+        QTextTable *table = nullptr;
+        if (extraSelections_list.isEmpty())
+        {
+            table = this->textCursor().currentTable();
+        }
+        else
+        {
+            for (auto &selection : extraSelections_list)
+            {
+                table = selection.cursor.currentTable();
+                if (!table)
+                {
+                    break;
+                }
+            }
+        }
         if (table == nullptr)
         {
             return;
@@ -670,7 +995,22 @@ void Basic_TextEdit::Added_Action_Func(QAction *action, QPoint pos)
     }
     else if (action == merge_cells_action)
     {
-        QTextTable *table = this->textCursor().currentTable();
+        QTextTable *table = nullptr;
+        if (extraSelections_list.isEmpty())
+        {
+            table = this->textCursor().currentTable();
+        }
+        else
+        {
+            for (auto &selection : extraSelections_list)
+            {
+                table = selection.cursor.currentTable();
+                if (!table)
+                {
+                    break;
+                }
+            }
+        }
         if (table == nullptr)
         {
             return;
@@ -701,7 +1041,22 @@ void Basic_TextEdit::Added_Action_Func(QAction *action, QPoint pos)
     }
     else if (action == split_cells_action)
     {
-        QTextTable *table = this->textCursor().currentTable();
+        QTextTable *table = nullptr;
+        if (extraSelections_list.isEmpty())
+        {
+            table = this->textCursor().currentTable();
+        }
+        else
+        {
+            for (auto &selection : extraSelections_list)
+            {
+                table = selection.cursor.currentTable();
+                if (!table)
+                {
+                    break;
+                }
+            }
+        }
         if (table == nullptr)
         {
             return;
@@ -723,23 +1078,48 @@ void Basic_TextEdit::Added_Action_Func(QAction *action, QPoint pos)
     }
     else if (action == clear_style_action)
     {
-        if (textCursor().hasSelection())
+        QTextCharFormat fmt;
+        fmt.setFont(QFontDatabase::systemFont(QFontDatabase::FixedFont));
+        fmt.setFontItalic(false);
+        fmt.setFontWeight(QFont::Normal);
+        fmt.setBackground(Qt::transparent);
+        fmt.setForeground(Qt::black);
+        fmt.setFontUnderline(false);
+        if (extraSelections_list.isEmpty())
         {
-            QTextCharFormat fmt;
-            fmt.setFont(QFontDatabase::systemFont(QFontDatabase::FixedFont));
-            fmt.setFontItalic(false);
-            fmt.setFontWeight(QFont::Normal);
-            fmt.setBackground(Qt::transparent);
-            fmt.setForeground(Qt::black);
-            fmt.setFontUnderline(false);
-            this->textCursor().mergeCharFormat(fmt);
+            if (textCursor().hasSelection())
+            {
+                this->textCursor().mergeCharFormat(fmt);
+            }
+        }
+        else
+        {
+            this->textCursor().beginEditBlock();
+            for (auto &ext_selection : extraSelections_list)
+            {
+                ext_selection.cursor.mergeCharFormat(fmt);
+            }
+            this->textCursor().endEditBlock();
         }
     }
     else if (action == record_style_action)
     {
-        if (textCursor().hasSelection())
+        if (extraSelections_list.isEmpty())
         {
-            QTextCursor help_cursor = QTextCursor(this->textCursor());
+            if (textCursor().hasSelection())
+            {
+                QTextCursor help_cursor = QTextCursor(this->textCursor());
+                help_cursor.setPosition(textCursor().selectionStart() + 1);
+                QTextCharFormat fmt = help_cursor.charFormat();
+                if (fmt.isValid())
+                {
+                    basic_format = Basic_format_Set(fmt);
+                }
+            }
+        }
+        else
+        {
+            QTextCursor help_cursor = QTextCursor(extraSelections_list[0].cursor);
             help_cursor.setPosition(textCursor().selectionStart() + 1);
             QTextCharFormat fmt = help_cursor.charFormat();
             if (fmt.isValid())
@@ -750,95 +1130,205 @@ void Basic_TextEdit::Added_Action_Func(QAction *action, QPoint pos)
     }
     else if (action == set_style_action)
     {
-        if (textCursor().hasSelection())
+        if (extraSelections_list.isEmpty())
         {
-            this->textCursor().mergeCharFormat(basic_format);
+            if (textCursor().hasSelection())
+            {
+                this->textCursor().mergeCharFormat(basic_format);
+            }
+        }
+        else
+        {
+            this->textCursor().beginEditBlock();
+            for (auto &ext_selection : extraSelections_list)
+            {
+                ext_selection.cursor.mergeCharFormat(basic_format);
+            }
+            this->textCursor().endEditBlock();
         }
     }
     else if (action == set_Top_A_action)
     {
-        if (textCursor().hasSelection())
+        if (extraSelections_list.isEmpty())
         {
-            int start = this->textCursor().selectionStart();
-            int end = this->textCursor().selectionEnd();
-            this->textCursor().beginEditBlock();
-            QTextCursor running_cursor = QTextCursor(this->document());
-            QString ins_text;
-            QTextCharFormat ins_Format;
-            bool first = true;
-            for (int i = start; i < end; i++)
+            if (textCursor().hasSelection())
             {
-                running_cursor.setPosition(i);
-                running_cursor.setPosition(i + 1, QTextCursor::MoveMode::KeepAnchor);
-                ins_text = running_cursor.selectedText();
-                if (ins_text == " " || ins_text.at(0) == "\u2029")
+                int start = this->textCursor().selectionStart();
+                int end = this->textCursor().selectionEnd();
+                this->textCursor().beginEditBlock();
+                QTextCursor running_cursor = QTextCursor(this->document());
+                QString ins_text;
+                QTextCharFormat ins_Format;
+                bool first = true;
+                for (int i = start; i < end; i++)
                 {
-                    first = true;
-                }
-                else
-                {
-                    if (first)
+                    running_cursor.setPosition(i);
+                    running_cursor.setPosition(i + 1, QTextCursor::MoveMode::KeepAnchor);
+                    ins_text = running_cursor.selectedText();
+                    if (ins_text == " " || ins_text.at(0) == "\u2029")
                     {
-                        first = false;
-                        ins_text = ins_text.toUpper();
+                        first = true;
                     }
                     else
                     {
-                        ins_text = ins_text.toLower();
+                        if (first)
+                        {
+                            first = false;
+                            ins_text = ins_text.toUpper();
+                        }
+                        else
+                        {
+                            ins_text = ins_text.toLower();
+                        }
                     }
+                    ins_Format = running_cursor.charFormat();
+                    running_cursor.insertText(ins_text, ins_Format);
                 }
-                ins_Format = running_cursor.charFormat();
-                running_cursor.insertText(ins_text, ins_Format);
+                this->textCursor().endEditBlock();
+            }
+        }
+        else
+        {
+            this->textCursor().beginEditBlock();
+            for (auto &ext_selection : extraSelections_list)
+            {
+                int start = ext_selection.cursor.selectionStart();
+                int end = ext_selection.cursor.selectionEnd();
+                QTextCursor running_cursor = QTextCursor(this->document());
+                QString ins_text;
+                QTextCharFormat ins_Format;
+                bool first = true;
+                for (int i = start; i < end; i++)
+                {
+                    running_cursor.setPosition(i);
+                    running_cursor.setPosition(i + 1, QTextCursor::MoveMode::KeepAnchor);
+                    ins_text = running_cursor.selectedText();
+                    if (ins_text == " " || ins_text.at(0) == "\u2029")
+                    {
+                        first = true;
+                    }
+                    else
+                    {
+                        if (first)
+                        {
+                            first = false;
+                            ins_text = ins_text.toUpper();
+                        }
+                        else
+                        {
+                            ins_text = ins_text.toLower();
+                        }
+                    }
+                    ins_Format = running_cursor.charFormat();
+                    running_cursor.insertText(ins_text, ins_Format);
+                }
             }
             this->textCursor().endEditBlock();
         }
     }
     else if (action == set_A_action)
     {
-        if (textCursor().hasSelection())
+        if (extraSelections_list.isEmpty())
         {
-            int start = this->textCursor().selectionStart();
-            int end = this->textCursor().selectionEnd();
-            this->textCursor().beginEditBlock();
-            QTextCursor running_cursor = QTextCursor(this->document());
-            QString ins_text;
-            QTextCharFormat ins_Format;
-            for (int i = start; i < end; i++)
+            if (textCursor().hasSelection())
             {
-                running_cursor.setPosition(i);
-                running_cursor.setPosition(i + 1, QTextCursor::MoveMode::KeepAnchor);
-                ins_text = running_cursor.selectedText().toUpper();
-                ins_Format = running_cursor.charFormat();
-                running_cursor.insertText(ins_text, ins_Format);
+                int start = this->textCursor().selectionStart();
+                int end = this->textCursor().selectionEnd();
+                this->textCursor().beginEditBlock();
+                QTextCursor running_cursor = QTextCursor(this->document());
+                QString ins_text;
+                QTextCharFormat ins_Format;
+                for (int i = start; i < end; i++)
+                {
+                    running_cursor.setPosition(i);
+                    running_cursor.setPosition(i + 1, QTextCursor::MoveMode::KeepAnchor);
+                    ins_text = running_cursor.selectedText().toUpper();
+                    ins_Format = running_cursor.charFormat();
+                    running_cursor.insertText(ins_text, ins_Format);
+                }
+                this->textCursor().endEditBlock();
+            }
+        }
+        else
+        {
+            this->textCursor().beginEditBlock();
+            for (auto &ext_selection : extraSelections_list)
+            {
+                int start = ext_selection.cursor.selectionStart();
+                int end = ext_selection.cursor.selectionEnd();
+                QTextCursor running_cursor = QTextCursor(this->document());
+                QString ins_text;
+                QTextCharFormat ins_Format;
+                for (int i = start; i < end; i++)
+                {
+                    running_cursor.setPosition(i);
+                    running_cursor.setPosition(i + 1, QTextCursor::MoveMode::KeepAnchor);
+                    ins_text = running_cursor.selectedText().toUpper();
+                    ins_Format = running_cursor.charFormat();
+                    running_cursor.insertText(ins_text, ins_Format);
+                }
             }
             this->textCursor().endEditBlock();
         }
     }
     else if (action == set_a_action)
     {
-        if (textCursor().hasSelection())
+        if (extraSelections_list.isEmpty())
         {
-            int start = this->textCursor().selectionStart();
-            int end = this->textCursor().selectionEnd();
-            this->textCursor().beginEditBlock();
-            QTextCursor running_cursor = QTextCursor(this->document());
-            QString ins_text;
-            QTextCharFormat ins_Format;
-            for (int i = start; i < end; i++)
+            if (textCursor().hasSelection())
             {
-                running_cursor.setPosition(i);
-                running_cursor.setPosition(i + 1, QTextCursor::MoveMode::KeepAnchor);
-                ins_text = running_cursor.selectedText().toLower();
-                ins_Format = running_cursor.charFormat();
-                running_cursor.insertText(ins_text, ins_Format);
+                int start = this->textCursor().selectionStart();
+                int end = this->textCursor().selectionEnd();
+                this->textCursor().beginEditBlock();
+                QTextCursor running_cursor = QTextCursor(this->document());
+                QString ins_text;
+                QTextCharFormat ins_Format;
+                for (int i = start; i < end; i++)
+                {
+                    running_cursor.setPosition(i);
+                    running_cursor.setPosition(i + 1, QTextCursor::MoveMode::KeepAnchor);
+                    ins_text = running_cursor.selectedText().toLower();
+                    ins_Format = running_cursor.charFormat();
+                    running_cursor.insertText(ins_text, ins_Format);
+                }
+                this->textCursor().endEditBlock();
+            }
+        }
+        else
+        {
+            this->textCursor().beginEditBlock();
+            for (auto &ext_selection : extraSelections_list)
+            {
+                int start = ext_selection.cursor.selectionStart();
+                int end = ext_selection.cursor.selectionEnd();
+                QTextCursor running_cursor = QTextCursor(this->document());
+                QString ins_text;
+                QTextCharFormat ins_Format;
+                for (int i = start; i < end; i++)
+                {
+                    running_cursor.setPosition(i);
+                    running_cursor.setPosition(i + 1, QTextCursor::MoveMode::KeepAnchor);
+                    ins_text = running_cursor.selectedText().toLower();
+                    ins_Format = running_cursor.charFormat();
+                    running_cursor.insertText(ins_text, ins_Format);
+                }
             }
             this->textCursor().endEditBlock();
         }
     }
     else if (action == format_set_font)
     {
-        QTextCursor help_cursor = QTextCursor(this->textCursor());
-        help_cursor.setPosition(textCursor().selectionStart() + 1);
+        QTextCursor help_cursor;
+        if (extraSelections_list.isEmpty())
+        {
+            help_cursor = QTextCursor(this->textCursor());
+            help_cursor.setPosition(textCursor().selectionStart() + 1);
+        }
+        else
+        {
+            help_cursor = QTextCursor(extraSelections_list[0].cursor);
+            help_cursor.setPosition(extraSelections_list[0].cursor.selectionStart() + 1);
+        }
         QTextCharFormat fmt = help_cursor.charFormat();
         fmt = Basic_format_Set(fmt);
         bool ok = false;
@@ -847,25 +1337,55 @@ void Basic_TextEdit::Added_Action_Func(QAction *action, QPoint pos)
         {
             return;
         }
-        int start = this->textCursor().selectionStart();
-        int end = this->textCursor().selectionEnd();
-        this->textCursor().beginEditBlock();
         QTextCursor running_cursor = QTextCursor(this->document());
-        QTextCharFormat ins_Format;
-        for (int i = start; i < end; i++)
+        this->textCursor().beginEditBlock();
+        if (extraSelections_list.isEmpty())
         {
-            running_cursor.setPosition(i);
-            running_cursor.setPosition(i + 1, QTextCursor::MoveMode::KeepAnchor);
-            ins_Format = running_cursor.charFormat();
-            ins_Format.setFont(font);
-            running_cursor.mergeCharFormat(ins_Format);
+            int start = this->textCursor().selectionStart();
+            int end = this->textCursor().selectionEnd();
+            QTextCharFormat ins_Format;
+            for (int i = start; i < end; i++)
+            {
+                running_cursor.setPosition(i);
+                running_cursor.setPosition(i + 1, QTextCursor::MoveMode::KeepAnchor);
+                ins_Format = running_cursor.charFormat();
+                ins_Format.setFont(font);
+                running_cursor.mergeCharFormat(ins_Format);
+            }
+        }
+        else
+        {
+            for (auto &ext_selection : extraSelections_list)
+            {
+                int start = ext_selection.cursor.selectionStart();
+                int end = ext_selection.cursor.selectionEnd();
+                QTextCursor running_cursor = QTextCursor(this->document());
+                QTextCharFormat ins_Format;
+                for (int i = start; i < end; i++)
+                {
+                    running_cursor.setPosition(i);
+                    running_cursor.setPosition(i + 1, QTextCursor::MoveMode::KeepAnchor);
+                    ins_Format = running_cursor.charFormat();
+                    ins_Format.setFont(font);
+                    running_cursor.mergeCharFormat(ins_Format);
+                }
+            }
         }
         this->textCursor().endEditBlock();
     }
     else if (action == format_set_font_color)
     {
-        QTextCursor help_cursor = QTextCursor(this->textCursor());
-        help_cursor.setPosition(textCursor().selectionStart() + 1);
+        QTextCursor help_cursor;
+        if (extraSelections_list.isEmpty())
+        {
+            help_cursor = QTextCursor(this->textCursor());
+            help_cursor.setPosition(textCursor().selectionStart() + 1);
+        }
+        else
+        {
+            help_cursor = QTextCursor(extraSelections_list[0].cursor);
+            help_cursor.setPosition(extraSelections_list[0].cursor.selectionStart() + 1);
+        }
         QTextCharFormat fmt = help_cursor.charFormat();
         fmt = Basic_format_Set(fmt);
         QColorDialog colorDialog;
@@ -877,25 +1397,54 @@ void Basic_TextEdit::Added_Action_Func(QAction *action, QPoint pos)
         {
             return;
         }
-        int start = this->textCursor().selectionStart();
-        int end = this->textCursor().selectionEnd();
-        this->textCursor().beginEditBlock();
         QTextCursor running_cursor = QTextCursor(this->document());
-        QTextCharFormat ins_Format;
-        for (int i = start; i < end; i++)
+        this->textCursor().beginEditBlock();
+        if (extraSelections_list.isEmpty())
         {
-            running_cursor.setPosition(i);
-            running_cursor.setPosition(i + 1, QTextCursor::MoveMode::KeepAnchor);
-            ins_Format = running_cursor.charFormat();
-            ins_Format.setForeground(colorDialog.currentColor());
-            running_cursor.mergeCharFormat(ins_Format);
+            int start = this->textCursor().selectionStart();
+            int end = this->textCursor().selectionEnd();
+            QTextCharFormat ins_Format;
+            for (int i = start; i < end; i++)
+            {
+                running_cursor.setPosition(i);
+                running_cursor.setPosition(i + 1, QTextCursor::MoveMode::KeepAnchor);
+                ins_Format = running_cursor.charFormat();
+                ins_Format.setForeground(colorDialog.currentColor());
+                running_cursor.mergeCharFormat(ins_Format);
+            }
+        }
+        else
+        {
+            for (auto &ext_selection : extraSelections_list)
+            {
+                int start = ext_selection.cursor.selectionStart();
+                int end = ext_selection.cursor.selectionEnd();
+                QTextCharFormat ins_Format;
+                for (int i = start; i < end; i++)
+                {
+                    running_cursor.setPosition(i);
+                    running_cursor.setPosition(i + 1, QTextCursor::MoveMode::KeepAnchor);
+                    ins_Format = running_cursor.charFormat();
+                    ins_Format.setForeground(colorDialog.currentColor());
+                    running_cursor.mergeCharFormat(ins_Format);
+                }
+            }
         }
         this->textCursor().endEditBlock();
     }
     else if (action == format_set_background_color)
     {
-        QTextCursor help_cursor = QTextCursor(this->textCursor());
-        help_cursor.setPosition(textCursor().selectionStart() + 1);
+        QTextCursor help_cursor;
+        if (extraSelections_list.isEmpty())
+        {
+            help_cursor = QTextCursor(this->textCursor());
+            help_cursor.setPosition(textCursor().selectionStart() + 1);
+        }
+        else
+        {
+            help_cursor = QTextCursor(extraSelections_list[0].cursor);
+            help_cursor.setPosition(extraSelections_list[0].cursor.selectionStart() + 1);
+        }
         QTextCharFormat fmt = help_cursor.charFormat();
         fmt = Basic_format_Set(fmt);
         QColorDialog colorDialog;
@@ -907,58 +1456,160 @@ void Basic_TextEdit::Added_Action_Func(QAction *action, QPoint pos)
         {
             return;
         }
-        int start = this->textCursor().selectionStart();
-        int end = this->textCursor().selectionEnd();
-        this->textCursor().beginEditBlock();
         QTextCursor running_cursor = QTextCursor(this->document());
-        QTextCharFormat ins_Format;
-        for (int i = start; i < end; i++)
+        this->textCursor().beginEditBlock();
+        if (extraSelections_list.isEmpty())
         {
-            running_cursor.setPosition(i);
-            running_cursor.setPosition(i + 1, QTextCursor::MoveMode::KeepAnchor);
-            ins_Format = running_cursor.charFormat();
-            ins_Format.setBackground(colorDialog.currentColor());
-            running_cursor.mergeCharFormat(ins_Format);
+            int start = this->textCursor().selectionStart();
+            int end = this->textCursor().selectionEnd();
+            QTextCharFormat ins_Format;
+            for (int i = start; i < end; i++)
+            {
+                running_cursor.setPosition(i);
+                running_cursor.setPosition(i + 1, QTextCursor::MoveMode::KeepAnchor);
+                ins_Format = running_cursor.charFormat();
+                ins_Format.setBackground(colorDialog.currentColor());
+                running_cursor.mergeCharFormat(ins_Format);
+            }
+        }
+        else
+        {
+            for (auto &ext_selection : extraSelections_list)
+            {
+                int start = ext_selection.cursor.selectionStart();
+                int end = ext_selection.cursor.selectionEnd();
+                QTextCharFormat ins_Format;
+                for (int i = start; i < end; i++)
+                {
+                    running_cursor.setPosition(i);
+                    running_cursor.setPosition(i + 1, QTextCursor::MoveMode::KeepAnchor);
+                    ins_Format = running_cursor.charFormat();
+                    ins_Format.setBackground(colorDialog.currentColor());
+                    running_cursor.mergeCharFormat(ins_Format);
+                }
+            }
         }
         this->textCursor().endEditBlock();
     }
     else if (action == set_font_I)
     {
-        int start = this->textCursor().selectionStart();
-        int end = this->textCursor().selectionEnd();
-        this->textCursor().beginEditBlock();
         QTextCursor running_cursor = QTextCursor(this->document());
-        QTextCharFormat ins_Format;
-        for (int i = start; i < end; i++)
+        this->textCursor().beginEditBlock();
+        if (extraSelections_list.isEmpty())
         {
-            running_cursor.setPosition(i);
-            running_cursor.setPosition(i + 1, QTextCursor::MoveMode::KeepAnchor);
-            ins_Format = running_cursor.charFormat();
-            ins_Format.setFontItalic(!set_font_I->isIconVisibleInMenu());
-            running_cursor.mergeCharFormat(ins_Format);
+            int start = this->textCursor().selectionStart();
+            int end = this->textCursor().selectionEnd();
+            QTextCharFormat ins_Format;
+            for (int i = start; i < end; i++)
+            {
+                running_cursor.setPosition(i);
+                running_cursor.setPosition(i + 1, QTextCursor::MoveMode::KeepAnchor);
+                ins_Format = running_cursor.charFormat();
+                ins_Format.setFontItalic(!set_font_I->isIconVisibleInMenu());
+                running_cursor.mergeCharFormat(ins_Format);
+            }
+        }
+        else
+        {
+            for (auto &ext_selection : extraSelections_list)
+            {
+                int start = ext_selection.cursor.selectionStart();
+                int end = ext_selection.cursor.selectionEnd();
+                QTextCharFormat ins_Format;
+                for (int i = start; i < end; i++)
+                {
+                    running_cursor.setPosition(i);
+                    running_cursor.setPosition(i + 1, QTextCursor::MoveMode::KeepAnchor);
+                    ins_Format = running_cursor.charFormat();
+                    ins_Format.setFontItalic(!set_font_I->isIconVisibleInMenu());
+                    running_cursor.mergeCharFormat(ins_Format);
+                }
+            }
         }
         this->textCursor().endEditBlock();
+        set_font_I->setIconVisibleInMenu(!set_font_I->isIconVisibleInMenu());
     }
     else if (action == set_font_B)
     {
-        int start = this->textCursor().selectionStart();
-        int end = this->textCursor().selectionEnd();
-        this->textCursor().beginEditBlock();
         QTextCursor running_cursor = QTextCursor(this->document());
-        QTextCharFormat ins_Format;
-        for (int i = start; i < end; i++)
+        this->textCursor().beginEditBlock();
+        if (extraSelections_list.isEmpty())
         {
-            running_cursor.setPosition(i);
-            running_cursor.setPosition(i + 1, QTextCursor::MoveMode::KeepAnchor);
-            ins_Format = running_cursor.charFormat();
-            ins_Format.setFontWeight(set_font_B->isIconVisibleInMenu()?QFont::Normal:QFont::Bold);
-            running_cursor.mergeCharFormat(ins_Format);
+            int start = this->textCursor().selectionStart();
+            int end = this->textCursor().selectionEnd();
+            QTextCharFormat ins_Format;
+            for (int i = start; i < end; i++)
+            {
+                running_cursor.setPosition(i);
+                running_cursor.setPosition(i + 1, QTextCursor::MoveMode::KeepAnchor);
+                ins_Format = running_cursor.charFormat();
+                ins_Format.setFontWeight(set_font_B->isIconVisibleInMenu()?QFont::Normal:QFont::Bold);
+                running_cursor.mergeCharFormat(ins_Format);
+            }
+        }
+        else
+        {
+            for (auto &ext_selection : extraSelections_list)
+            {
+                int start = ext_selection.cursor.selectionStart();
+                int end = ext_selection.cursor.selectionEnd();
+                QTextCharFormat ins_Format;
+                for (int i = start; i < end; i++)
+                {
+                    running_cursor.setPosition(i);
+                    running_cursor.setPosition(i + 1, QTextCursor::MoveMode::KeepAnchor);
+                    ins_Format = running_cursor.charFormat();
+                    ins_Format.setFontWeight(set_font_B->isIconVisibleInMenu()?QFont::Normal:QFont::Bold);
+                    running_cursor.mergeCharFormat(ins_Format);
+                }
+            }
         }
         this->textCursor().endEditBlock();
+        set_font_B->setIconVisibleInMenu(!set_font_B->isIconVisibleInMenu());
     }
     else if (action == wheel_change_size_action)
     {
         wheel_change_size_action->setIconVisibleInMenu(!wheel_change_size_action->isIconVisibleInMenu());
+    }
+    else if (action == set_selection_color)
+    {
+        QColorDialog colorDialog;
+        colorDialog.setOption(QColorDialog::ShowAlphaChannel);
+        colorDialog.setCurrentColor(selection_color);
+        colorDialog.setParent(nullptr);
+        colorDialog.setWindowTitle("获取颜色");
+        if (colorDialog.exec() != QDialog::Accepted)
+        {
+            return;
+        }
+        selection_color = colorDialog.currentColor();
+    }
+    else if (action == insert_mode_action)
+    {
+        insert_mode_action->setIconVisibleInMenu(!insert_mode_action->isIconVisibleInMenu());
+        setCursorWidth(insert_mode_action->isIconVisibleInMenu() ? 8 : 2);
+    }
+    else if (action == search_for_text_action)
+    {}
+    else if (action == set_search_color)
+    {
+        QColorDialog colorDialog;
+        colorDialog.setOption(QColorDialog::ShowAlphaChannel);
+        colorDialog.setCurrentColor(search_color);
+        colorDialog.setParent(nullptr);
+        colorDialog.setWindowTitle("获取颜色");
+        if (colorDialog.exec() != QDialog::Accepted)
+        {
+            return;
+        }
+        search_color = colorDialog.currentColor();
+    }
+    else if (action == jump_to_line)
+    {}
+    else if (action == show_line_num_action)
+    {
+        show_line_num_action->setIconVisibleInMenu(!show_line_num_action->isIconVisibleInMenu());
+        updateLineNumberAreaWidth();
     }
 }
 QTextCharFormat Basic_TextEdit::Basic_format_Set(QTextCharFormat format)
@@ -980,7 +1631,15 @@ QTextCharFormat Basic_TextEdit::Basic_format_Set(QTextCharFormat format)
 }
 void Basic_TextEdit::self_copy()
 {
-    QTextImageFormat imageFormat = this->textCursor().charFormat().toImageFormat();
+    QTextImageFormat imageFormat;
+    if (extraSelections_list.isEmpty())
+    {
+        imageFormat = this->textCursor().charFormat().toImageFormat();
+    }
+    else
+    {
+        imageFormat = extraSelections_list.first().cursor.charFormat().toImageFormat();
+    }
     if (imageFormat.isValid())
     {
         QVariant imageData = document()->resource(QTextDocument::ImageResource, QUrl(imageFormat.name()));
@@ -993,7 +1652,15 @@ void Basic_TextEdit::self_copy()
 }
 void Basic_TextEdit::first_cut()
 {
-    QTextImageFormat imageFormat = this->textCursor().charFormat().toImageFormat();
+    QTextImageFormat imageFormat;
+    if (extraSelections_list.isEmpty())
+    {
+        imageFormat = this->textCursor().charFormat().toImageFormat();
+    }
+    else
+    {
+        imageFormat = extraSelections_list.first().cursor.charFormat().toImageFormat();
+    }
     if (imageFormat.isValid())
     {
         QVariant imageData = document()->resource(QTextDocument::ImageResource, QUrl(imageFormat.name()));
@@ -1043,7 +1710,15 @@ void Basic_TextEdit::insertFromMimeData(const QMimeData *source)
 }
 void Basic_TextEdit::insertImage(const QImage &image)
 {
-    QTextCursor cursor = textCursor();
+    QTextCursor cursor;
+    if (extraSelections_list.isEmpty())
+    {
+        cursor = textCursor();
+    }
+    else
+    {
+        cursor = extraSelections_list.first().cursor;
+    }
     QByteArray ba;
     QBuffer buffer(&ba);
     buffer.open(QIODevice::WriteOnly);
@@ -1157,6 +1832,8 @@ void Basic_TextEdit::set_icon(QString checked_icon_path)
     set_font_B->setIcon(QIcon(checked_icon_path));
     set_font_I->setIcon(QIcon(checked_icon_path));
     wheel_change_size_action->setIcon(QIcon(checked_icon_path));
+    insert_mode_action->setIcon(QIcon(checked_icon_path));
+    show_line_num_action->setIcon(QIcon(checked_icon_path));
 }
 void Basic_TextEdit::H_save(QSettings *settings)
 {
@@ -1167,6 +1844,10 @@ void Basic_TextEdit::H_save(QSettings *settings)
     settings->setValue("H_SValue", this->horizontalScrollBar()->value());
     settings->setValue("V_SValue", this->verticalScrollBar()->value());
     settings->setValue("html_text", this->toHtml());
+    settings->setValue("selection_color", selection_color.rgba());
+    settings->setValue("insert_mode_action", insert_mode_action->isIconVisibleInMenu());
+    settings->setValue("search_color", search_color.rgba());
+    settings->setValue("show_line_num_action", show_line_num_action->isIconVisibleInMenu());
 }
 void Basic_TextEdit::H_load(QSettings *settings)
 {
@@ -1182,4 +1863,24 @@ void Basic_TextEdit::H_load(QSettings *settings)
     this->setHtml(settings->value("html_text", "").toString());
     this->horizontalScrollBar()->setValue(settings->value("H_SValue", 0).toInt());
     this->verticalScrollBar()->setValue(settings->value("V_SValue", 0).toInt());
+    selection_color = QColor::fromRgba(settings->value("selection_color", QColor(0, 100, 255, 80).rgba()).toUInt());
+    bool insert_mode = settings->value("insert_mode_action", false).toBool();
+    insert_mode_action->setIconVisibleInMenu(center_paste);
+    setCursorWidth(insert_mode ? 8 : 2);
+    search_color = QColor::fromRgba(settings->value("search_color", QColor(255, 255, 0, 255).rgba()).toUInt());
+    show_line_num_action->setIconVisibleInMenu(settings->value("show_line_num_action", false).toBool());
+    updateLineNumberAreaWidth();
+}
+Basic_TextEdit::LineNumberArea::LineNumberArea(Basic_TextEdit *editor)
+    : QWidget(editor), textEdit(editor)
+{
+    setStyleSheet("background-color: rgba(240,240,240,100);border-radius: 10px 10px;");
+}
+QSize Basic_TextEdit::LineNumberArea::sizeHint() const
+{
+    return QSize(textEdit->lineNumberAreaWidth(), 0);
+}
+void Basic_TextEdit::LineNumberArea::paintEvent(QPaintEvent *event)
+{
+    textEdit->lineNumberAreaPaintEvent(event);
 }
