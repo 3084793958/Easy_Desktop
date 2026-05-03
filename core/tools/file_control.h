@@ -22,7 +22,7 @@ public:
     explicit File_MessageBox(QWidget *parent, QString filename, int *strategy, int *autoConflictStrategy);
     void Setup();
 private:
-    QCheckBox *checkAuto = new QCheckBox("记住我的选择，以后自动处理", this);
+    QCheckBox *checkAuto = new QCheckBox(tr("记住我的选择，以后自动处理"), this);
     QPushButton *buttonOverwrite = nullptr;
     QPushButton *buttonCoexist = nullptr;
     QPushButton *buttonCancel = nullptr;

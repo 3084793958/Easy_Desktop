@@ -5,6 +5,7 @@ void File_Tree::set_icon(QString checked_icon_path)
 {
     single_press_mode_action->setIcon(QIcon(checked_icon_path));
     show_hidden_action->setIcon(QIcon(checked_icon_path));
+    m_dialog->set_icon(checked_icon_path);
     Basic_Widget::set_icon(checked_icon_path);
 }
 File_Tree::File_Tree(QWidget *parent)
@@ -53,6 +54,11 @@ File_Tree::File_Tree(QWidget *parent)
     single_press_mode_action->setIconVisibleInMenu(false);
     tree_setting->addAction(single_press_mode_action);
     tree_setting->addAction(set_dir_path);
+    set_show_status_bar->setIcon(QIcon(":/base/this.svg"));
+    set_show_status_bar->setIconVisibleInMenu(false);
+    set_style_menu->addAction(set_show_status_bar);
+    set_style_menu->addAction(set_show_status_bar_text_color);
+    set_style_menu->addSeparator();
     set_style_menu->addAction(set_icon_size_action);
     set_style_menu->addAction(set_font_action);
     set_style_menu->addAction(set_select_radius);
@@ -61,6 +67,15 @@ File_Tree::File_Tree(QWidget *parent)
     tree_setting->addMenu(set_style_menu);
     menu->addMenu(tree_setting);
     basic_context(menu);
+
+    treeView->m_statusBar->setFixedHeight(24);
+    treeView->m_statusBar->hide();
+    treeView->updateStatusBar_style();
+    treeView->m_statusBar->setSizeGripEnabled(false);
+    treeView->statusLabel->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
+    treeView->m_statusBar->addPermanentWidget(treeView->statusLabel, 1);
+    treeView->updateStatusBar();
+
     //shortcut
     shortcut_copy_action->setShortcut(QKeySequence::Copy);
     shortcut_copy_action->setShortcutContext(Qt::WidgetWithChildrenShortcut);
@@ -184,7 +199,7 @@ File_Tree::File_Tree(QWidget *parent)
             QFileInfo to_file_info(root_path);
             if (!selectedList.isEmpty())
             {
-                for (int i = 0; i < selectedList.count(); i++)
+                for (int i = 0; i < selectedList.count(); i += 4)
                 {
                     QFileInfo file_info(model->filePath(proxyModel->mapToSource(selectedList[i])));
                     if (file_info.isDir())
@@ -317,24 +332,11 @@ File_Tree::File_Tree(QWidget *parent)
                     }
                     name_list_str += model->fileName(proxyModel->mapToSource(selectedList[i]));
                 }
-                QInputDialog dialog;
-                dialog.setParent(nullptr);
-                dialog.setWindowTitle("重命名");
-                dialog.setLabelText("获取新名称:(请勿添加\\n)");
-                dialog.setTextValue(name_list_str);
-                dialog.setInputMode(QInputDialog::TextInput);
-                dialog.setOption(QInputDialog::UsePlainTextEditForTextInput);
-                dialog.setFont(QFontDatabase::systemFont(QFontDatabase::FixedFont));
-                QPlainTextEdit *textEdit = dialog.findChild<QPlainTextEdit*>();
-                if (textEdit)
-                {
-                    textEdit->setTextInteractionFlags(Qt::TextSelectableByMouse | Qt::TextSelectableByKeyboard | Qt::TextEditable);
-                }
-                if (dialog.exec() != QDialog::Accepted)
+                if (m_dialog->Setup(tr("重命名"), tr("获取新名称:(请勿添加\\n)"), name_list_str) != QDialog::Accepted)
                 {
                     return;
                 }
-                QStringList name_list = name_list_str.split("\n");
+                QStringList name_list = m_dialog->getLines();
                 if (name_list.count() != selectedList.count() / 4)
                 {
                     return;
@@ -381,7 +383,7 @@ File_Tree::File_Tree(QWidget *parent)
                                                    "QScrollBar::handle:horizontal:hover{background:rgba(0,0,0,125);}"
                                                    "QScrollBar::add-line:horizontal,QScrollBar::sub-line:horizontal{width:0px;}"
                                                    "QScrollBar::add-page:horizontal,QScrollBar::sub-page:horizontal{background:none;}");
-    search_edit->setPlaceholderText("搜索");
+    search_edit->setPlaceholderText(tr("搜索"));
     search_img_action->setIcon(QIcon(":/base/search.svg"));
     search_edit->addAction(search_img_action, QLineEdit::LeadingPosition);
     search_del_action->setIcon(QIcon(":/base/del.svg"));
@@ -443,6 +445,14 @@ File_Tree::File_Tree(QWidget *parent)
         {
             Pressed();
         }
+    });
+    connect(this->treeView->selectionModel(), &QItemSelectionModel::selectionChanged, this, [=]
+    {
+        treeView->updateStatusBar();
+    });
+    connect(this->treeView->selectionModel(), &QItemSelectionModel::currentChanged, this, [=]
+    {
+        treeView->updateStatusBar();
     });
     resize(600, 300);
     show();
@@ -560,6 +570,7 @@ void File_Tree::set_tree_view_style()
 }
 File_Tree::~File_Tree()
 {
+    m_dialog->deleteLater();
     if (file_tree_list)
     {
         file_tree_list->removeOne(this);
@@ -759,24 +770,11 @@ void File_Tree::contextMenuEvent(QContextMenuEvent *event)
     {
         if (treeView->selectionModel())
         {
-            QInputDialog dialog;
-            dialog.setParent(nullptr);
-            dialog.setWindowTitle("新建文件");
-            dialog.setLabelText("获取文件名:(一行一文件)");
-            dialog.setTextValue("new_file");
-            dialog.setInputMode(QInputDialog::TextInput);
-            dialog.setOption(QInputDialog::UsePlainTextEditForTextInput);
-            dialog.setFont(QFontDatabase::systemFont(QFontDatabase::FixedFont));
-            QPlainTextEdit *textEdit = dialog.findChild<QPlainTextEdit*>();
-            if (textEdit)
-            {
-                textEdit->setTextInteractionFlags(Qt::TextSelectableByMouse | Qt::TextSelectableByKeyboard | Qt::TextEditable);
-            }
-            if (dialog.exec() != QDialog::Accepted)
+            if (m_dialog->Setup(tr("新建文件"), tr("获取文件名:(一行一文件)"), "new_file") != QDialog::Accepted)
             {
                 return;
             }
-            QStringList name_list = dialog.textValue().split("\n");
+            QStringList name_list = m_dialog->getLines();
             QModelIndexList selectedList = treeView->selectionModel()->selectedIndexes();
             QString tmp_file_top_path = "";
             if (!selectedList.isEmpty())
@@ -826,24 +824,11 @@ void File_Tree::contextMenuEvent(QContextMenuEvent *event)
     {
         if (treeView->selectionModel())
         {
-            QInputDialog dialog;
-            dialog.setParent(nullptr);
-            dialog.setWindowTitle("新建文件夹");
-            dialog.setLabelText("获取文件夹名:(一行一文件夹)");
-            dialog.setTextValue("new_folder");
-            dialog.setInputMode(QInputDialog::TextInput);
-            dialog.setOption(QInputDialog::UsePlainTextEditForTextInput);
-            dialog.setFont(QFontDatabase::systemFont(QFontDatabase::FixedFont));
-            QPlainTextEdit *textEdit = dialog.findChild<QPlainTextEdit*>();
-            if (textEdit)
-            {
-                textEdit->setTextInteractionFlags(Qt::TextSelectableByMouse | Qt::TextSelectableByKeyboard | Qt::TextEditable);
-            }
-            if (dialog.exec() != QDialog::Accepted)
+            if (m_dialog->Setup(tr("新建文件夹"), tr("获取文件夹名:(一行一文件夹)"), "new_folder") != QDialog::Accepted)
             {
                 return;
             }
-            QStringList name_list = dialog.textValue().split("\n");
+            QStringList name_list = m_dialog->getLines();
             QModelIndexList selectedList = treeView->selectionModel()->selectedIndexes();
             QString tmp_file_top_path = "";
             if (!selectedList.isEmpty())
@@ -997,7 +982,7 @@ void File_Tree::contextMenuEvent(QContextMenuEvent *event)
                     m_process_str = *compressor_process;
                 }
                 QString files_str = "";
-                for (int i = 0; i < selectedList.count(); i++)
+                for (int i = 0; i < selectedList.count(); i += 4)
                 {
                     files_str += " ";
                     files_str += File_Control::FilenameForBash(model->filePath(proxyModel->mapToSource(selectedList[i])));
@@ -1049,7 +1034,7 @@ void File_Tree::contextMenuEvent(QContextMenuEvent *event)
                     m_process_str = *compressor_zip_process;
                 }
                 QString files_str = "";
-                for (int i = 0; i < selectedList.count(); i++)
+                for (int i = 0; i < selectedList.count(); i += 4)
                 {
                     files_str += " ";
                     files_str += File_Control::FilenameForBash(model->filePath(proxyModel->mapToSource(selectedList[i])));
@@ -1101,7 +1086,7 @@ void File_Tree::contextMenuEvent(QContextMenuEvent *event)
                     m_process_str = *compressor_7z_process;
                 }
                 QString files_str = "";
-                for (int i = 0; i < selectedList.count(); i++)
+                for (int i = 0; i < selectedList.count(); i += 4)
                 {
                     files_str += " ";
                     files_str += File_Control::FilenameForBash(model->filePath(proxyModel->mapToSource(selectedList[i])));
@@ -1247,7 +1232,7 @@ void File_Tree::contextMenuEvent(QContextMenuEvent *event)
         QFileInfo to_file_info(root_path);
         if (!selectedList.isEmpty())
         {
-            for (int i = 0; i < selectedList.count(); i++)
+            for (int i = 0; i < selectedList.count(); i += 4)
             {
                 QFileInfo file_info(model->filePath(proxyModel->mapToSource(selectedList[i])));
                 if (file_info.isDir())
@@ -1296,25 +1281,11 @@ void File_Tree::contextMenuEvent(QContextMenuEvent *event)
                     }
                     name_list_str += model->fileName(proxyModel->mapToSource(selectedList[i]));
                 }
-                QInputDialog dialog;
-                dialog.setParent(nullptr);
-                dialog.setWindowTitle("重命名");
-                dialog.setLabelText("获取新名称:(请勿添加\\n)");
-                dialog.setTextValue(name_list_str);
-                dialog.setInputMode(QInputDialog::TextInput);
-                dialog.setOption(QInputDialog::UsePlainTextEditForTextInput);
-                dialog.setFont(QFontDatabase::systemFont(QFontDatabase::FixedFont));
-                QPlainTextEdit *textEdit = dialog.findChild<QPlainTextEdit*>();
-                if (textEdit)
-                {
-                    textEdit->setTextInteractionFlags(Qt::TextSelectableByMouse | Qt::TextSelectableByKeyboard | Qt::TextEditable);
-                }
-                if (dialog.exec() != QDialog::Accepted)
+                if (m_dialog->Setup(tr("重命名"), tr("获取新名称:(请勿添加\\n)"), name_list_str) != QDialog::Accepted)
                 {
                     return;
                 }
-                name_list_str = dialog.textValue();
-                QStringList name_list = name_list_str.split("\n");
+                QStringList name_list = m_dialog->getLines();
                 if (name_list.count() != selectedList.count() / 4)
                 {
                     return;
@@ -1395,7 +1366,7 @@ void File_Tree::contextMenuEvent(QContextMenuEvent *event)
     }
     else if (know_what == set_dir_path)
     {
-        QString filename = QFileDialog::getExistingDirectory(nullptr, "获取文件夹", root_path);
+        QString filename = QFileDialog::getExistingDirectory(nullptr, tr("获取文件夹"), root_path);
         My_X11_Libs::X11_Raise();
         if (filename.isEmpty() || filename.isNull())
         {
@@ -1411,7 +1382,7 @@ void File_Tree::contextMenuEvent(QContextMenuEvent *event)
     else if (know_what == set_icon_size_action)
     {
         bool ok = false;
-        int num = QInputDialog::getInt(nullptr, "获取数值", "大小:", treeView->indentation(), 10, 2147483647, 1, &ok);
+        int num = QInputDialog::getInt(nullptr, tr("获取数值"), tr("大小:"), treeView->indentation(), 10, 2147483647, 1, &ok);
         if (ok)
         {
             treeView->setIconSize(QSize(num, num));
@@ -1434,7 +1405,7 @@ void File_Tree::contextMenuEvent(QContextMenuEvent *event)
         colorDialog.setOption(QColorDialog::ShowAlphaChannel);
         colorDialog.setCurrentColor(hover_color);
         colorDialog.setParent(nullptr);
-        colorDialog.setWindowTitle("获取颜色");
+        colorDialog.setWindowTitle(tr("获取颜色"));
         if (colorDialog.exec() != QDialog::Accepted)
         {
             return;
@@ -1448,7 +1419,7 @@ void File_Tree::contextMenuEvent(QContextMenuEvent *event)
         colorDialog.setOption(QColorDialog::ShowAlphaChannel);
         colorDialog.setCurrentColor(select_color);
         colorDialog.setParent(nullptr);
-        colorDialog.setWindowTitle("获取颜色");
+        colorDialog.setWindowTitle(tr("获取颜色"));
         if (colorDialog.exec() != QDialog::Accepted)
         {
             return;
@@ -1459,12 +1430,32 @@ void File_Tree::contextMenuEvent(QContextMenuEvent *event)
     else if (know_what == set_select_radius)
     {
         bool ok = false;
-        int num = QInputDialog::getInt(nullptr, "获取数值", "大小:", radius, 0, 2147483647, 1, &ok);
+        int num = QInputDialog::getInt(nullptr, tr("获取数值"), tr("大小:"), radius, 0, 2147483647, 1, &ok);
         if (ok)
         {
             radius = num;
             set_tree_view_style();
         }
+    }
+    else if (know_what == set_show_status_bar)
+    {
+        set_show_status_bar->setIconVisibleInMenu(!set_show_status_bar->isIconVisibleInMenu());
+        treeView->m_statusBar->setVisible(set_show_status_bar->isIconVisibleInMenu());
+        treeView->updateStatusBar();
+    }
+    else if (know_what == set_show_status_bar_text_color)
+    {
+        QColorDialog colorDialog;
+        colorDialog.setOption(QColorDialog::ShowAlphaChannel);
+        colorDialog.setCurrentColor(treeView->statusBar_text_color);
+        colorDialog.setParent(nullptr);
+        colorDialog.setWindowTitle(tr("获取颜色"));
+        if (colorDialog.exec() != QDialog::Accepted)
+        {
+            return;
+        }
+        treeView->statusBar_text_color = colorDialog.currentColor();
+        treeView->updateStatusBar_style();
     }
     else
     {
@@ -1602,6 +1593,9 @@ void File_Tree::save(QSettings *settings)
     settings->setValue("single_press_mode", single_press_mode_action->isIconVisibleInMenu());
     settings->setValue("show_hidden_action", show_hidden_action->isIconVisibleInMenu());
     settings->setValue("treeview_radius", radius);
+    settings->setValue("set_show_status_bar", set_show_status_bar->isIconVisibleInMenu());
+    treeView->p_save(settings);
+    m_dialog->p_save(settings, "file_tree_dialog_");
 }
 void File_Tree::load(QSettings *settings)
 {
@@ -1625,6 +1619,10 @@ void File_Tree::load(QSettings *settings)
     proxyModel->setShowHidden(show_hidden_action->isIconVisibleInMenu());
     radius = settings->value("treeview_radius", 10).toInt();
     set_tree_view_style();
+    set_show_status_bar->setIconVisibleInMenu(settings->value("set_show_status_bar", false).toBool());
+    treeView->m_statusBar->setVisible(set_show_status_bar->isIconVisibleInMenu());
+    treeView->p_load(settings);
+    m_dialog->p_load(settings, "file_tree_dialog_");
 }
 QIcon My_Icon_Provider::icon(QFileIconProvider::IconType type) const
 {
@@ -1716,6 +1714,16 @@ My_Tree_View::My_Tree_View(QWidget *parent)
     setDragDropMode(QAbstractItemView::NoDragDrop);
     setMouseTracking(true);
     setTabletTracking(true);
+}
+void My_Tree_View::p_save(QSettings *settings)
+{
+    settings->setValue("statusBar_text_color", statusBar_text_color.rgba());
+}
+void My_Tree_View::p_load(QSettings *settings)
+{
+    statusBar_text_color = QColor::fromRgba(settings->value("statusBar_text_color", QColor(50, 50, 50, 255).rgba()).toUInt());
+    updateStatusBar_style();
+    updateStatusBar();
 }
 void My_Tree_View::dropEvent(QDropEvent *event)
 {
@@ -1852,6 +1860,99 @@ void My_Tree_View::wheelEvent(QWheelEvent *event)
         }
     }
     QTreeView::wheelEvent(event);
+}
+void My_Tree_View::updateStatusBar_style()
+{
+    m_statusBar->setStyleSheet(QString("QStatusBar{background:rgba(240,240,240,150); color:rgba(%1,%2,%3,%4); border-radius: 7px 7px;}").arg(statusBar_text_color.red()).arg(statusBar_text_color.green()).arg(statusBar_text_color.blue()).arg(statusBar_text_color.alpha()));
+    statusLabel->setStyleSheet(QString("QLabel{background:rgba(0,0,0,0); color:rgba(%1,%2,%3,%4);}").arg(statusBar_text_color.red()).arg(statusBar_text_color.green()).arg(statusBar_text_color.blue()).arg(statusBar_text_color.alpha()));
+}
+void My_Tree_View::updateStatusBar()
+{
+    QMargins margin = viewportMargins();
+    margin.setBottom(m_statusBar->height() * m_statusBar->isVisible());
+    this->setViewportMargins(margin);
+    if (!m_statusBar->isVisible() || !F_model || !proxyModel || !selectionModel())
+    {
+        return;
+    }
+    QModelIndexList selected = selectionModel()->selectedIndexes();
+    QSet<QModelIndex> uniqueRows;
+    for (const QModelIndex &idx : selected)
+    {
+        if (idx.column() == 0)
+        {
+            uniqueRows.insert(idx);
+        }
+    }
+    qint64 selectedFileCount = 0, selectedFileSize = 0;
+    qint64 selectedFolderCount = 0, selectedFolderChildrenCount = 0;
+    for (const QModelIndex &idx : uniqueRows)
+    {
+        QModelIndex srcIdx = proxyModel->mapToSource(idx);
+        QFileInfo info = F_model->fileInfo(srcIdx);
+        if (info.isFile())
+        {
+            ++selectedFileCount;
+            selectedFileSize += info.size();
+        }
+        else if (info.isDir())
+        {
+            ++selectedFolderCount;
+            selectedFolderChildrenCount += QDir(info.absoluteFilePath()).entryList(QDir::Files | QDir::Dirs | QDir::NoDotAndDotDot | QDir::Hidden).count();
+        }
+    }
+    QModelIndex rootProxy = rootIndex();
+    qint64 totalFileCount = 0, totalFileSize = 0;
+    qint64 totalFolderCount = 0;
+    recurseStat(rootProxy, totalFileCount, totalFileSize, totalFolderCount);
+    QString statusText = tr("选择: %1 个文件 (共 %2)  %3 个文件夹(包含 %4 项) |根文件夹: 总文件: %6 个 (共 %7)  总文件夹: %8 个")
+            .arg(selectedFileCount)
+            .arg(formatSize(selectedFileSize))
+            .arg(selectedFolderCount)
+            .arg(selectedFolderChildrenCount)
+            .arg(totalFileCount)
+            .arg(formatSize(totalFileSize))
+            .arg(totalFolderCount);
+    statusLabel->setText(statusText);
+}
+void My_Tree_View::resizeEvent(QResizeEvent *event)
+{
+    QTreeView::resizeEvent(event);
+    updateStatusBar();
+    if (m_statusBar->isVisible())
+    {
+        m_statusBar->setGeometry(0, height() - m_statusBar->height(), width(), m_statusBar->height());
+    }
+}
+QString My_Tree_View::formatSize(qint64 bytes)
+{
+    const char* units[] = {"B", "KiB", "MiB", "GiB"};
+    double value = bytes;
+    int unitIdx = 0;
+    while (unitIdx < 3 && value > 2048.0)
+    {
+        value /= 1024.0;
+        ++unitIdx;
+    }
+    return QString("%1 %2").arg(std::round(value * 100) / 100).arg(units[unitIdx]);
+}
+void My_Tree_View::recurseStat(const QModelIndex proxyParent, qint64 &outFileCount, qint64 &outFileSize, qint64 &outFolderCount)
+{
+    QDir root_dir(F_model->filePath(proxyModel->mapToSource(proxyParent)));
+    auto file_list = root_dir.entryList(QDir::Files | QDir::Dirs | QDir::NoDotAndDotDot | QDir::Hidden);
+    for (int r = 0; r < file_list.count(); ++r)
+    {
+        QFileInfo info(file_list[r]);
+        if (info.isFile())
+        {
+            ++outFileCount;
+            outFileSize += info.size();
+        }
+        else
+        {
+            ++outFolderCount;
+        }
+    }
 }
 My_TreeView_Delegate::My_TreeView_Delegate(QObject *parent, QColor *m_hover_color, QColor *m_select_color, int *m_radius, QModelIndex *m_proposed_action_index)
     :QStyledItemDelegate(parent)
@@ -2012,4 +2113,8 @@ void My_ProxyModel::sort(int column, Qt::SortOrder order)
         QSortFilterProxyModel::sort(column, order);
     }
     invalidate();
+}
+void File_Tree::update_style(QColor theme_color, QColor theme_background_color, QColor theme_text_color, QColor select_text_color, QColor disabled_text_color, QString checked_icon_path)
+{
+    m_dialog->update_style(theme_color, theme_background_color, theme_text_color, select_text_color, disabled_text_color, checked_icon_path);
 }

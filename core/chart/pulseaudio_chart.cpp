@@ -336,14 +336,14 @@ void PulseAudio_Chart::pa_update()
     if (use_rms)
     {
         axisY->setRange(-1, 1);
-        series->setName("左声道RMS");
-        sec_series->setName("右声道RMS");
+        series->setName(tr("左声道RMS"));
+        sec_series->setName(tr("右声道RMS"));
     }
     else
     {
         axisY->setRange(-120, 120);
-        series->setName("左声道dB");
-        sec_series->setName("右声道dB");
+        series->setName(tr("左声道dB"));
+        sec_series->setName(tr("右声道dB"));
     }
     axisX->setRange(0, left_data.size());
     update_data_size();
@@ -453,7 +453,7 @@ void PulseAudio_Chart::contextMenuEvent(QContextMenuEvent *event)
     else if (know_what == set_update_time)
     {
         bool ok = false;
-        int time = QInputDialog::getInt(nullptr, "获取数值", "侦测间隔(ms)", update_time, 1, 2147483647, 100, &ok);
+        int time = QInputDialog::getInt(nullptr, tr("获取数值"), tr("侦测间隔(ms)"), update_time, 1, 2147483647, 100, &ok);
         if (!ok)
         {
             return;
@@ -463,7 +463,7 @@ void PulseAudio_Chart::contextMenuEvent(QContextMenuEvent *event)
     else if (know_what == set_vector_long)
     {
         bool ok = false;
-        int time = QInputDialog::getInt(nullptr, "获取数值", "数据点数量", vector_long, 1, 2147483647, 10, &ok);
+        int time = QInputDialog::getInt(nullptr, tr("获取数值"), tr("数据点数量"), vector_long, 1, 2147483647, 10, &ok);
         if (!ok)
         {
             return;
@@ -499,7 +499,7 @@ void PulseAudio_Chart::contextMenuEvent(QContextMenuEvent *event)
     else if (know_what == set_max_can_process)
     {
         bool ok = false;
-        int time = QInputDialog::getInt(nullptr, "获取数值", "数据点数量", pa_can_process, 1, 1024, 1, &ok);
+        int time = QInputDialog::getInt(nullptr, tr("获取数值"), tr("数据点数量"), pa_can_process, 1, 1024, 1, &ok);
         if (!ok)
         {
             return;
@@ -521,23 +521,23 @@ void PulseAudio_Chart::contextMenuEvent(QContextMenuEvent *event)
     }
     else if (know_what == set_line_color)
     {
-        QMessageBox::information(nullptr, "设置左声道颜色", "设置左声道颜色");
+        QMessageBox::information(nullptr, tr("设置左声道颜色"), tr("设置左声道颜色"));
         QColorDialog colorDialog;
         colorDialog.setOption(QColorDialog::ShowAlphaChannel);
         colorDialog.setCurrentColor(line1_color);
         colorDialog.setParent(nullptr);
-        colorDialog.setWindowTitle("获取颜色");
+        colorDialog.setWindowTitle(tr("获取颜色"));
         if (colorDialog.exec() != QDialog::Accepted)
         {
             return;
         }
         line1_color = colorDialog.currentColor();
         series->setColor(line1_color);
-        QMessageBox::information(nullptr, "设置右声道颜色", "设置右声道颜色");
+        QMessageBox::information(nullptr, tr("设置右声道颜色"), tr("设置右声道颜色"));
         colorDialog.setOption(QColorDialog::ShowAlphaChannel);
         colorDialog.setCurrentColor(line2_color);
         colorDialog.setParent(nullptr);
-        colorDialog.setWindowTitle("获取颜色");
+        colorDialog.setWindowTitle(tr("获取颜色"));
         if (colorDialog.exec() != QDialog::Accepted)
         {
             return;

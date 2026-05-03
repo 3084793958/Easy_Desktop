@@ -436,7 +436,7 @@ void Plugin_Root::load_plugin(QString filepath)
     plugin_loader->setFileName(filepath);
     if (!plugin_loader->load())
     {
-        qDebug() << "插件导入失败:" << plugin_loader->errorString();
+        qDebug() << tr("插件导入失败:") << plugin_loader->errorString();
         return;
     }
     QObject *pluginInstance = plugin_loader->instance();
@@ -897,13 +897,13 @@ void Plugin_Widget::context_menu_event(QAction *know_what)
     if (know_what == set_distance_action)
     {
         bool ok = false;
-        int new_width = QInputDialog::getInt(nullptr, "获取数值", "宽度间距:", distance_width, 0, 2147483647, 1, &ok);
+        int new_width = QInputDialog::getInt(nullptr, tr("获取数值"), tr("宽度间距:"), distance_width, 0, 2147483647, 1, &ok);
         if (!ok)
         {
             return;
         }
         ok = false;
-        int new_height = QInputDialog::getInt(nullptr, "获取数值", "高度间距:", distance_height, 0, 2147483647, 1, &ok);
+        int new_height = QInputDialog::getInt(nullptr, tr("获取数值"), tr("高度间距:"), distance_height, 0, 2147483647, 1, &ok);
         if (!ok)
         {
             return;
@@ -915,13 +915,13 @@ void Plugin_Widget::context_menu_event(QAction *know_what)
     else if (know_what == set_delta_action)
     {
         bool ok = false;
-        int new_x = QInputDialog::getInt(nullptr, "获取数值", "X偏移:", delta_x, -2147483647, 2147483647, 1, &ok);
+        int new_x = QInputDialog::getInt(nullptr, tr("获取数值"), tr("X偏移:"), delta_x, -2147483647, 2147483647, 1, &ok);
         if (!ok)
         {
             return;
         }
         ok = false;
-        int new_y = QInputDialog::getInt(nullptr, "获取数值", "Y偏移:", delta_y, -2147483647, 2147483647, 1, &ok);
+        int new_y = QInputDialog::getInt(nullptr, tr("获取数值"), tr("Y偏移:"), delta_y, -2147483647, 2147483647, 1, &ok);
         if (!ok)
         {
             return;
@@ -1269,7 +1269,7 @@ void Plugin_Item_Widget::context_menu_event(QAction *know_what)
     if (!know_what) return;
     if (know_what == set_plugin_path_action)
     {
-        QString plugin_filename = QFileDialog::getOpenFileName(nullptr, "获取插件", QDir::homePath(), "插件(*.so);;所有文件(*.*)");
+        QString plugin_filename = QFileDialog::getOpenFileName(nullptr, tr("获取插件"), QDir::homePath(), tr("插件") + "(*.so);;" + tr("所有文件") + "(*.*)");
         emit Call_X11_Raise();
         if (!plugin_filename.isEmpty())
         {
@@ -1362,13 +1362,13 @@ void Plugin_Item_Widget::context_menu_event(QAction *know_what)
     else if (know_what == set_distance_action)
     {
         bool ok = false;
-        int new_width = QInputDialog::getInt(nullptr, "获取数值", "宽度间距:", distance_width, 0, 2147483647, 1, &ok);
+        int new_width = QInputDialog::getInt(nullptr, tr("获取数值"), tr("宽度间距:"), distance_width, 0, 2147483647, 1, &ok);
         if (!ok)
         {
             return;
         }
         ok = false;
-        int new_height = QInputDialog::getInt(nullptr, "获取数值", "高度间距:", distance_height, 0, 2147483647, 1, &ok);
+        int new_height = QInputDialog::getInt(nullptr, tr("获取数值"), tr("高度间距:"), distance_height, 0, 2147483647, 1, &ok);
         if (!ok)
         {
             return;
@@ -1380,13 +1380,13 @@ void Plugin_Item_Widget::context_menu_event(QAction *know_what)
     else if (know_what == set_delta_action)
     {
         bool ok = false;
-        int new_x = QInputDialog::getInt(nullptr, "获取数值", "X偏移:", delta_x, -2147483647, 2147483647, 1, &ok);
+        int new_x = QInputDialog::getInt(nullptr, tr("获取数值"), tr("X偏移:"), delta_x, -2147483647, 2147483647, 1, &ok);
         if (!ok)
         {
             return;
         }
         ok = false;
-        int new_y = QInputDialog::getInt(nullptr, "获取数值", "Y偏移:", delta_y, -2147483647, 2147483647, 1, &ok);
+        int new_y = QInputDialog::getInt(nullptr, tr("获取数值"), tr("Y偏移:"), delta_y, -2147483647, 2147483647, 1, &ok);
         if (!ok)
         {
             return;

@@ -32,6 +32,7 @@
 int main(int argc, char* argv[])
 {
     QString load_path = QDir::homePath() + "/.local/lib/easy_desktop/config.ini";
+    QString translation_path = "";
     int workspace = 0;
     int dbus_id = 0;
     bool send_dbus = false;
@@ -45,6 +46,10 @@ int main(int argc, char* argv[])
         if ((strcmp(argv[i], "-config") == 0 || strcmp(argv[i], "-C") == 0) && i + 1 < argc)
         {
             load_path = argv[++i];
+        }
+        else if ((strcmp(argv[i], "-translation") == 0 || strcmp(argv[i], "-T") == 0) && i + 1 < argc)
+        {
+            translation_path = argv[++i];
         }
         else if ((strcmp(argv[i], "-workspace") == 0 || strcmp(argv[i], "-WS") == 0) && i + 1 < argc)
         {
@@ -96,6 +101,7 @@ int main(int argc, char* argv[])
             std::cout << "示例: ./Easy_Desktop -G 0 0 1440 900" << std::endl;
             std::cout << "选项:" << std::endl;
             std::cout << "  -config, -C <路径>                          指定配置文件路径" << std::endl;
+            std::cout << "  -translation, -T <路径>                     设置自定义翻译文件路径" << std::endl;
             std::cout << "  -workspace, -WS <索引号>                    设置工作空间索引 (0 表示任意空间)" << std::endl;
             std::cout << "  -dbus_id, -D_I <ID>                        设置 dbus_id 号" << std::endl;
             std::cout << "  -always_refresh, -A_R <布尔值>              是否持续刷新空间结构 (true/false)" << std::endl;
@@ -169,6 +175,22 @@ int main(int argc, char* argv[])
     if (qtTranslator.load("qtbase_zh_CN.qm",":/base"))
     {
         app.installTranslator(&qtTranslator);
+    }
+    if (!translation_path.isEmpty())
+    {
+        QFileInfo trans_file(translation_path);
+        if (trans_file.exists() && trans_file.isFile())
+        {
+            QTranslator *customTranslator = new QTranslator(&app);
+            if (customTranslator->load(translation_path))
+            {
+                app.installTranslator(customTranslator);
+            }
+            else
+            {
+                delete customTranslator;
+            }
+        }
     }
     All_Control *all_control = new All_Control(nullptr, load_path, workspace, dbus_id, always_refresh_screen_size, screen_geometry);
     std::cout<<"Easy_Desktop: "<<">(O^<)<~GET!"<<std::endl;

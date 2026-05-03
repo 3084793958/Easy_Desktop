@@ -6,11 +6,11 @@ Setting_Widget::Setting_Widget(QWidget *parent)
 {
     this->setAcceptDrops(true);
     this->setMinimumSize(600, 300);
-    setWindowTitle("壁纸设置");
+    setWindowTitle(tr("壁纸设置"));
     resize(600,400);
     table_widget->resize(600,300);
     table_widget->setColumnCount(15);
-    table_widget->setHorizontalHeaderLabels({"ID","名称","显示方式","路径","缩放方式","居中","鼠标效果","鼠标效果宽度系数","鼠标效果高度系数","X轴偏移量","Y轴偏移量","抗锯齿","鼠标控制类型","自定宽","自定高"});
+    table_widget->setHorizontalHeaderLabels({tr("ID"),tr("名称"),tr("显示方式"),tr("路径"),tr("缩放方式"),tr("居中"),tr("鼠标效果"),tr("鼠标效果宽度系数"),tr("鼠标效果高度系数"),tr("X轴偏移量"),tr("Y轴偏移量"),tr("抗锯齿"),tr("鼠标控制类型"),tr("自定宽"),tr("自定高")});
     table_widget->setAlternatingRowColors(true);
     update_button->move(540,360);
     connect(update_button, &QPushButton::pressed, this, &Setting_Widget::List_Update);
@@ -179,7 +179,7 @@ Setting_Widget::Setting_Widget(QWidget *parent)
                            );
         }
         bool get_ok = false;
-        uint delete_id = static_cast<uint>(QInputDialog::getInt(this,"删除","请输入删除id(重复id删除第一个):",
+        uint delete_id = static_cast<uint>(QInputDialog::getInt(this,tr("删除"),tr("请输入删除id(重复id删除第一个):"),
                                                                 static_cast<int>(path_list[table_widget->currentRow()].id),0,2147483647,1,
                                                                 &get_ok));
         if (!get_ok)
@@ -225,7 +225,7 @@ Setting_Widget::Setting_Widget(QWidget *parent)
         {
             return;
         }
-        QString file_name = QFileDialog::getOpenFileName(nullptr, "获取文件", QDir::homePath(), "所有文件(*.*)");
+        QString file_name = QFileDialog::getOpenFileName(nullptr, tr("获取文件"), QDir::homePath(), tr("所有文件") + "(*.*)");
         My_X11_Libs::X11_Raise();//没办法,要跟dde-desktop争夺[桌面显示权]
         path_box_list[index]->setText(file_name);
     });
@@ -233,7 +233,7 @@ Setting_Widget::Setting_Widget(QWidget *parent)
     load_video_button->move(150, 320);
     connect(load_img_button, &QPushButton::released, this, [=]
     {
-        QStringList filenames = QFileDialog::getOpenFileNames(nullptr, "获取文件", QDir::homePath(), "图像文件(*.png *.jpg *.jpeg *.svg *.gif *.bmp);;所有文件(*.*)");
+        QStringList filenames = QFileDialog::getOpenFileNames(nullptr, tr("获取文件"), QDir::homePath(), tr("图像文件") + "(*.png *.jpg *.jpeg *.svg *.gif *.bmp);;" + tr("所有文件") + "(*.*)");
         My_X11_Libs::X11_Raise();
         path_list.clear();
         for (int i = 0; i < id_box_list.count(); i++)
@@ -272,7 +272,7 @@ Setting_Widget::Setting_Widget(QWidget *parent)
     });
     connect(load_video_button, &QPushButton::released, this, [=]
     {
-        QStringList filenames = QFileDialog::getOpenFileNames(nullptr, "获取文件", QDir::homePath(), "视频文件(*.*);;所有文件(*.*)");
+        QStringList filenames = QFileDialog::getOpenFileNames(nullptr, tr("获取文件"), QDir::homePath(), tr("视频文件") + "(*.*);;" + tr("所有文件") + "(*.*)");
         My_X11_Libs::X11_Raise();
         path_list.clear();
         for (int i = 0; i < id_box_list.count(); i++)
@@ -465,13 +465,13 @@ void Setting_Widget::private_update()
             QSpinBox *B15 = new QSpinBox();
             B1->setRange(0, 2147483647);
             B1->setValue(static_cast<int>(path_list[basic_count + i].id));
-            B2->setPlaceholderText("输入名称:");
+            B2->setPlaceholderText(tr("输入名称:"));
             B2->setText(path_list[basic_count + i].name);
-            B3->addItems({"图像","视频"});
+            B3->addItems({tr("图像"),tr("视频")});
             B3->setCurrentIndex(!path_list[basic_count + i].is_image);
-            B4->setPlaceholderText("输入路径:");
+            B4->setPlaceholderText(tr("输入路径:"));
             B4->setText(path_list[basic_count + i].path);
-            B5->addItems({"不缩放","全缩放","宽基准","高基准","短基准","长基准","饱满","自定义宽高"});
+            B5->addItems({tr("不缩放"),tr("全缩放"),tr("宽基准"),tr("高基准"),tr("短基准"),tr("长基准"),tr("饱满"),tr("自定义宽高")});
             int index;
             switch (path_list[basic_count + i].scale_type)
             {
@@ -517,9 +517,9 @@ void Setting_Widget::private_update()
             }
             }
             B5->setCurrentIndex(index);
-            B6->addItems({"是","否"});
+            B6->addItems({tr("是"),tr("否")});
             B6->setCurrentIndex(!path_list[basic_count + i].center);
-            B7->addItems({"是","否"});
+            B7->addItems({tr("是"),tr("否")});
             B7->setCurrentIndex(!path_list[basic_count + i].mouse_effect);
             B8->setRange(-1024.0, 1024.0);
             B8->setValue(path_list[basic_count + i].k_mouse_move_width);
@@ -529,9 +529,9 @@ void Setting_Widget::private_update()
             B10->setValue(path_list[basic_count + i].delta_x);
             B11->setRange(-2147483647, 2147483647);
             B11->setValue(path_list[basic_count + i].delta_y);
-            B12->addItems({"是","否"});
+            B12->addItems({tr("是"),tr("否")});
             B12->setCurrentIndex(!path_list[basic_count + i].on_Antialiasing);
-            B13->addItems({"跟随桌面", "跟随壁纸"});
+            B13->addItems({tr("跟随桌面"), tr("跟随壁纸")});
             index = 0;
             switch (path_list[basic_count + i].mouse_control_type)
             {

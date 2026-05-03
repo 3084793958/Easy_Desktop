@@ -56,12 +56,12 @@ void RAM_Chart::timeout_slot()
     if (channel == 0)
     {
         m_data = ram_data_vec;
-        series->setName(QString("RAM:%1").arg(ram_data_str));
+        series->setName(tr("RAM") + QString(":%1").arg(ram_data_str));
     }
     else
     {
         m_data = swap_data_vec;
-        series->setName(QString("SWap:%1").arg(swap_data_str));
+        series->setName(tr("SWap") + QString(":%1").arg(swap_data_str));
     }
     update_data();
 }
@@ -169,7 +169,7 @@ void RAM_Chart::contextMenuEvent(QContextMenuEvent *event)
     else if (know_what == set_update_time)
     {
         bool ok = false;
-        int time = QInputDialog::getInt(nullptr, "获取数值", "侦测间隔(ms)", update_time, 1, 2147483647, 100, &ok);
+        int time = QInputDialog::getInt(nullptr, tr("获取数值"), tr("侦测间隔(ms)"), update_time, 1, 2147483647, 100, &ok);
         if (!ok)
         {
             return;
@@ -180,7 +180,7 @@ void RAM_Chart::contextMenuEvent(QContextMenuEvent *event)
     else if (know_what == set_vector_long)
     {
         bool ok = false;
-        int time = QInputDialog::getInt(nullptr, "获取数值", "数据点数量", vector_long, 1, 2147483647, 10, &ok);
+        int time = QInputDialog::getInt(nullptr, tr("获取数值"), tr("数据点数量"), vector_long, 1, 2147483647, 10, &ok);
         if (!ok)
         {
             return;
@@ -217,7 +217,7 @@ void RAM_Chart::contextMenuEvent(QContextMenuEvent *event)
         colorDialog.setOption(QColorDialog::ShowAlphaChannel);
         colorDialog.setCurrentColor(line_color);
         colorDialog.setParent(nullptr);
-        colorDialog.setWindowTitle("获取颜色");
+        colorDialog.setWindowTitle(tr("获取颜色"));
         if (colorDialog.exec() != QDialog::Accepted)
         {
             return;

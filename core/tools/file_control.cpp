@@ -176,12 +176,12 @@ File_MessageBox::File_MessageBox(QWidget *parent, QString filename, int *strateg
     ,m_strategy(strategy)
     ,m_autoConflictStrategy(autoConflictStrategy)
 {
-    this->setWindowTitle("该文件已存在");
-    this->setText(QString("\"%1\" 已存在").arg(filename));
-    this->setInformativeText("选择操作:");
-    buttonOverwrite = this->addButton("覆盖", QMessageBox::AcceptRole);
-    buttonCoexist = this->addButton("共存", QMessageBox::ActionRole);
-    buttonCancel = this->addButton("取消", QMessageBox::RejectRole);
+    this->setWindowTitle(tr("该文件已存在"));
+    this->setText(QString("\"%1\"").arg(filename) + tr("已存在"));
+    this->setInformativeText(tr("选择操作:"));
+    buttonOverwrite = this->addButton(tr("覆盖"), QMessageBox::AcceptRole);
+    buttonCoexist = this->addButton(tr("共存"), QMessageBox::ActionRole);
+    buttonCancel = this->addButton(tr("取消"), QMessageBox::RejectRole);
     this->setCheckBox(checkAuto);
 }
 void File_MessageBox::Setup()

@@ -60,7 +60,7 @@ void Media_WidgetAction::qslider_doing(int value)
     {
         return;
     }
-    setvolume->setText(QString("设置音量\n%1%").arg(value));
+    setvolume->setText(tr("设置音量\n") + QString("%1%").arg(value));
     emit change_signals_V(value);
 }
 void Media_WidgetAction::music_value_speed(int value)
@@ -69,21 +69,21 @@ void Media_WidgetAction::music_value_speed(int value)
     {
         return;
     }
-    setmusic_speed->setText(QString("速度\n%1%").arg(value));
+    setmusic_speed->setText(tr("速度\n") + QString("%1%").arg(value));
     emit change_signals_S(value);
 }
 void Media_WidgetAction::set_value(int m_volume, int m_speed)
 {
     updating = true;
-    setvolume->setText(QString("设置音量\n%1%").arg(m_volume));
+    setvolume->setText(tr("设置音量\n") + QString("%1%").arg(m_volume));
     set_volume_main->setValue(m_volume);
-    setmusic_speed->setText(QString("速度\n%1%").arg(m_speed));
+    setmusic_speed->setText(tr("速度\n") + QString("%1%").arg(m_speed));
     set_music_speed_main->setValue(m_speed);
     updating = false;
 }
 void Media_WidgetAction::set_second(int value, QString text)
 {
-    setmusic_time->setText(QString("进度条\n%1").arg(text));
+    setmusic_time->setText(tr("进度条\n") + QString("%1").arg(text));
     if (!position_changing)
     {
         set_music_time_main->setValue(value);

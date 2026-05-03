@@ -68,11 +68,11 @@ void CPU_Chart::timeout_slot()
         double res = std::round(m_data.back() * 100) / 100;
         if (channel != 0)
         {
-            series->setName(QString("CPU%1:%2%").arg(channel - 1).arg(res));
+            series->setName(tr("CPU") + QString("%1:%2%").arg(channel - 1).arg(res));
         }
         else
         {
-            series->setName(QString("CPU:%1%").arg(res));
+            series->setName(tr("CPU") + QString(":%1%").arg(res));
         }
     }
     update_data();
@@ -172,7 +172,7 @@ void CPU_Chart::contextMenuEvent(QContextMenuEvent *event)
     else if (know_what == set_update_time)
     {
         bool ok = false;
-        int time = QInputDialog::getInt(nullptr, "获取数值", "侦测间隔(ms)", update_time, 1, 2147483647, 100, &ok);
+        int time = QInputDialog::getInt(nullptr, tr("获取数值"), tr("侦测间隔(ms)"), update_time, 1, 2147483647, 100, &ok);
         if (!ok)
         {
             return;
@@ -183,7 +183,7 @@ void CPU_Chart::contextMenuEvent(QContextMenuEvent *event)
     else if (know_what == set_vector_long)
     {
         bool ok = false;
-        int time = QInputDialog::getInt(nullptr, "获取数值", "数据点数量", vector_long, 1, 2147483647, 10, &ok);
+        int time = QInputDialog::getInt(nullptr, tr("获取数值"), tr("数据点数量"), vector_long, 1, 2147483647, 10, &ok);
         if (!ok)
         {
             return;
@@ -194,7 +194,7 @@ void CPU_Chart::contextMenuEvent(QContextMenuEvent *event)
     else if (know_what == set_channel)
     {
         bool ok = false;
-        int time = QInputDialog::getInt(nullptr, "获取数值", "侦测频道", channel, 0, 2147483647, 1, &ok);
+        int time = QInputDialog::getInt(nullptr, tr("获取数值"), tr("侦测频道"), channel, 0, 2147483647, 1, &ok);
         if (!ok)
         {
             return;
@@ -221,7 +221,7 @@ void CPU_Chart::contextMenuEvent(QContextMenuEvent *event)
         colorDialog.setOption(QColorDialog::ShowAlphaChannel);
         colorDialog.setCurrentColor(line_color);
         colorDialog.setParent(nullptr);
-        colorDialog.setWindowTitle("获取颜色");
+        colorDialog.setWindowTitle(tr("获取颜色"));
         if (colorDialog.exec() != QDialog::Accepted)
         {
             return;

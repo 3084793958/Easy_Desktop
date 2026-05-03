@@ -95,7 +95,7 @@ void My_Label::contextMenuEvent(QContextMenuEvent *event)
     QAction *know_what = menu->exec(mapToGlobal(event->pos()));
     if (know_what == set_image)
     {
-        QString filename = QFileDialog::getOpenFileName(nullptr, "获取图像", QDir::homePath(), "图像文件(*.png *.jpg *.jpeg *.svg *.gif *.bmp);;所有文件(*.*)");
+        QString filename = QFileDialog::getOpenFileName(nullptr, tr("获取图像"), QDir::homePath(), tr("图像文件") + "(*.png *.jpg *.jpeg *.svg *.gif *.bmp);;" + tr("所有文件") + "(*.*)");
         My_X11_Libs::X11_Raise();
         if (filename.isEmpty())
         {
@@ -124,8 +124,8 @@ void My_Label::contextMenuEvent(QContextMenuEvent *event)
     {
         QInputDialog dialog;
         dialog.setParent(nullptr);
-        dialog.setWindowTitle("获取文字");
-        dialog.setLabelText("输入文字");
+        dialog.setWindowTitle(tr("获取文字"));
+        dialog.setLabelText(tr("输入文字"));
         dialog.setTextValue(this->main_label->text());
         dialog.setInputMode(QInputDialog::TextInput);
         dialog.setOption(QInputDialog::UsePlainTextEditForTextInput);
@@ -159,7 +159,7 @@ void My_Label::contextMenuEvent(QContextMenuEvent *event)
         colorDialog.setOption(QColorDialog::ShowAlphaChannel);
         colorDialog.setCurrentColor(this->main_label->text_color);
         colorDialog.setParent(nullptr);
-        colorDialog.setWindowTitle("获取颜色");
+        colorDialog.setWindowTitle(tr("获取颜色"));
         if (colorDialog.exec() != QDialog::Accepted)
         {
             return;
@@ -182,7 +182,7 @@ void My_Label::contextMenuEvent(QContextMenuEvent *event)
     else if (know_what == set_out_line_width)
     {
         bool ok = false;
-        int out_line_width = QInputDialog::getInt(nullptr, "获取数值", "描边大小", this->main_label->outlineWidth, 1, 2147483647, 1, &ok);
+        int out_line_width = QInputDialog::getInt(nullptr, tr("获取数值"), tr("描边大小"), this->main_label->outlineWidth, 1, 2147483647, 1, &ok);
         if (!ok)
         {
             return;
@@ -209,25 +209,25 @@ void My_Label::contextMenuEvent(QContextMenuEvent *event)
         QString m_dbus_interface = "";
         QString m_dbus_name = "";
         bool ok = false;
-        m_dbus_service = QInputDialog::getText(nullptr, "获取service", "获取service(dbus服务名)", QLineEdit::Normal, dbus_service, &ok);
+        m_dbus_service = QInputDialog::getText(nullptr, tr("获取service"), tr("获取service(dbus服务名)"), QLineEdit::Normal, dbus_service, &ok);
         if (!ok)
         {
             return;
         }
         ok = false;
-        m_dbus_path = QInputDialog::getText(nullptr, "获取path", "获取path(dbus路径)", QLineEdit::Normal, dbus_path, &ok);
+        m_dbus_path = QInputDialog::getText(nullptr, tr("获取path"), tr("获取path(dbus路径)"), QLineEdit::Normal, dbus_path, &ok);
         if (!ok)
         {
             return;
         }
         ok = false;
-        m_dbus_interface = QInputDialog::getText(nullptr, "获取interface", "获取interface(dbus接口)", QLineEdit::Normal, dbus_interface, &ok);
+        m_dbus_interface = QInputDialog::getText(nullptr, tr("获取interface"), tr("获取interface(dbus接口)"), QLineEdit::Normal, dbus_interface, &ok);
         if (!ok)
         {
             return;
         }
         ok = false;
-        m_dbus_name = QInputDialog::getText(nullptr, "获取name", "获取name(dbus信号名)", QLineEdit::Normal, dbus_name, &ok);
+        m_dbus_name = QInputDialog::getText(nullptr, tr("获取name"), tr("获取name(dbus信号名)"), QLineEdit::Normal, dbus_name, &ok);
         if (!ok)
         {
             return;

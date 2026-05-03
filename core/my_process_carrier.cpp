@@ -140,61 +140,62 @@ void My_Process_Carrier::context_solution(QAction *know_what, QPoint pos)
         QStringList filenames;
         if (know_what == load_files)
         {
-            filenames = QFileDialog::getOpenFileNames(nullptr, "获取文件", QDir::homePath());
+            filenames = QFileDialog::getOpenFileNames(nullptr, tr("获取文件"), QDir::homePath());
         }
         else
         {
-            filenames << QFileDialog::getExistingDirectory(nullptr, "获取文件夹", QDir::homePath());
+            filenames << QFileDialog::getExistingDirectory(nullptr, tr("获取文件夹"), QDir::homePath());
         }
         My_X11_Libs::X11_Raise();
         int x = pos.x(), y = pos.y(), width = 90, height = 90, delta_x = 5, delta_y = 5;
         bool ok = false;
-        x = QInputDialog::getInt(nullptr, "获取数值", "位置坐标:(x,y),宽度:width,高度:height,横向间隔:delta_x,纵向间隔:delta_y\n设置x", x, -2147483647, 2147483647, 1, &ok);
+        x = QInputDialog::getInt(nullptr, tr("获取数值"), tr("位置坐标:(x,y),宽度:width,高度:height,横向间隔:delta_x,纵向间隔:delta_y\n设置x"), x, -2147483647, 2147483647, 1, &ok);
         if (!ok)
         {
             return;
         }
         ok = false;
-        y = QInputDialog::getInt(nullptr, "获取数值", QString("位置坐标:(%1,y),宽度:width,高度:height,横向间隔:delta_x,纵向间隔:delta_y\n设置y").arg(x), y, -2147483647, 2147483647, 1, &ok);
+        y = QInputDialog::getInt(nullptr, tr("获取数值"), tr("位置坐标:(") + QString::number(x) + tr(",y),宽度:width,高度:height,横向间隔:delta_x,纵向间隔:delta_y\n设置y"), y, -2147483647, 2147483647, 1, &ok);
         if (!ok)
         {
             return;
         }
         ok = false;
-        width = QInputDialog::getInt(nullptr, "获取数值", QString("位置坐标:(%1,%2),宽度:width,高度:height,横向间隔:delta_x,纵向间隔:delta_y\n设置width").arg(x).arg(y), width, 0, 2147483647, 1, &ok);
+        width = QInputDialog::getInt(nullptr, tr("获取数值"), tr("位置坐标:(") + QString::number(x) + tr(",") + QString::number(y) + tr("),宽度:width,高度:height,横向间隔:delta_x,纵向间隔:delta_y\n设置width"), width, 0, 2147483647, 1, &ok);
         if (!ok)
         {
             return;
         }
         ok = false;
-        height = QInputDialog::getInt(nullptr, "获取数值", QString("位置坐标:(%1,%2),宽度:%3,高度:height,横向间隔:delta_x,纵向间隔:delta_y\n设置height").arg(x).arg(y).arg(width), height, 0, 2147483647, 1, &ok);
+        height = QInputDialog::getInt(nullptr, tr("获取数值"), tr("位置坐标:(") + QString::number(x) + tr(",") + QString::number(y) + tr("),宽度:") + QString::number(width) + tr(",高度:height,横向间隔:delta_x,纵向间隔:delta_y\n设置height"), height, 0, 2147483647, 1, &ok);
         if (!ok)
         {
             return;
         }
         ok = false;
-        if (filenames.size() <= 1)
+        int x_num = 2;
+        if (filenames.size() > 1)
         {
-            delta_x = QInputDialog::getInt(nullptr, "获取数值", QString("位置坐标:(%1,%2),宽度:%3,高度:%4,横向间隔:delta_x,纵向间隔:delta_y\n设置delta_x").arg(x).arg(y).arg(width).arg(height), delta_x, -2147483647, 2147483647, 1, &ok);
+            delta_x = QInputDialog::getInt(nullptr, tr("获取数值"), tr("位置坐标:(") + QString::number(x) + tr(",") + QString::number(y) + tr("),宽度:") + QString::number(width) + tr(",高度:") + QString::number(height) + tr(",横向间隔:delta_x,纵向间隔:delta_y\n设置delta_x"), delta_x, -2147483647, 2147483647, 1, &ok);
             if (!ok)
             {
                 return;
             }
             ok = false;
-            delta_y = QInputDialog::getInt(nullptr, "获取数值", QString("位置坐标:(%1,%2),宽度:%3,高度:%4,横向间隔:%5,纵向间隔:delta_y\n设置delta_y").arg(x).arg(y).arg(width).arg(height).arg(delta_x), delta_y, -2147483647, 2147483647, 1, &ok);
+            delta_y = QInputDialog::getInt(nullptr, tr("获取数值"), tr("位置坐标:(") + QString::number(x) + tr(",") + QString::number(y) + tr("),宽度:") + QString::number(width) + tr(",高度:") + QString::number(height) + tr(",横向间隔:") + QString::number(delta_x) + tr(",纵向间隔:delta_y\n设置delta_y"), delta_y, -2147483647, 2147483647, 1, &ok);
+            if (!ok)
+            {
+                return;
+            }
+            ok = false;
+            x_num = QInputDialog::getInt(nullptr, tr("获取数值"), tr("设置列数"), 2, 1, 2147483647, 1, &ok);
             if (!ok)
             {
                 return;
             }
             ok = false;
         }
-        int x_num = QInputDialog::getInt(nullptr, "获取数值", "设置列数", 2, 1, 2147483647, 1, &ok);
-        if (!ok)
-        {
-            return;
-        }
-        ok = false;
-        bool show_close_button_bool = QInputDialog::getItem(nullptr, "显示关闭按钮", "显示关闭按钮", QStringList() << "是" << "否", 0, false, &ok) == "是";
+        bool show_close_button_bool = QInputDialog::getItem(nullptr, tr("显示关闭按钮"), tr("显示关闭按钮"), QStringList() << tr("是") << tr("否"), 0, false, &ok) == tr("是");
         if (!ok)
         {
             show_close_button_bool = true;
@@ -222,7 +223,7 @@ void My_Process_Carrier::context_solution(QAction *know_what, QPoint pos)
     }
     else if (know_what == delete_carrier_action)
     {
-        QMessageBox::StandardButton box = QMessageBox::question(this, "删除当前载体页", "是否删除当前载体页?", QMessageBox::Yes | QMessageBox::No);
+        QMessageBox::StandardButton box = QMessageBox::question(this, tr("删除当前载体页"), tr("是否删除当前载体页?"), QMessageBox::Yes | QMessageBox::No);
         if (box != QMessageBox::Yes)
         {
             return;
@@ -345,25 +346,25 @@ void My_Process_Carrier::dropEvent(QDropEvent *event)
         }
         int x = event->pos().x(), y = event->pos().y(), width = 90, height = 90, delta_x = 5, delta_y = 5;
         bool ok = false;
-        x = QInputDialog::getInt(nullptr, "获取数值", "位置坐标:(x,y),宽度:width,高度:height,横向间隔:delta_x,纵向间隔:delta_y\n设置x", x, -2147483647, 2147483647, 1, &ok);
+        x = QInputDialog::getInt(nullptr, tr("获取数值"), tr("位置坐标:(x,y),宽度:width,高度:height,横向间隔:delta_x,纵向间隔:delta_y\n设置x"), x, -2147483647, 2147483647, 1, &ok);
         if (!ok)
         {
             return;
         }
         ok = false;
-        y = QInputDialog::getInt(nullptr, "获取数值", QString("位置坐标:(%1,y),宽度:width,高度:height,横向间隔:delta_x,纵向间隔:delta_y\n设置y").arg(x), y, -2147483647, 2147483647, 1, &ok);
+        y = QInputDialog::getInt(nullptr, tr("获取数值"), tr("位置坐标:(") + QString::number(x) + tr(",y),宽度:width,高度:height,横向间隔:delta_x,纵向间隔:delta_y\n设置y"), y, -2147483647, 2147483647, 1, &ok);
         if (!ok)
         {
             return;
         }
         ok = false;
-        width = QInputDialog::getInt(nullptr, "获取数值", QString("位置坐标:(%1,%2),宽度:width,高度:height,横向间隔:delta_x,纵向间隔:delta_y\n设置width").arg(x).arg(y), width, 0, 2147483647, 1, &ok);
+        width = QInputDialog::getInt(nullptr, tr("获取数值"), tr("位置坐标:(") + QString::number(x) + tr(",") + QString::number(y) + tr("),宽度:width,高度:height,横向间隔:delta_x,纵向间隔:delta_y\n设置width"), width, 0, 2147483647, 1, &ok);
         if (!ok)
         {
             return;
         }
         ok = false;
-        height = QInputDialog::getInt(nullptr, "获取数值", QString("位置坐标:(%1,%2),宽度:%3,高度:height,横向间隔:delta_x,纵向间隔:delta_y\n设置height").arg(x).arg(y).arg(width), height, 0, 2147483647, 1, &ok);
+        height = QInputDialog::getInt(nullptr, tr("获取数值"), tr("位置坐标:(") + QString::number(x) + tr(",") + QString::number(y) + tr("),宽度:") + QString::number(width) + tr(",高度:height,横向间隔:delta_x,纵向间隔:delta_y\n设置height"), height, 0, 2147483647, 1, &ok);
         if (!ok)
         {
             return;
@@ -372,26 +373,26 @@ void My_Process_Carrier::dropEvent(QDropEvent *event)
         int x_num = 2;
         if (filenames.size() > 1)
         {
-            delta_x = QInputDialog::getInt(nullptr, "获取数值", QString("位置坐标:(%1,%2),宽度:%3,高度:%4,横向间隔:delta_x,纵向间隔:delta_y\n设置delta_x").arg(x).arg(y).arg(width).arg(height), delta_x, -2147483647, 2147483647, 1, &ok);
+            delta_x = QInputDialog::getInt(nullptr, tr("获取数值"), tr("位置坐标:(") + QString::number(x) + tr(",") + QString::number(y) + tr("),宽度:") + QString::number(width) + tr(",高度:") + QString::number(height) + tr(",横向间隔:delta_x,纵向间隔:delta_y\n设置delta_x"), delta_x, -2147483647, 2147483647, 1, &ok);
             if (!ok)
             {
                 return;
             }
             ok = false;
-            delta_y = QInputDialog::getInt(nullptr, "获取数值", QString("位置坐标:(%1,%2),宽度:%3,高度:%4,横向间隔:%5,纵向间隔:delta_y\n设置delta_y").arg(x).arg(y).arg(width).arg(height).arg(delta_x), delta_y, -2147483647, 2147483647, 1, &ok);
+            delta_y = QInputDialog::getInt(nullptr, tr("获取数值"), tr("位置坐标:(") + QString::number(x) + tr(",") + QString::number(y) + tr("),宽度:") + QString::number(width) + tr(",高度:") + QString::number(height) + tr(",横向间隔:") + QString::number(delta_x) + tr(",纵向间隔:delta_y\n设置delta_y"), delta_y, -2147483647, 2147483647, 1, &ok);
             if (!ok)
             {
                 return;
             }
             ok = false;
-            x_num = QInputDialog::getInt(nullptr, "获取数值", "设置列数", 2, 1, 2147483647, 1, &ok);
+            x_num = QInputDialog::getInt(nullptr, tr("获取数值"), tr("设置列数"), 2, 1, 2147483647, 1, &ok);
             if (!ok)
             {
                 return;
             }
             ok = false;
         }
-        bool show_close_button_bool = QInputDialog::getItem(nullptr, "显示关闭按钮", "显示关闭按钮", QStringList() << "是" << "否", 0, false, &ok) == "是";
+        bool show_close_button_bool = QInputDialog::getItem(nullptr, tr("显示关闭按钮"), tr("显示关闭按钮"), QStringList() << tr("是") << tr("否"), 0, false, &ok) == tr("是");
         if (!ok)
         {
             show_close_button_bool = true;

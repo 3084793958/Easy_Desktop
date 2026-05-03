@@ -53,7 +53,8 @@ SOURCES += \
     core/plugin_widget.cpp \
     interfaces/pluginsiteminterface.cpp \
     core/tools/my_x11_libs.cpp \
-    core/tools/file_control.cpp
+    core/tools/file_control.cpp \
+    core/tools/multilinetextinputdialog.cpp
 contains(DEFINES, USE_CHART) {
     SOURCES += \
         core/chart/basic_chart.cpp \
@@ -87,7 +88,8 @@ HEADERS += \
     interfaces/pluginproxyinterface.h \
     interfaces/pluginsiteminterface.h \
     core/tools/my_x11_libs.h \
-    core/tools/file_control.h
+    core/tools/file_control.h \
+    core/tools/multilinetextinputdialog.h
 
 contains(DEFINES, USE_CHART) {
     HEADERS += \
@@ -101,3 +103,5 @@ contains(DEFINES, USE_CHART) {
 
 RESOURCES += \
     base.qrc
+
+TRANSLATIONS += translations/Original.ts

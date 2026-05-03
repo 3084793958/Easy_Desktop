@@ -57,7 +57,7 @@ Process_Widget::Process_Widget(QWidget *parent)
     process_name_label->setMouseTracking(true);
     process_name_label->setAlignment(Qt::AlignCenter);
     process_name_label->setFont(QFontDatabase::systemFont(QFontDatabase::FixedFont));
-    process_name_label->setText("进程");
+    process_name_label->setText(tr("进程"));
     process_name_label->setStyleSheet("background:rgba(0,0,0,0)");
     process_name_label->text_color = QColor(0, 0, 0, 255);
     process_name_label->outlineWidth = 2;
@@ -240,7 +240,7 @@ void Process_Widget::context_solution(QAction *know_what)
     }
     else if (know_what == set_image)
     {
-        QString filename = QFileDialog::getOpenFileName(nullptr, "获取图像", QDir::homePath(), "图像文件(*.png *.jpg *.jpeg *.svg *.gif *.bmp);;所有文件(*.*)");
+        QString filename = QFileDialog::getOpenFileName(nullptr, tr("获取图像"), QDir::homePath(), tr("图像文件") + "(*.png *.jpg *.jpeg *.svg *.gif *.bmp);;" + tr("所有文件") + "(*.*)");
         My_X11_Libs::X11_Raise();
         if (filename.isEmpty())
         {
@@ -258,8 +258,8 @@ void Process_Widget::context_solution(QAction *know_what)
     {
         QInputDialog dialog;
         dialog.setParent(nullptr);
-        dialog.setWindowTitle("获取文字");
-        dialog.setLabelText("输入文字");
+        dialog.setWindowTitle(tr("获取文字"));
+        dialog.setLabelText(tr("输入文字"));
         dialog.setTextValue(this->process_name_label->text());
         dialog.setInputMode(QInputDialog::TextInput);
         dialog.setOption(QInputDialog::UsePlainTextEditForTextInput);
@@ -292,7 +292,7 @@ void Process_Widget::context_solution(QAction *know_what)
         colorDialog.setOption(QColorDialog::ShowAlphaChannel);
         colorDialog.setCurrentColor(this->process_name_label->text_color);
         colorDialog.setParent(nullptr);
-        colorDialog.setWindowTitle("获取颜色");
+        colorDialog.setWindowTitle(tr("获取颜色"));
         if (colorDialog.exec() != QDialog::Accepted)
         {
             return;
@@ -302,7 +302,7 @@ void Process_Widget::context_solution(QAction *know_what)
     else if (know_what == set_out_line_width)
     {
         bool ok = false;
-        int out_line_width = QInputDialog::getInt(nullptr, "获取数值", "描边大小", this->process_name_label->outlineWidth, 1, 2147483647, 1, &ok);
+        int out_line_width = QInputDialog::getInt(nullptr, tr("获取数值"), tr("描边大小"), this->process_name_label->outlineWidth, 1, 2147483647, 1, &ok);
         if (!ok)
         {
             return;
@@ -315,7 +315,7 @@ void Process_Widget::context_solution(QAction *know_what)
         colorDialog.setOption(QColorDialog::ShowAlphaChannel);
         colorDialog.setCurrentColor(this->process_name_label->outlineColor);
         colorDialog.setParent(nullptr);
-        colorDialog.setWindowTitle("获取颜色");
+        colorDialog.setWindowTitle(tr("获取颜色"));
         if (colorDialog.exec() != QDialog::Accepted)
         {
             return;
@@ -325,20 +325,20 @@ void Process_Widget::context_solution(QAction *know_what)
     else if (know_what == set_process)
     {
         bool ok = false;
-        QString first_string = QInputDialog::getText(nullptr, "设置运行进程", "设置运行进程:",QLineEdit::Normal, process_string, &ok);
+        QString first_string = QInputDialog::getText(nullptr, tr("设置运行进程"), tr("设置运行进程:"), QLineEdit::Normal, process_string, &ok);
         if (!ok || first_string.isEmpty())
         {
             return;
         }
         ok = false;
-        QMessageBox::information(nullptr, "设置运行路径", "设置运行路径");
-        QString filepath = QFileDialog::getExistingDirectory(nullptr, "获取运行路径", running_path);
+        QMessageBox::information(nullptr, tr("设置运行路径"), tr("设置运行路径"));
+        QString filepath = QFileDialog::getExistingDirectory(nullptr, tr("获取运行路径"), running_path);
         My_X11_Libs::X11_Raise();
         if (filepath.isEmpty())
         {
             filepath = QDir::homePath();
         }
-        QMessageBox::StandardButton final_ans = QMessageBox::question(nullptr, "确认进程", QString("最终指令:%1\n运行路径:%2").arg(first_string).arg(filepath));
+        QMessageBox::StandardButton final_ans = QMessageBox::question(nullptr, tr("确认进程"), tr("最终指令:") + first_string + tr("\n运行路径:") + filepath);
         if (final_ans == QMessageBox::Yes)
         {
             process_string = first_string;
@@ -347,7 +347,7 @@ void Process_Widget::context_solution(QAction *know_what)
     }
     else if (know_what == set_by_desktop)
     {
-        QString final_process = QFileDialog::getOpenFileName(nullptr, "获取.desktop文件", running_path);
+        QString final_process = QFileDialog::getOpenFileName(nullptr, tr("获取.desktop文件"), running_path);
         My_X11_Libs::X11_Raise();
         if (!final_process.isEmpty())
         {
@@ -403,22 +403,22 @@ void Process_Widget::context_solution(QAction *know_what)
         colorDialog.setOption(QColorDialog::ShowAlphaChannel);
         colorDialog.setCurrentColor(basic_color);
         colorDialog.setParent(nullptr);
-        colorDialog.setWindowTitle("获取基础颜色");
-        QMessageBox::information(nullptr, "设置基础颜色", "设置基础颜色");
+        colorDialog.setWindowTitle(tr("获取基础颜色"));
+        QMessageBox::information(nullptr, tr("设置基础颜色"), tr("设置基础颜色"));
         if (colorDialog.exec() == QDialog::Accepted)
         {
             basic_color = colorDialog.currentColor();
         }
         colorDialog.setCurrentColor(press_color);
-        colorDialog.setWindowTitle("获取按下颜色");
-        QMessageBox::information(nullptr, "设置按下颜色", "设置按下颜色");
+        colorDialog.setWindowTitle(tr("获取按下颜色"));
+        QMessageBox::information(nullptr, tr("设置按下颜色"), tr("设置按下颜色"));
         if (colorDialog.exec() == QDialog::Accepted)
         {
             press_color = colorDialog.currentColor();
         }
         colorDialog.setCurrentColor(hover_color);
-        colorDialog.setWindowTitle("获取悬停(hover)颜色");
-        QMessageBox::information(nullptr, "设置悬停(hover)颜色", "设置悬停(hover)颜色");
+        colorDialog.setWindowTitle(tr("获取悬停(hover)颜色"));
+        QMessageBox::information(nullptr, tr("设置悬停(hover)颜色"), tr("设置悬停(hover)颜色"));
         if (colorDialog.exec() == QDialog::Accepted)
         {
             hover_color = colorDialog.currentColor();

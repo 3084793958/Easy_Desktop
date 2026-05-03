@@ -119,17 +119,17 @@ void My_Program_Container::contextMenuEvent(QContextMenuEvent *event)
             QString windowType = get_window_class(display, windowId);
             if (windowPId == static_cast<unsigned long>(QCoreApplication::applicationPid()))
             {
-                QMessageBox::question(nullptr, "无法设置", QString("(#`Д´)ﾉ不能自食其果!\nPID:%1").arg(windowPId));
+                QMessageBox::question(nullptr, tr("无法设置"),tr("(#`Д´)ﾉ不能自食其果!\nPID:") + QString("%1").arg(windowPId));
                 return;
             }
-            QMessageBox::StandardButton final_ans = QMessageBox::question(nullptr, "确认WinId", QString("选取WinId:%1").arg(windowId));
+            QMessageBox::StandardButton final_ans = QMessageBox::question(nullptr, tr("确认WinId"), tr("选取WinId:") + QString("%1").arg(windowId));
             if (final_ans != QMessageBox::StandardButton::Yes)
             {
                 return;
             }
             if (windowType != "_NET_WM_WINDOW_TYPE_NORMAL")
             {
-                QMessageBox::StandardButton final_ans = QMessageBox::question(nullptr, "确认_NET_WM_WINDOW_TYPE", QString(">_<|||窗口类型:%1\n强行设置可能出错,是否设置").arg(windowType));
+                QMessageBox::StandardButton final_ans = QMessageBox::question(nullptr, tr("确认_NET_WM_WINDOW_TYPE"), tr(">_<|||窗口类型:") + QString("%1").arg(windowType) + tr("\n强行设置可能出错,是否设置"));
                 if (final_ans != QMessageBox::StandardButton::Yes)
                 {
                     return;
@@ -159,13 +159,13 @@ void My_Program_Container::contextMenuEvent(QContextMenuEvent *event)
     else if (know_what == set_distance_action)
     {
         bool ok = false;
-        int new_width = QInputDialog::getInt(nullptr, "获取数值", "宽度间距:", distance_width, 0, 2147483647, 1, &ok);
+        int new_width = QInputDialog::getInt(nullptr, tr("获取数值"), tr("宽度间距:"), distance_width, 0, 2147483647, 1, &ok);
         if (!ok)
         {
             return;
         }
         ok = false;
-        int new_height = QInputDialog::getInt(nullptr, "获取数值", "高度间距:", distance_height, 0, 2147483647, 1, &ok);
+        int new_height = QInputDialog::getInt(nullptr, tr("获取数值"), tr("高度间距:"), distance_height, 0, 2147483647, 1, &ok);
         if (!ok)
         {
             return;
@@ -177,13 +177,13 @@ void My_Program_Container::contextMenuEvent(QContextMenuEvent *event)
     else if (know_what == set_delta_action)
     {
         bool ok = false;
-        int new_x = QInputDialog::getInt(nullptr, "获取数值", "X偏移:", delta_x, -2147483647, 2147483647, 1, &ok);
+        int new_x = QInputDialog::getInt(nullptr, tr("获取数值"), tr("X偏移:"), delta_x, -2147483647, 2147483647, 1, &ok);
         if (!ok)
         {
             return;
         }
         ok = false;
-        int new_y = QInputDialog::getInt(nullptr, "获取数值", "Y偏移:", delta_y, -2147483647, 2147483647, 1, &ok);
+        int new_y = QInputDialog::getInt(nullptr, tr("获取数值"), tr("Y偏移:"), delta_y, -2147483647, 2147483647, 1, &ok);
         if (!ok)
         {
             return;

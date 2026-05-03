@@ -154,8 +154,8 @@ void DISK_Chart::timeout_slot()
     {
         Rec_str = QString("%1MiB/s").arg(std::round(Rec_data_vec.last() / std::pow(1024, Rec_count_time) * 100) / 100);
     }
-    sec_series->setName(QString("读取:%1").arg(Tra_str));
-    series->setName(QString("写入:%1").arg(Rec_str));
+    sec_series->setName(tr("读取:") + QString("%1").arg(Tra_str));
+    series->setName(tr("写入:") + QString("%1").arg(Rec_str));
     axisY->setRange(-std::round(d_Y_Tra * 100) / 100, std::round(d_Y_Rec * 100) / 100);
     //
 }
@@ -249,7 +249,7 @@ void DISK_Chart::contextMenuEvent(QContextMenuEvent *event)
     else if (know_what == set_update_time)
     {
         bool ok = false;
-        int time = QInputDialog::getInt(nullptr, "获取数值", "侦测间隔(ms)", update_time, 1, 2147483647, 100, &ok);
+        int time = QInputDialog::getInt(nullptr, tr("获取数值"), tr("侦测间隔(ms)"), update_time, 1, 2147483647, 100, &ok);
         if (!ok)
         {
             return;
@@ -260,7 +260,7 @@ void DISK_Chart::contextMenuEvent(QContextMenuEvent *event)
     else if (know_what == set_vector_long)
     {
         bool ok = false;
-        int time = QInputDialog::getInt(nullptr, "获取数值", "数据点数量", vector_long, 1, 2147483647, 10, &ok);
+        int time = QInputDialog::getInt(nullptr, tr("获取数值"), tr("数据点数量"), vector_long, 1, 2147483647, 10, &ok);
         if (!ok)
         {
             return;
@@ -282,23 +282,23 @@ void DISK_Chart::contextMenuEvent(QContextMenuEvent *event)
     }
     else if (know_what == set_line_color)
     {
-        QMessageBox::information(nullptr, "设置下行颜色", "设置下行颜色");
+        QMessageBox::information(nullptr, tr("设置下行颜色"), tr("设置下行颜色"));
         QColorDialog colorDialog;
         colorDialog.setOption(QColorDialog::ShowAlphaChannel);
         colorDialog.setCurrentColor(line1_color);
         colorDialog.setParent(nullptr);
-        colorDialog.setWindowTitle("获取颜色");
+        colorDialog.setWindowTitle(tr("获取颜色"));
         if (colorDialog.exec() != QDialog::Accepted)
         {
             return;
         }
         line1_color = colorDialog.currentColor();
         series->setColor(line1_color);
-        QMessageBox::information(nullptr, "设置上行颜色", "设置上行颜色");
+        QMessageBox::information(nullptr, tr("设置上行颜色"), tr("设置上行颜色"));
         colorDialog.setOption(QColorDialog::ShowAlphaChannel);
         colorDialog.setCurrentColor(line2_color);
         colorDialog.setParent(nullptr);
-        colorDialog.setWindowTitle("获取颜色");
+        colorDialog.setWindowTitle(tr("获取颜色"));
         if (colorDialog.exec() != QDialog::Accepted)
         {
             return;

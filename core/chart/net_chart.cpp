@@ -246,7 +246,7 @@ void NET_Chart::contextMenuEvent(QContextMenuEvent *event)
     else if (know_what == set_update_time)
     {
         bool ok = false;
-        int time = QInputDialog::getInt(nullptr, "获取数值", "侦测间隔(ms)", update_time, 1, 2147483647, 100, &ok);
+        int time = QInputDialog::getInt(nullptr, tr("获取数值"), tr("侦测间隔(ms)"), update_time, 1, 2147483647, 100, &ok);
         if (!ok)
         {
             return;
@@ -257,7 +257,7 @@ void NET_Chart::contextMenuEvent(QContextMenuEvent *event)
     else if (know_what == set_vector_long)
     {
         bool ok = false;
-        int time = QInputDialog::getInt(nullptr, "获取数值", "数据点数量", vector_long, 1, 2147483647, 10, &ok);
+        int time = QInputDialog::getInt(nullptr, tr("获取数值"), tr("数据点数量"), vector_long, 1, 2147483647, 10, &ok);
         if (!ok)
         {
             return;
@@ -279,23 +279,23 @@ void NET_Chart::contextMenuEvent(QContextMenuEvent *event)
     }
     else if (know_what == set_line_color)
     {
-        QMessageBox::information(nullptr, "设置下行颜色", "设置下行颜色");
+        QMessageBox::information(nullptr, tr("设置下行颜色"), tr("设置下行颜色"));
         QColorDialog colorDialog;
         colorDialog.setOption(QColorDialog::ShowAlphaChannel);
         colorDialog.setCurrentColor(line1_color);
         colorDialog.setParent(nullptr);
-        colorDialog.setWindowTitle("获取颜色");
+        colorDialog.setWindowTitle(tr("获取颜色"));
         if (colorDialog.exec() != QDialog::Accepted)
         {
             return;
         }
         line1_color = colorDialog.currentColor();
         series->setColor(line1_color);
-        QMessageBox::information(nullptr, "设置上行颜色", "设置上行颜色");
+        QMessageBox::information(nullptr, tr("设置上行颜色"), tr("设置上行颜色"));
         colorDialog.setOption(QColorDialog::ShowAlphaChannel);
         colorDialog.setCurrentColor(line2_color);
         colorDialog.setParent(nullptr);
-        colorDialog.setWindowTitle("获取颜色");
+        colorDialog.setWindowTitle(tr("获取颜色"));
         if (colorDialog.exec() != QDialog::Accepted)
         {
             return;

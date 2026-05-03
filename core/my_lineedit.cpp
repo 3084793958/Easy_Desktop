@@ -27,9 +27,6 @@ Basic_TextEdit::Basic_TextEdit(QWidget *parent)
     extra_mode->addAction(insert_mode_action);
     insert_mode_action->setIconVisibleInMenu(false);
     insert_mode_action->setIcon(QIcon(":/base/this.svg"));
-    extra_mode->addAction(show_line_num_action);
-    show_line_num_action->setIconVisibleInMenu(false);
-    show_line_num_action->setIcon(QIcon(":/base/this.svg"));
     extra_mode->addAction(center_paste_action);
     center_paste_action->setIconVisibleInMenu(true);
     center_paste_action->setIcon(QIcon(":/base/this.svg"));
@@ -67,9 +64,35 @@ Basic_TextEdit::Basic_TextEdit(QWidget *parent)
     set_font_I->setIcon(QIcon(":/base/this.svg"));
     extra_menu->addAction(set_font_I);
     extra_menu->addAction(set_font_B);
-    set_color_menu->addAction(set_selection_color);
-    set_color_menu->addAction(set_search_color);
+    set_apperance_menu->addAction(show_line_num_action);
+    show_line_num_action->setIconVisibleInMenu(false);
+    show_line_num_action->setIcon(QIcon(":/base/this.svg"));
+    set_show_line_pos_menu->addAction(set_show_line_pos_left_action);
+    set_show_line_pos_left_action->setIconVisibleInMenu(true);
+    set_show_line_pos_left_action->setIcon(QIcon(":/base/this.svg"));
+    set_show_line_pos_menu->addAction(set_show_line_pos_right_action);
+    set_show_line_pos_right_action->setIconVisibleInMenu(false);
+    set_show_line_pos_right_action->setIcon(QIcon(":/base/this.svg"));
+    set_apperance_menu->addMenu(set_show_line_pos_menu);
+    set_apperance_menu->addAction(set_show_line_text_color_action);
+    set_apperance_menu->addAction(set_show_line_mark_color_action);
+    set_apperance_menu->addSeparator();
+    set_apperance_menu->addAction(set_show_status_bar);
+    set_show_status_bar->setIconVisibleInMenu(false);
+    set_show_status_bar->setIcon(QIcon(":/base/this.svg"));
+    set_apperance_menu->addAction(set_show_status_bar_text_color);
+    set_apperance_menu->addSeparator();
+    set_apperance_menu->addAction(set_selection_color);
+    set_apperance_menu->addAction(set_search_color);
+    set_apperance_menu->addAction(set_search_select_color);
     lineNumberArea->setVisible(false);
+    m_statusBar->setFixedHeight(24);
+    m_statusBar->hide();
+    updateStatusBar_style();
+    m_statusBar->setSizeGripEnabled(false);
+    statusLabel->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
+    m_statusBar->addPermanentWidget(statusLabel, 1);
+    updateStatusBar();
     connect(this, &QTextEdit::textChanged, this, &Basic_TextEdit::updateLineNumberAreaWidth);
     connect(document(), &QTextDocument::blockCountChanged, this, &Basic_TextEdit::updateLineNumberAreaWidth);
     connect(verticalScrollBar(), &QScrollBar::valueChanged, this, [=]
@@ -79,6 +102,16 @@ Basic_TextEdit::Basic_TextEdit(QWidget *parent)
             lineNumberArea->update();
         }
     });
+    connect(this, &QTextEdit::cursorPositionChanged, this, &Basic_TextEdit::updateStatusBar);
+    connect(this, &QTextEdit::selectionChanged, this, &Basic_TextEdit::updateStatusBar);
+    connect(this, &QTextEdit::textChanged, this, &Basic_TextEdit::updateStatusBar);
+    updateLineNumberAreaWidth();
+    m_searchBar->hide();
+    connect(m_searchBar, &SearchBar::findNext, this, &Basic_TextEdit::goToNextMatch);
+    connect(m_searchBar, &SearchBar::findPrevious, this, &Basic_TextEdit::goToPrevMatch);
+    connect(m_searchBar, &SearchBar::replaceCurrent, this, &Basic_TextEdit::replaceCurrentMatch);
+    connect(m_searchBar, &SearchBar::replaceAll, this, &Basic_TextEdit::replaceAllMatches);
+    connect(m_searchBar, &SearchBar::visibilityChanged, this, &Basic_TextEdit::setSearchBarVisible);
 }
 int Basic_TextEdit::lineNumberAreaWidth() const
 {
@@ -93,20 +126,42 @@ int Basic_TextEdit::lineNumberAreaWidth() const
         maxLines /= 10;
         ++digits;
     }
-    return 8 + fontMetrics().horizontalAdvance(QLatin1Char('9')) * digits;
+    return 8 + fontMetrics().horizontalAdvance(QLatin1Char('9')) * digits + 16;
 }
 void Basic_TextEdit::updateLineNumberAreaWidth()
 {
+    if (!set_show_status_bar->isIconVisibleInMenu())
+    {
+        m_statusBar->hide();
+    }
+    else
+    {
+        m_statusBar->show();
+    }
     if (!show_line_num_action->isIconVisibleInMenu())
     {
-        setViewportMargins(0, 0, 0, 0);
+        setViewportMargins(0, 0, 0, m_statusBar->height() * m_statusBar->isVisible());
         lineNumberArea->setVisible(false);
         return;
     }
     int space = lineNumberAreaWidth();
-    setViewportMargins(space, 0, 0, 0);
+    if (lineArea_left)
+    {
+        setViewportMargins(space, 0, 0, m_statusBar->height() * m_statusBar->isVisible());
+    }
+    else
+    {
+        setViewportMargins(0, 0, space, m_statusBar->height() * m_statusBar->isVisible());
+    }
     lineNumberArea->setVisible(true);
-    lineNumberArea->setGeometry(QRect(0, 0, space, height()));
+    if (lineArea_left)
+    {
+        lineNumberArea->setGeometry(QRect(0, 0, space, height() - (m_statusBar->height() + 5) * m_statusBar->isVisible()));
+    }
+    else
+    {
+        lineNumberArea->setGeometry(QRect(this->width() - space, 0, space, height() - (m_statusBar->height() + 5) * m_statusBar->isVisible()));
+    }
 }
 void Basic_TextEdit::lineNumberAreaPaintEvent(QPaintEvent *event)
 {
@@ -127,9 +182,35 @@ void Basic_TextEdit::lineNumberAreaPaintEvent(QPaintEvent *event)
         if (bottomInViewport >= 0 && topInViewport <= lineNumberArea->height())
         {
             QString number = QString::number(blockNumber + 1);
-            painter.setPen(Qt::black);
+            painter.setPen(line_text_color);
             int y = qRound(topInViewport);
-            painter.drawText(0, y, lineNumberArea->width(), fontMetrics().height(), Qt::AlignRight, number);
+            if (lineArea_left)
+            {
+                painter.drawText(0, y, lineNumberArea->width() - 16, qRound(blockRect.height()), Qt::AlignRight | Qt::AlignVCenter, number);
+            }
+            else
+            {
+                painter.drawText(16, y, lineNumberArea->width() - 16 - 8, qRound(blockRect.height()), Qt::AlignRight | Qt::AlignVCenter, number);
+            }
+            if (markedLines.contains(blockNumber))
+            {
+                painter.setRenderHint(QPainter::Antialiasing, true);
+                painter.setBrush(line_mark_color);
+                painter.setPen(Qt::NoPen);
+                int dotDiameter = 10;
+                int dotY = y + qRound(blockRect.height()) / 2 - dotDiameter / 2 + 1;
+                int dotX = 0;
+                if (lineArea_left)
+                {
+                    dotX = lineNumberArea->width() - 10 - dotDiameter / 2;
+
+                }
+                else
+                {
+                    dotX = 3;
+                }
+                painter.drawEllipse(dotX, dotY, dotDiameter, dotDiameter);
+            }
         }
         block = block.next();
         ++blockNumber;
@@ -139,6 +220,39 @@ void Basic_TextEdit::resizeEvent(QResizeEvent *event)
 {
     QTextEdit::resizeEvent(event);
     updateLineNumberAreaWidth();
+    if (m_statusBar->isVisible())
+    {
+        m_statusBar->setGeometry(0, height() - m_statusBar->height(), width(), m_statusBar->height());
+    }
+    QRect editorRect = geometry();
+    int x = editorRect.x() + editorRect.width() - 400 - 10;
+    int y = 10;
+    m_searchBar->setGeometry(x, y, 400, 80);
+}
+void Basic_TextEdit::updateStatusBar_style()
+{
+    m_statusBar->setStyleSheet(QString("QStatusBar{background:rgba(240,240,240,150); color:rgba(%1,%2,%3,%4); border-radius: 7px 7px;}").arg(statusBar_text_color.red()).arg(statusBar_text_color.green()).arg(statusBar_text_color.blue()).arg(statusBar_text_color.alpha()));
+    statusLabel->setStyleSheet(QString("QLabel{background:rgba(0,0,0,0); color:rgba(%1,%2,%3,%4);}").arg(statusBar_text_color.red()).arg(statusBar_text_color.green()).arg(statusBar_text_color.blue()).arg(statusBar_text_color.alpha()));
+}
+void Basic_TextEdit::updateStatusBar()
+{
+    if (!m_statusBar->isVisible())
+    {
+        return;
+    }
+    m_statusBar->setGeometry(0, height() - m_statusBar->height(), width(), m_statusBar->height());
+    int totalChars = document()->characterCount() - 1;
+    int totalLines = document()->blockCount();
+    QTextCursor cursor = textCursor();
+    int currentLine = cursor.block().blockNumber() + 1;
+    int currentColumn = cursor.positionInBlock() + 1;
+    int selectedChars = 0;
+    if (cursor.hasSelection())
+    {
+        selectedChars = cursor.selectedText().length();
+    }
+    QString statusText = QString(tr("选择: %1 字 | 行: %2, 列: %3 | 总字数: %4  总行数: %5")).arg(selectedChars).arg(currentLine).arg(currentColumn).arg(totalChars).arg(totalLines);
+    statusLabel->setText(statusText);
 }
 void Basic_TextEdit::mouseMoveEvent(QMouseEvent *event)
 {
@@ -232,7 +346,7 @@ void Basic_TextEdit::Add_Action(QMenu *menu)
     menu->insertMenu(menu->actions()[2], insert_menu);
     menu->insertSeparator(menu->actions()[3]);
     menu->insertMenu(menu->actions()[4], extra_mode);
-    menu->insertMenu(menu->actions()[5], set_color_menu);
+    menu->insertMenu(menu->actions()[5], set_apperance_menu);
     menu->insertSeparator(menu->actions()[6]);
     menu->insertAction(menu->actions()[7], search_for_text_action);
     menu->insertAction(menu->actions()[8], jump_to_line);
@@ -243,7 +357,7 @@ void Basic_TextEdit::Add_Action(QMenu *menu)
     set_image_size_action->setEnabled(isSelectionImage());
     set_table->setEnabled(isSelectionTable());
     set_control_menu->setEnabled(set_image_size_action->isEnabled() || set_table->isEnabled());
-
+    insert_menu->setEnabled(!isReadOnly());
     if (isSelectionImage())
     {
         had_selected = true;
@@ -283,7 +397,54 @@ void Basic_TextEdit::keyPressEvent(QKeyEvent *event)
     }
     if (event->matches(QKeySequence::Find))
     {
-        ;
+        if (!extraSelections_list.isEmpty())
+        {
+            QString text;
+            for (const auto &sel : extraSelections_list)
+            {
+                text += sel.cursor.selectedText() + QChar::LineFeed;
+            }
+            if (!text.isEmpty())
+            {
+                text.chop(1);
+                m_searchBar->setfindText(text);
+            }
+        }
+        else
+        {
+            QString text = this->textCursor().selectedText();
+            if (!text.isEmpty())
+            {
+                m_searchBar->setfindText(text);
+            }
+        }
+        m_searchBar->showSearchBar();
+        return;
+    }
+    if (event->modifiers() == Qt::ControlModifier && event->key() == Qt::Key_H)
+    {
+        if (!extraSelections_list.isEmpty())
+        {
+            QString text;
+            for (const auto &sel : extraSelections_list)
+            {
+                text += sel.cursor.selectedText() + QChar::LineFeed;
+            }
+            if (!text.isEmpty())
+            {
+                text.chop(1);
+                m_searchBar->setfindText(text);
+            }
+        }
+        else
+        {
+            QString text = this->textCursor().selectedText();
+            if (!text.isEmpty())
+            {
+                m_searchBar->setfindText(text);
+            }
+        }
+        m_searchBar->showSearchBar();
         return;
     }
     if (!extraSelections_list.isEmpty())
@@ -540,6 +701,14 @@ void Basic_TextEdit::inputMethodEvent(QInputMethodEvent *event)
     }
     QTextEdit::inputMethodEvent(event);
 }
+QString Basic_TextEdit::getSearchText() const
+{
+    return m_searchBar->findText();
+}
+QString Basic_TextEdit::getReplaceText() const
+{
+    return m_searchBar->replaceText();
+}
 void Basic_TextEdit::wheelEvent(QWheelEvent *event)
 {
     if ((event->modifiers() & Qt::ControlModifier) && wheel_change_size_action->isIconVisibleInMenu())
@@ -613,6 +782,7 @@ void Basic_TextEdit::updateColumnSelection()
         });
     }
     setExtraSelections(extraSelections_list);
+    mergeAndSetExtraSelections();
 }
 void Basic_TextEdit::clearColumnSelection()
 {
@@ -622,6 +792,7 @@ void Basic_TextEdit::clearColumnSelection()
         m_columnCursors.clear();
         setExtraSelections(QList<QTextEdit::ExtraSelection>());
     }
+    mergeAndSetExtraSelections();
 }
 void Basic_TextEdit::NormalSelection()
 {
@@ -633,6 +804,7 @@ void Basic_TextEdit::NormalSelection()
         selectionCursor.setPosition(Column_end_cursor.position(), QTextCursor::KeepAnchor);
         setTextCursor(selectionCursor);
     }
+    mergeAndSetExtraSelections();
 }
 void Basic_TextEdit::ZoomIn()
 {
@@ -865,7 +1037,7 @@ void Basic_TextEdit::Added_Action_Func(QAction *action, QPoint pos)
     }
     else if (action == insert_image_action)
     {
-        QList<QString> urls = QFileDialog::getOpenFileNames(nullptr, "获取图像", QDir::homePath(), "图像文件(*.png *.jpg *.jpeg *.svg *.gif *.bmp);;所有文件(*.*)");
+        QList<QString> urls = QFileDialog::getOpenFileNames(nullptr, tr("获取图像"), QDir::homePath(), tr("图像文件") + "(*.png *.jpg *.jpeg *.svg *.gif *.bmp);;" + tr("所有文件") + "(*.*)");
         My_X11_Libs::X11_Raise();//没办法,要跟dde-desktop争夺[桌面显示权]
         if (urls.isEmpty())
         {
@@ -889,13 +1061,13 @@ void Basic_TextEdit::Added_Action_Func(QAction *action, QPoint pos)
     else if (action == insert_table_action)
     {
         bool ok = false;
-        int rows = QInputDialog::getInt(nullptr, "获取数值", "行数", 1, 1, 2147483647, 1, &ok);
+        int rows = QInputDialog::getInt(nullptr, tr("获取数值"), tr("行数"), 1, 1, 2147483647, 1, &ok);
         if (!ok)
         {
             return;
         }
         ok = false;
-        int cols = QInputDialog::getInt(nullptr, "获取数值", "列数", 1, 1, 2147483647, 1, &ok);
+        int cols = QInputDialog::getInt(nullptr, tr("获取数值"), tr("列数"), 1, 1, 2147483647, 1, &ok);
         if (!ok)
         {
             return;
@@ -943,12 +1115,12 @@ void Basic_TextEdit::Added_Action_Func(QAction *action, QPoint pos)
             }
         }
         bool ok = false;
-        qreal new_width = QInputDialog::getDouble(nullptr, "获取数值", "宽度", imageFormat.width(), 0.00, 2147483647.00, 1, &ok);
+        qreal new_width = QInputDialog::getDouble(nullptr, tr("获取数值"), tr("宽度"), imageFormat.width(), 0.00, 2147483647.00, 1, &ok);
         if (!ok)
         {
             return;
         }
-        qreal new_height = QInputDialog::getDouble(nullptr, "获取数值", "高度", imageFormat.height(), 0.00, 2147483647.00, 1, &ok);
+        qreal new_height = QInputDialog::getDouble(nullptr, tr("获取数值"), tr("高度"), imageFormat.height(), 0.00, 2147483647.00, 1, &ok);
         if (!ok)
         {
             return;
@@ -980,13 +1152,13 @@ void Basic_TextEdit::Added_Action_Func(QAction *action, QPoint pos)
             return;
         }
         bool ok = false;
-        int rows = QInputDialog::getInt(nullptr, "获取数值", "行数", table->rows(), 1, 2147483647, 1, &ok);
+        int rows = QInputDialog::getInt(nullptr, tr("获取数值"), tr("行数"), table->rows(), 1, 2147483647, 1, &ok);
         if (!ok)
         {
             return;
         }
         ok = false;
-        int cols = QInputDialog::getInt(nullptr, "获取数值", "列数", table->columns(), 1, 2147483647, 1, &ok);
+        int cols = QInputDialog::getInt(nullptr, tr("获取数值"), tr("列数"), table->columns(), 1, 2147483647, 1, &ok);
         if (!ok)
         {
             return;
@@ -1022,13 +1194,13 @@ void Basic_TextEdit::Added_Action_Func(QAction *action, QPoint pos)
         else
         {
             bool ok = false;
-            int rows = QInputDialog::getInt(nullptr, "获取数值", "向下合并[行数]", 1, 0, 2147483647, 1, &ok);
+            int rows = QInputDialog::getInt(nullptr, tr("获取数值"), tr("向下合并[行数]"), 1, 0, 2147483647, 1, &ok);
             if (!ok)
             {
                 return;
             }
             ok = false;
-            int cols = QInputDialog::getInt(nullptr, "获取数值", "向右合并[列数]", 1, 0, 2147483647, 1, &ok);
+            int cols = QInputDialog::getInt(nullptr, tr("获取数值"), tr("向右合并[列数]"), 1, 0, 2147483647, 1, &ok);
             if (!ok)
             {
                 return;
@@ -1062,13 +1234,13 @@ void Basic_TextEdit::Added_Action_Func(QAction *action, QPoint pos)
             return;
         }
         bool ok = false;
-        int rows = QInputDialog::getInt(nullptr, "获取数值", "拆分[行数]维度\n得到单元格所占行数", 1, 1, 2147483647, 1, &ok);
+        int rows = QInputDialog::getInt(nullptr, tr("获取数值"), tr("拆分[行数]维度\n得到单元格所占行数"), 1, 1, 2147483647, 1, &ok);
         if (!ok)
         {
             return;
         }
         ok = false;
-        int cols = QInputDialog::getInt(nullptr, "获取数值", "拆分为[列数]维度\n得到单元格所占行数", 1, 1, 2147483647, 1, &ok);
+        int cols = QInputDialog::getInt(nullptr, tr("获取数值"), tr("拆分为[列数]维度\n得到单元格所占行数"), 1, 1, 2147483647, 1, &ok);
         if (!ok)
         {
             return;
@@ -1392,7 +1564,7 @@ void Basic_TextEdit::Added_Action_Func(QAction *action, QPoint pos)
         colorDialog.setOption(QColorDialog::ShowAlphaChannel);
         colorDialog.setCurrentColor(fmt.foreground().color());
         colorDialog.setParent(nullptr);
-        colorDialog.setWindowTitle("获取颜色");
+        colorDialog.setWindowTitle(tr("获取颜色"));
         if (colorDialog.exec() != QDialog::Accepted)
         {
             return;
@@ -1451,7 +1623,7 @@ void Basic_TextEdit::Added_Action_Func(QAction *action, QPoint pos)
         colorDialog.setOption(QColorDialog::ShowAlphaChannel);
         colorDialog.setCurrentColor(fmt.background().color());
         colorDialog.setParent(nullptr);
-        colorDialog.setWindowTitle("获取颜色");
+        colorDialog.setWindowTitle(tr("获取颜色"));
         if (colorDialog.exec() != QDialog::Accepted)
         {
             return;
@@ -1577,7 +1749,7 @@ void Basic_TextEdit::Added_Action_Func(QAction *action, QPoint pos)
         colorDialog.setOption(QColorDialog::ShowAlphaChannel);
         colorDialog.setCurrentColor(selection_color);
         colorDialog.setParent(nullptr);
-        colorDialog.setWindowTitle("获取颜色");
+        colorDialog.setWindowTitle(tr("获取颜色"));
         if (colorDialog.exec() != QDialog::Accepted)
         {
             return;
@@ -1590,25 +1762,150 @@ void Basic_TextEdit::Added_Action_Func(QAction *action, QPoint pos)
         setCursorWidth(insert_mode_action->isIconVisibleInMenu() ? 8 : 2);
     }
     else if (action == search_for_text_action)
-    {}
+    {
+        if (!extraSelections_list.isEmpty())
+        {
+            QString text;
+            for (const auto &sel : extraSelections_list)
+            {
+                text += sel.cursor.selectedText() + QChar::LineFeed;
+            }
+            if (!text.isEmpty())
+            {
+                text.chop(1);
+                m_searchBar->setfindText(text);
+            }
+        }
+        else
+        {
+            QString text = this->textCursor().selectedText();
+            if (!text.isEmpty())
+            {
+                m_searchBar->setfindText(text);
+            }
+        }
+        m_searchBar->showSearchBar();
+    }
     else if (action == set_search_color)
     {
         QColorDialog colorDialog;
         colorDialog.setOption(QColorDialog::ShowAlphaChannel);
         colorDialog.setCurrentColor(search_color);
         colorDialog.setParent(nullptr);
-        colorDialog.setWindowTitle("获取颜色");
+        colorDialog.setWindowTitle(tr("获取颜色"));
         if (colorDialog.exec() != QDialog::Accepted)
         {
             return;
         }
         search_color = colorDialog.currentColor();
     }
+    else if (action == set_search_select_color)
+    {
+        QColorDialog colorDialog;
+        colorDialog.setOption(QColorDialog::ShowAlphaChannel);
+        colorDialog.setCurrentColor(search_and_select_color);
+        colorDialog.setParent(nullptr);
+        colorDialog.setWindowTitle(tr("获取颜色"));
+        if (colorDialog.exec() != QDialog::Accepted)
+        {
+            return;
+        }
+        search_and_select_color = colorDialog.currentColor();
+    }
     else if (action == jump_to_line)
-    {}
+    {
+        bool ok = false;
+        int cursor_line = 1;
+        if (extraSelections_list.isEmpty())
+        {
+            cursor_line = this->textCursor().block().firstLineNumber() + 1;
+        }
+        else
+        {
+            cursor_line = extraSelections_list.first().cursor.block().firstLineNumber() + 1;
+        }
+        int lineNumber = QInputDialog::getInt(nullptr, tr("跳转到行"), tr("行号 (1~%1):").arg(document()->blockCount()), cursor_line, 1, document()->blockCount(), 1, &ok);
+        if (!ok)
+        {
+            return;
+        }
+        int blockIndex = lineNumber - 1;
+        QTextBlock targetBlock = document()->findBlockByNumber(blockIndex);
+        if (!targetBlock.isValid())
+        {
+            return;
+        }
+        QTextCursor cursor(targetBlock);
+        cursor.movePosition(QTextCursor::StartOfBlock);
+        setTextCursor(cursor);
+        ensureCursorVisible();
+    }
     else if (action == show_line_num_action)
     {
         show_line_num_action->setIconVisibleInMenu(!show_line_num_action->isIconVisibleInMenu());
+        updateLineNumberAreaWidth();
+    }
+    else if (action == set_show_line_pos_left_action)
+    {
+        lineArea_left = true;
+        set_show_line_pos_left_action->setIconVisibleInMenu(true);
+        set_show_line_pos_right_action->setIconVisibleInMenu(false);
+        updateLineNumberAreaWidth();
+    }
+    else if (action == set_show_line_pos_right_action)
+    {
+        lineArea_left = false;
+        set_show_line_pos_left_action->setIconVisibleInMenu(false);
+        set_show_line_pos_right_action->setIconVisibleInMenu(true);
+        updateLineNumberAreaWidth();
+    }
+    else if (action == set_show_line_mark_color_action)
+    {
+        QColorDialog colorDialog;
+        colorDialog.setOption(QColorDialog::ShowAlphaChannel);
+        colorDialog.setCurrentColor(line_mark_color);
+        colorDialog.setParent(nullptr);
+        colorDialog.setWindowTitle(tr("获取颜色"));
+        if (colorDialog.exec() != QDialog::Accepted)
+        {
+            return;
+        }
+        line_mark_color = colorDialog.currentColor();
+        updateLineNumberAreaWidth();
+    }
+    else if (action == set_show_line_text_color_action)
+    {
+        QColorDialog colorDialog;
+        colorDialog.setOption(QColorDialog::ShowAlphaChannel);
+        colorDialog.setCurrentColor(line_text_color);
+        colorDialog.setParent(nullptr);
+        colorDialog.setWindowTitle(tr("获取颜色"));
+        if (colorDialog.exec() != QDialog::Accepted)
+        {
+            return;
+        }
+        line_text_color = colorDialog.currentColor();
+        updateLineNumberAreaWidth();
+    }
+    else if (action == set_show_status_bar)
+    {
+        set_show_status_bar->setIconVisibleInMenu(!set_show_status_bar->isIconVisibleInMenu());
+        updateLineNumberAreaWidth();
+        updateStatusBar();
+    }
+    else if (action == set_show_status_bar_text_color)
+    {
+        QColorDialog colorDialog;
+        colorDialog.setOption(QColorDialog::ShowAlphaChannel);
+        colorDialog.setCurrentColor(statusBar_text_color);
+        colorDialog.setParent(nullptr);
+        colorDialog.setWindowTitle(tr("获取颜色"));
+        if (colorDialog.exec() != QDialog::Accepted)
+        {
+            return;
+        }
+        statusBar_text_color = colorDialog.currentColor();
+        updateStatusBar_style();
         updateLineNumberAreaWidth();
     }
 }
@@ -1766,6 +2063,7 @@ My_LineEdit::My_LineEdit(QWidget *parent)
 }
 My_LineEdit::~My_LineEdit()
 {
+    textEdit->deleteLater();
     if (my_lineedit_list)
     {
         my_lineedit_list->removeOne(this);
@@ -1790,12 +2088,12 @@ void My_LineEdit::wheelEvent(QWheelEvent *event)
 void My_LineEdit::save(QSettings *settings)
 {
     Basic_Widget::save(settings);
-    this->textEdit->H_save(settings);
+    this->textEdit->H_save(settings, "");
 }
 void My_LineEdit::load(QSettings *settings)
 {
     Basic_Widget::load(settings);
-    this->textEdit->H_load(settings);
+    this->textEdit->H_load(settings, "");
 }
 void My_LineEdit::update_style(QColor theme_color, QColor theme_background_color, QColor theme_text_color, QColor select_text_color, QColor disabled_text_color, QString checked_icon_path)
 {
@@ -1834,42 +2132,82 @@ void Basic_TextEdit::set_icon(QString checked_icon_path)
     wheel_change_size_action->setIcon(QIcon(checked_icon_path));
     insert_mode_action->setIcon(QIcon(checked_icon_path));
     show_line_num_action->setIcon(QIcon(checked_icon_path));
+    set_show_line_pos_left_action->setIcon(QIcon(checked_icon_path));
+    set_show_line_pos_right_action->setIcon(QIcon(checked_icon_path));
+    set_show_status_bar->setIcon(QIcon(checked_icon_path));
 }
-void Basic_TextEdit::H_save(QSettings *settings)
+void Basic_TextEdit::H_save(QSettings *settings, QString Token)
 {
-    settings->setValue("auto_turn_line", auto_turn_line_action->isIconVisibleInMenu());
-    settings->setValue("read_only", read_only_action->isIconVisibleInMenu());
-    settings->setValue("center_paste", center_paste_action->isIconVisibleInMenu());
-    settings->setValue("wheel_change_size", wheel_change_size_action->isIconVisibleInMenu());
-    settings->setValue("H_SValue", this->horizontalScrollBar()->value());
-    settings->setValue("V_SValue", this->verticalScrollBar()->value());
-    settings->setValue("html_text", this->toHtml());
-    settings->setValue("selection_color", selection_color.rgba());
-    settings->setValue("insert_mode_action", insert_mode_action->isIconVisibleInMenu());
-    settings->setValue("search_color", search_color.rgba());
-    settings->setValue("show_line_num_action", show_line_num_action->isIconVisibleInMenu());
+    settings->setValue(Token + "auto_turn_line", auto_turn_line_action->isIconVisibleInMenu());
+    settings->setValue(Token + "read_only", read_only_action->isIconVisibleInMenu());
+    settings->setValue(Token + "center_paste", center_paste_action->isIconVisibleInMenu());
+    settings->setValue(Token + "wheel_change_size", wheel_change_size_action->isIconVisibleInMenu());
+    settings->setValue(Token + "H_SValue", this->horizontalScrollBar()->value());
+    settings->setValue(Token + "V_SValue", this->verticalScrollBar()->value());
+    settings->setValue(Token + "html_text", this->toHtml());
+    settings->setValue(Token + "selection_color", selection_color.rgba());
+    settings->setValue(Token + "insert_mode_action", insert_mode_action->isIconVisibleInMenu());
+    settings->setValue(Token + "search_color", search_color.rgba());
+    settings->setValue(Token + "search_and_select_color", search_and_select_color.rgba());
+    settings->setValue(Token + "show_line_num_action", show_line_num_action->isIconVisibleInMenu());
+    settings->setValue(Token + "line_mark_color", line_mark_color.rgba());
+    settings->setValue(Token + "line_text_color", line_text_color.rgba());
+    settings->setValue(Token + "statusBar_text_color", statusBar_text_color.rgba());
+    settings->setValue(Token + "lineArea_left", lineArea_left);
+    settings->setValue(Token + "set_show_status_bar", set_show_status_bar->isIconVisibleInMenu());
+    QVariantList markList;
+    for (int line : markedLines)
+    {
+        markList.append(line);
+    }
+    settings->setValue(Token + "markedLines", markList);
 }
-void Basic_TextEdit::H_load(QSettings *settings)
+void Basic_TextEdit::H_load(QSettings *settings, QString Token)
 {
-    bool auto_turn_line = settings->value("auto_turn_line", false).toBool();
+    bool auto_turn_line = settings->value(Token + "auto_turn_line", false).toBool();
     auto_turn_line_action->setIconVisibleInMenu(auto_turn_line);
     setWordWrapMode(auto_turn_line_action->isIconVisibleInMenu()?QTextOption::WrapMode::WrapAnywhere:QTextOption::WrapMode::NoWrap);
-    bool read_only = settings->value("read_only", false).toBool();
+    bool read_only = settings->value(Token + "read_only", false).toBool();
     read_only_action->setIconVisibleInMenu(read_only);
     setReadOnly(read_only_action->isIconVisibleInMenu());
-    bool center_paste = settings->value("center_paste", true).toBool();
+    bool center_paste = settings->value(Token + "center_paste", true).toBool();
     center_paste_action->setIconVisibleInMenu(center_paste);
-    wheel_change_size_action->setIconVisibleInMenu(settings->value("wheel_change_size", true).toBool());
-    this->setHtml(settings->value("html_text", "").toString());
-    this->horizontalScrollBar()->setValue(settings->value("H_SValue", 0).toInt());
-    this->verticalScrollBar()->setValue(settings->value("V_SValue", 0).toInt());
-    selection_color = QColor::fromRgba(settings->value("selection_color", QColor(0, 100, 255, 80).rgba()).toUInt());
-    bool insert_mode = settings->value("insert_mode_action", false).toBool();
+    wheel_change_size_action->setIconVisibleInMenu(settings->value(Token + "wheel_change_size", true).toBool());
+    this->setHtml(settings->value(Token + "html_text", "").toString());
+    this->horizontalScrollBar()->setValue(settings->value(Token + "H_SValue", 0).toInt());
+    this->verticalScrollBar()->setValue(settings->value(Token + "V_SValue", 0).toInt());
+    selection_color = QColor::fromRgba(settings->value(Token + "selection_color", QColor(0, 100, 255, 80).rgba()).toUInt());
+    bool insert_mode = settings->value(Token + "insert_mode_action", false).toBool();
     insert_mode_action->setIconVisibleInMenu(center_paste);
     setCursorWidth(insert_mode ? 8 : 2);
-    search_color = QColor::fromRgba(settings->value("search_color", QColor(255, 255, 0, 255).rgba()).toUInt());
-    show_line_num_action->setIconVisibleInMenu(settings->value("show_line_num_action", false).toBool());
+    search_color = QColor::fromRgba(settings->value(Token + "search_color", QColor(255, 255, 0, 255).rgba()).toUInt());
+    search_and_select_color = QColor::fromRgba(settings->value(Token + "search_and_select_color", QColor(0, 129, 255, 255).rgba()).toUInt());
+    show_line_num_action->setIconVisibleInMenu(settings->value(Token + "show_line_num_action", false).toBool());
+    lineArea_left = settings->value(Token + "lineArea_left", true).toBool();
+    set_show_line_pos_left_action->setIconVisibleInMenu(lineArea_left);
+    set_show_line_pos_right_action->setIconVisibleInMenu(!lineArea_left);
+    line_mark_color = QColor::fromRgba(settings->value(Token + "line_mark_color", QColor(255, 0, 0, 255).rgba()).toUInt());
+    line_text_color = QColor::fromRgba(settings->value(Token + "line_text_color", QColor(30, 30, 30, 255).rgba()).toUInt());
+    statusBar_text_color = QColor::fromRgba(settings->value(Token + "statusBar_text_color", QColor(30, 30, 30, 255).rgba()).toUInt());
+    set_show_status_bar->setIconVisibleInMenu(settings->value(Token + "set_show_status_bar", false).toBool());
+    markedLines.clear();
+    QVariantList markList = settings->value(Token + "markedLines").toList();
+    for (const QVariant &v : markList)
+    {
+        bool ok = false;
+        int line = v.toInt(&ok);
+        if (ok)
+        {
+            markedLines.insert(line);
+        }
+    }
+    if (lineNumberArea)
+    {
+        lineNumberArea->update();
+    }
+    updateStatusBar_style();
     updateLineNumberAreaWidth();
+    updateStatusBar();
 }
 Basic_TextEdit::LineNumberArea::LineNumberArea(Basic_TextEdit *editor)
     : QWidget(editor), textEdit(editor)
@@ -1883,4 +2221,364 @@ QSize Basic_TextEdit::LineNumberArea::sizeHint() const
 void Basic_TextEdit::LineNumberArea::paintEvent(QPaintEvent *event)
 {
     textEdit->lineNumberAreaPaintEvent(event);
+}
+void Basic_TextEdit::LineNumberArea::mouseReleaseEvent(QMouseEvent *event)
+{
+    if (textEdit->show_line_num_action->isIconVisibleInMenu() && ((textEdit->lineArea_left && event->x() > width() - 16) ||(!textEdit->lineArea_left && event->x() < 16)))
+    {
+        QTextCursor cursor = textEdit->cursorForPosition(QPoint(1, event->y()));
+        int line = cursor.block().blockNumber();
+        if (textEdit->markedLines.contains(line))
+        {
+            textEdit->markedLines.remove(line);
+        }
+        else
+        {
+            textEdit->markedLines.insert(line);
+        }
+        update();
+    }
+    QWidget::mouseReleaseEvent(event);
+}
+QString SearchBar::findText() const
+{
+    return m_findEdit->text();
+}
+QString SearchBar::replaceText() const
+{
+    return m_replaceEdit->text();
+}
+void SearchBar::setfindText(QString &text)
+{
+    m_findEdit->setText(text);
+}
+SearchBar::SearchBar(Basic_TextEdit *editor, QWidget *parent)
+    :QWidget(parent)
+    ,m_editor(editor)
+{
+    setStyleSheet("QWidget{background-color: rgba(32, 32, 32, 220);border-radius: 10px;border: 1px solid rgba(80, 80, 80, 200);}"
+        "QLineEdit{background-color: rgba(48, 48, 48, 240);color: #f0f0f0;border: 1px solid #5a5a5a;border-radius: 10px;padding: 4px 6px;selection-background-color: #2c7bb6;}"
+        "QLineEdit:focus {border-color: #2c7bb6;}"
+        "QPushButton {background-color: #3c3c3c;color: #f0f0f0;border: 1px solid #5a5a5a;border-radius: 10px;padding: 4px 8px;}"
+        "QPushButton:hover {background-color: #505050;border-color: #7a7a7a;border-radius: 10px;}"
+        "QPushButton:pressed {background-color: #2c7bb6;border-color: #1e5a8a;border-radius: 10px;}"
+        "QCheckBox {color: #f0f0f0;spacing: 6px;border-radius: 10px;}"
+        "QCheckBox::indicator {width: 16px;height: 16px;border-radius: 3px;border: 1px solid #7a7a7a;background-color: #3c3c3c;}"
+        "QCheckBox::indicator:checked {background-color: #2c7bb6;border-color: #1e5a8a;}"
+        "QLabel {color: #e0e0e0;border-radius: 10px;}");
+    setVisible(false);
+    setFocusPolicy(Qt::StrongFocus);
+    QHBoxLayout *mainLayout = new QHBoxLayout(this);
+    mainLayout->setContentsMargins(4, 4, 4, 4);
+    mainLayout->setSpacing(6);
+
+    QVBoxLayout *verticalLayout = new QVBoxLayout();
+    verticalLayout->setSpacing(4);
+    QHBoxLayout *findRow = new QHBoxLayout();
+    QLabel *findLabel = new QLabel(tr("查找:"), this);
+    m_findEdit->setPlaceholderText(tr("查找内容"));
+    m_findEdit->setMinimumWidth(200);
+    findRow->addWidget(findLabel);
+    findRow->addWidget(m_findEdit);
+    findRow->addWidget(m_prevBtn);
+    findRow->addWidget(m_nextBtn);
+    findRow->addWidget(m_closeBtn);
+
+    QHBoxLayout *replaceRow = new QHBoxLayout();
+    QLabel *replaceLabel = new QLabel(tr("替换为:"), this);
+    m_replaceEdit->setPlaceholderText(tr("替换内容"));
+    m_replaceEdit->setMinimumWidth(200);
+    replaceRow->addWidget(replaceLabel);
+    replaceRow->addWidget(m_replaceEdit);
+    replaceRow->addWidget(m_replaceBtn);
+    replaceRow->addWidget(m_replaceAllBtn);
+    verticalLayout->addLayout(findRow);
+    verticalLayout->addLayout(replaceRow);
+    QVBoxLayout *optionsRow = new QVBoxLayout();
+    optionsRow->addWidget(m_caseSensitive);
+    optionsRow->addWidget(m_wholeWord);
+
+    mainLayout->addLayout(verticalLayout);
+    mainLayout->addLayout(optionsRow);
+
+    connect(m_findEdit, &QLineEdit::textChanged, this, &SearchBar::onTextChanged);
+    connect(m_prevBtn, &QPushButton::clicked, this, &SearchBar::findPrevious);
+    connect(m_nextBtn, &QPushButton::clicked, this, &SearchBar::findNext);
+    connect(m_replaceBtn, &QPushButton::clicked, this, &SearchBar::replaceCurrent);
+    connect(m_replaceAllBtn, &QPushButton::clicked, this, &SearchBar::replaceAll);
+    connect(m_closeBtn, &QPushButton::clicked, this, &SearchBar::hideSearchBar);
+    connect(m_caseSensitive, &QCheckBox::toggled, this, &SearchBar::onCaseSensitiveToggled);
+    connect(m_wholeWord, &QCheckBox::toggled, this, &SearchBar::onWholeWordToggled);
+
+    QRect editorRect = geometry();
+    int x = editorRect.x() + editorRect.width() - 400 - 10;
+    int y = 10;
+    setGeometry(x, y, 400, 80);
+}
+void SearchBar::showSearchBar()
+{
+    if (m_editor->isReadOnly())
+    {
+        m_replaceBtn->setEnabled(false);
+        m_replaceAllBtn->setEnabled(false);
+    }
+    else
+    {
+        m_replaceBtn->setEnabled(true);
+        m_replaceAllBtn->setEnabled(true);
+    }
+    show();
+    raise();
+    m_findEdit->setFocus();
+    m_findEdit->selectAll();
+    emit visibilityChanged(true);
+}
+void SearchBar::hideSearchBar()
+{
+    hide();
+    m_editor->setSearchBarVisible(false);
+    emit visibilityChanged(false);
+}
+void SearchBar::onTextChanged(const QString &text)
+{
+    Q_UNUSED(text);
+    if (m_editor)
+    {
+        m_editor->performSearch(false);
+    }
+}
+void SearchBar::onCaseSensitiveToggled(bool checked)
+{
+    if (m_editor)
+    {
+        m_editor->setSearchOptions(checked, m_wholeWord->isChecked());
+    }
+}
+void SearchBar::onWholeWordToggled(bool checked)
+{
+    if (m_editor)
+    {
+        m_editor->setSearchOptions(m_caseSensitive->isChecked(), checked);
+    }
+}
+void SearchBar::keyPressEvent(QKeyEvent *event)
+{
+    if (event->key() == Qt::Key_Escape)
+    {
+        hideSearchBar();
+        event->accept();
+    }
+    else if (event->key() == Qt::Key_Return || event->key() == Qt::Key_Enter)
+    {
+        if (event->modifiers() & Qt::ShiftModifier)
+        {
+            emit findPrevious();
+        }
+        else
+        {
+            emit findNext();
+        }
+        event->accept();
+    }
+    else
+    {
+        QWidget::keyPressEvent(event);
+    }
+}
+void Basic_TextEdit::setSearchOptions(bool caseSensitive, bool wholeWord)
+{
+    m_caseSensitive = caseSensitive;
+    m_wholeWord = wholeWord;
+    this->performSearch();
+}
+void Basic_TextEdit::performSearch(bool moveToFirst)
+{
+    QString searchText = getSearchText();
+    m_matchCursors.clear();
+    m_searchHighlights.clear();
+    m_currentMatchIndex = -1;
+    if (searchText.isEmpty())
+    {
+        mergeAndSetExtraSelections();
+        return;
+    }
+    QTextDocument *doc = document();
+    QTextCursor cursor(doc);
+    QTextDocument::FindFlags flags = QTextDocument::FindFlags();
+    if (m_caseSensitive)
+    {
+        flags |= QTextDocument::FindCaseSensitively;
+    }
+    if (m_wholeWord)
+    {
+        flags |= QTextDocument::FindWholeWords;
+    }
+    while (!cursor.isNull() && !cursor.atEnd())
+    {
+        cursor = doc->find(searchText, cursor, flags);
+        if (!cursor.isNull())
+        {
+            QTextCursor matchCursor = cursor;
+            m_matchCursors.append(matchCursor);
+            QTextEdit::ExtraSelection highlight;
+            highlight.cursor = matchCursor;
+            highlight.format.setBackground(search_color);
+            m_searchHighlights.append(highlight);
+            cursor = matchCursor;
+            int pos = cursor.position();
+            if (pos < doc->characterCount() - 1)
+            {
+                cursor.setPosition(pos + 1);
+            }
+            else
+            {
+                break;
+            }
+        }
+    }
+    if (moveToFirst && !m_matchCursors.isEmpty())
+    {
+        m_currentMatchIndex = 0;
+        QTextCursor firstMatch = m_matchCursors.first();
+        setTextCursor(firstMatch);
+        ensureCursorVisible();
+        QTextEdit::ExtraSelection currentSelection;
+        currentSelection.cursor = firstMatch;
+        currentSelection.format.setBackground(search_and_select_color);
+        m_searchHighlights[m_currentMatchIndex] = currentSelection;
+    }
+    mergeAndSetExtraSelections();
+}
+void Basic_TextEdit::goToNextMatch()
+{
+    if (m_matchCursors.isEmpty())
+    {
+        this->performSearch(true);
+        if (m_matchCursors.isEmpty())
+        {
+            return;
+        }
+    }
+    if (m_currentMatchIndex >= 0 && m_currentMatchIndex < m_searchHighlights.size())
+    {
+        m_searchHighlights[m_currentMatchIndex].format.setBackground(search_color);
+    }
+    m_currentMatchIndex++;
+    if (m_currentMatchIndex >= m_matchCursors.size())
+    {
+        m_currentMatchIndex = 0;
+    }
+    QTextCursor nextMatch = m_matchCursors[m_currentMatchIndex];
+    setTextCursor(nextMatch);
+    ensureCursorVisible();
+    if (m_currentMatchIndex >= 0 && m_currentMatchIndex < m_searchHighlights.size())
+    {
+        m_searchHighlights[m_currentMatchIndex].format.setBackground(search_and_select_color);
+    }
+    mergeAndSetExtraSelections();
+}
+void Basic_TextEdit::goToPrevMatch()
+{
+    if (m_matchCursors.isEmpty())
+    {
+        this->performSearch(true);
+        if (m_matchCursors.isEmpty())
+        {
+            return;
+        }
+    }
+    if (m_currentMatchIndex >= 0 && m_currentMatchIndex < m_searchHighlights.size())
+    {
+        m_searchHighlights[m_currentMatchIndex].format.setBackground(search_color);
+    }
+    m_currentMatchIndex--;
+    if (m_currentMatchIndex < 0)
+    {
+        m_currentMatchIndex = m_matchCursors.size() - 1;
+    }
+    QTextCursor prevMatch = m_matchCursors[m_currentMatchIndex];
+    setTextCursor(prevMatch);
+    ensureCursorVisible();
+    if (m_currentMatchIndex >= 0 && m_currentMatchIndex < m_searchHighlights.size())
+    {
+        m_searchHighlights[m_currentMatchIndex].format.setBackground(search_and_select_color);
+    }
+    mergeAndSetExtraSelections();
+}
+void Basic_TextEdit::replaceCurrentMatch()
+{
+    if (m_matchCursors.isEmpty() || m_currentMatchIndex < 0 || m_currentMatchIndex >= m_matchCursors.size())
+    {
+        return;
+    }
+
+    if (isReadOnly())
+    {
+        return;
+    }
+    QString replaceText = getReplaceText();
+    QTextCursor cursor = m_matchCursors[m_currentMatchIndex];
+    QTextCharFormat originalFormat;
+    if (cursor.hasSelection())
+    {
+        QTextCursor formatCursor = cursor;
+        formatCursor.setPosition(cursor.selectionStart() + 1);
+        if (!formatCursor.atEnd())
+        {
+            originalFormat = formatCursor.charFormat();
+        }
+    }
+    cursor.beginEditBlock();
+    cursor.removeSelectedText();
+    cursor.insertText(replaceText, originalFormat);
+    cursor.endEditBlock();
+    this->performSearch(false);//刷新
+}
+void Basic_TextEdit::replaceAllMatches()
+{
+    if (m_matchCursors.isEmpty())
+    {
+        return;
+    }
+    if (isReadOnly())
+    {
+        return;
+    }
+    QString replaceText = getReplaceText();
+    QTextCursor cursor = textCursor();
+    cursor.beginEditBlock();
+    for (int i = m_matchCursors.size() - 1; i >= 0; --i)
+    {
+        QTextCursor matchCursor = m_matchCursors[i];
+        QTextCharFormat originalFormat;
+        if (matchCursor.hasSelection())
+        {
+            QTextCursor formatCursor = matchCursor;
+            formatCursor.setPosition(matchCursor.selectionStart() + 1);
+            if (!formatCursor.atEnd())
+            {
+                originalFormat = formatCursor.charFormat();
+            }
+        }
+        matchCursor.removeSelectedText();
+        matchCursor.insertText(replaceText, originalFormat);
+    }
+    cursor.endEditBlock();
+    this->performSearch(false);
+}
+void Basic_TextEdit::setSearchBarVisible(bool visible)
+{
+    if (!visible)
+    {
+        m_searchHighlights.clear();
+        m_matchCursors.clear();
+        m_currentMatchIndex = -1;
+        mergeAndSetExtraSelections();
+    }
+}
+void Basic_TextEdit::mergeAndSetExtraSelections()
+{
+    QList<QTextEdit::ExtraSelection> allSelections = extraSelections_list;
+    allSelections.append(m_searchHighlights);
+    setExtraSelections(allSelections);
 }

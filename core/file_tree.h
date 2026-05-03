@@ -3,6 +3,7 @@
 #include "basic_widget.h"
 #include <QTreeView>
 #include <QFileSystemModel>
+#include "core/tools/multilinetextinputdialog.h"
 class My_TreeView_Delegate : public QStyledItemDelegate
 {
 public:
@@ -36,6 +37,8 @@ class My_Tree_View : public QTreeView
     Q_OBJECT
 public:
     explicit My_Tree_View(QWidget *parent);
+    void p_save(QSettings *settings);
+    void p_load(QSettings *settings);
     QFileSystemModel *F_model = nullptr;
     My_ProxyModel *proxyModel = nullptr;
     static My_Tree_View * catch_ptr;
@@ -54,6 +57,17 @@ private:
     QPoint origin_pos = QPoint();
     bool setup_rubber = false;
     char my_padding[7];
+public:
+    QStatusBar *m_statusBar = new QStatusBar(this);
+    QLabel *statusLabel = new QLabel(this);
+    QColor statusBar_text_color = QColor(50, 50, 50, 255);
+    void updateStatusBar_style();
+    void updateStatusBar();
+protected:
+    virtual void resizeEvent(QResizeEvent *event) override;
+private:
+    QString formatSize(qint64 bytes);
+    void recurseStat(const QModelIndex proxyParent, qint64 &outFileCount, qint64 &outFileSize, qint64 &outFolderCount);
 };
 class My_Icon_Provider : public QFileIconProvider
 {
@@ -83,6 +97,7 @@ public:
     QString *compressor_7z_process = nullptr;
     bool *m_allow_drop = nullptr;
     QString root_path = QDir::rootPath();
+    void update_style(QColor theme_color, QColor theme_background_color, QColor theme_text_color, QColor select_text_color, QColor disabled_text_color, QString checked_icon_path);
 protected:
     QModelIndex proposed_action_index;
     QColor hover_color = QColor(227, 242, 253, 255);
@@ -135,6 +150,8 @@ protected:
     QAction *single_press_mode_action = new QAction(tr("单击模式"), this);
     QAction *set_dir_path = new QAction(tr("设置文件夹路径"), this);
     QMenu *set_style_menu = new QMenu(tr("设置外观"), this);
+    QAction *set_show_status_bar = new QAction(tr("显示状态栏"), this);
+    QAction *set_show_status_bar_text_color = new QAction(tr("设置状态栏字体颜色"), this);
     QAction *set_icon_size_action = new QAction(tr("图标大小"), this);
     QAction *set_font_action = new QAction(tr("字体"), this);
     QAction *set_hover_color = new QAction(tr("悬停颜色"), this);
@@ -161,6 +178,8 @@ private:
     void dragLeaveEvent(QDragLeaveEvent *event);
     virtual void wheelEvent(QWheelEvent *event);
     void Pressed(bool from_key = false);
+private:
+    MultiLineTextInputDialog *m_dialog = new MultiLineTextInputDialog(nullptr);
 };
 
 #endif // FILE_TREE_H

@@ -44,7 +44,7 @@ void My_Clock::contextMenuEvent(QContextMenuEvent *event)
     if (know_what == set_outline)
     {
         bool ok = false;
-        int new_out_line = QInputDialog::getInt(nullptr, "获取数值", "输入描边大小:", time_label->outlineWidth, 0, 2147483647, 1, &ok);
+        int new_out_line = QInputDialog::getInt(nullptr, tr("获取数值"), tr("输入描边大小:"), time_label->outlineWidth, 0, 2147483647, 1, &ok);
         if (!ok)
         {
             return;
@@ -57,7 +57,7 @@ void My_Clock::contextMenuEvent(QContextMenuEvent *event)
         colorDialog.setOption(QColorDialog::ShowAlphaChannel);
         colorDialog.setCurrentColor(time_label->outlineColor);
         colorDialog.setParent(nullptr);
-        colorDialog.setWindowTitle("获取颜色");
+        colorDialog.setWindowTitle(tr("获取颜色"));
         if (colorDialog.exec() != QDialog::Accepted)
         {
             return;

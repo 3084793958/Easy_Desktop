@@ -482,7 +482,7 @@ void Desktop_Main::contextMenuEvent(QContextMenuEvent *event)
     }
     else if (know_what == delete_this_desktop)
     {
-        QMessageBox::StandardButton box = QMessageBox::question(this, "删除当前桌面", "是否删除当前桌面?", QMessageBox::Yes | QMessageBox::No);
+        QMessageBox::StandardButton box = QMessageBox::question(this, tr("删除当前桌面"), tr("是否删除当前桌面?"), QMessageBox::Yes | QMessageBox::No);
         if (box != QMessageBox::Yes)
         {
             return;
@@ -723,6 +723,7 @@ void Desktop_Main::contextMenuEvent(QContextMenuEvent *event)
         file_tree->compressor_zip_process = compressor_zip_process;
         file_tree->compressor_7z_process = compressor_7z_process;
         file_tree->m_allow_drop = allow_drop;
+        file_tree->update_style(*theme_color, *theme_background_color, *theme_text_color, *select_text_color, *disabled_text_color, *checked_icon_path);
     }
     else if (know_what == plugin_widget_action)
     {
@@ -751,25 +752,25 @@ void Desktop_Main::dropEvent(QDropEvent *event)
         }
         int x = event->pos().x(), y = event->pos().y(), width = 90, height = 90, delta_x = 5, delta_y = 5;
         bool ok = false;
-        x = QInputDialog::getInt(nullptr, "获取数值", "位置坐标:(x,y),宽度:width,高度:height,横向间隔:delta_x,纵向间隔:delta_y\n设置x", x, -2147483647, 2147483647, 1, &ok);
+        x = QInputDialog::getInt(nullptr, tr("获取数值"), tr("位置坐标:(x,y),宽度:width,高度:height,横向间隔:delta_x,纵向间隔:delta_y\n设置x"), x, -2147483647, 2147483647, 1, &ok);
         if (!ok)
         {
             return;
         }
         ok = false;
-        y = QInputDialog::getInt(nullptr, "获取数值", QString("位置坐标:(%1,y),宽度:width,高度:height,横向间隔:delta_x,纵向间隔:delta_y\n设置y").arg(x), y, -2147483647, 2147483647, 1, &ok);
+        y = QInputDialog::getInt(nullptr, tr("获取数值"), tr("位置坐标:(") + QString::number(x) + tr(",y),宽度:width,高度:height,横向间隔:delta_x,纵向间隔:delta_y\n设置y"), y, -2147483647, 2147483647, 1, &ok);
         if (!ok)
         {
             return;
         }
         ok = false;
-        width = QInputDialog::getInt(nullptr, "获取数值", QString("位置坐标:(%1,%2),宽度:width,高度:height,横向间隔:delta_x,纵向间隔:delta_y\n设置width").arg(x).arg(y), width, 0, 2147483647, 1, &ok);
+        width = QInputDialog::getInt(nullptr, tr("获取数值"), tr("位置坐标:(") + QString::number(x) + tr(",") + QString::number(y) + tr("),宽度:width,高度:height,横向间隔:delta_x,纵向间隔:delta_y\n设置width"), width, 0, 2147483647, 1, &ok);
         if (!ok)
         {
             return;
         }
         ok = false;
-        height = QInputDialog::getInt(nullptr, "获取数值", QString("位置坐标:(%1,%2),宽度:%3,高度:height,横向间隔:delta_x,纵向间隔:delta_y\n设置height").arg(x).arg(y).arg(width), height, 0, 2147483647, 1, &ok);
+        height = QInputDialog::getInt(nullptr, tr("获取数值"), tr("位置坐标:(") + QString::number(x) + tr(",") + QString::number(y) + tr("),宽度:") + QString::number(width) + tr(",高度:height,横向间隔:delta_x,纵向间隔:delta_y\n设置height"), height, 0, 2147483647, 1, &ok);
         if (!ok)
         {
             return;
@@ -778,26 +779,26 @@ void Desktop_Main::dropEvent(QDropEvent *event)
         int x_num = 2;
         if (filenames.size() > 1)
         {
-            delta_x = QInputDialog::getInt(nullptr, "获取数值", QString("位置坐标:(%1,%2),宽度:%3,高度:%4,横向间隔:delta_x,纵向间隔:delta_y\n设置delta_x").arg(x).arg(y).arg(width).arg(height), delta_x, -2147483647, 2147483647, 1, &ok);
+            delta_x = QInputDialog::getInt(nullptr, tr("获取数值"), tr("位置坐标:(") + QString::number(x) + tr(",") + QString::number(y) + tr("),宽度:") + QString::number(width) + tr(",高度:") + QString::number(height) + tr(",横向间隔:delta_x,纵向间隔:delta_y\n设置delta_x"), delta_x, -2147483647, 2147483647, 1, &ok);
             if (!ok)
             {
                 return;
             }
             ok = false;
-            delta_y = QInputDialog::getInt(nullptr, "获取数值", QString("位置坐标:(%1,%2),宽度:%3,高度:%4,横向间隔:%5,纵向间隔:delta_y\n设置delta_y").arg(x).arg(y).arg(width).arg(height).arg(delta_x), delta_y, -2147483647, 2147483647, 1, &ok);
+            delta_y = QInputDialog::getInt(nullptr, tr("获取数值"), tr("位置坐标:(") + QString::number(x) + tr(",") + QString::number(y) + tr("),宽度:") + QString::number(width) + tr(",高度:") + QString::number(height) + tr(",横向间隔:") + QString::number(delta_x) + tr(",纵向间隔:delta_y\n设置delta_y"), delta_y, -2147483647, 2147483647, 1, &ok);
             if (!ok)
             {
                 return;
             }
             ok = false;
-            x_num = QInputDialog::getInt(nullptr, "获取数值", "设置列数", 2, 1, 2147483647, 1, &ok);
+            x_num = QInputDialog::getInt(nullptr, tr("获取数值"), tr("设置列数"), 2, 1, 2147483647, 1, &ok);
             if (!ok)
             {
                 return;
             }
             ok = false;
         }
-        bool show_close_button_bool = QInputDialog::getItem(nullptr, "显示关闭按钮", "显示关闭按钮", QStringList() << "是" << "否", 0, false, &ok) == "是";
+        bool show_close_button_bool = QInputDialog::getItem(nullptr, tr("显示关闭按钮"), tr("显示关闭按钮"), QStringList() << tr("是") << tr("否"), 0, false, &ok) == tr("是");
         if (!ok)
         {
             show_close_button_bool = true;
@@ -893,6 +894,7 @@ void Desktop_Main::update_for_lineedit(QColor m_theme_color, QColor m_theme_back
     for (auto *item : file_tree_list)
     {
         item->set_icon(m_checked_icon_path);
+        item->update_style(m_theme_color, m_theme_background_color, m_theme_text_color, m_select_text_color, m_disabled_text_color, m_checked_icon_path);
     }
 #ifdef USE_CHART
     for (auto *item : cpu_chart_list)

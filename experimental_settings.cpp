@@ -5,7 +5,7 @@ Experimental_Settings::Experimental_Settings(QWidget *parent)
 {
     set_theme_dialog->hide();
     this->setMinimumSize(450, 235);
-    this->setWindowTitle("实验设置");
+    this->setWindowTitle(tr("实验设置"));
     load_path_label->move(5, 5);
     load_path_label->resize(70, 40);
     load_path_edit->move(75, 5);
@@ -86,7 +86,7 @@ Experimental_Settings::Experimental_Settings(QWidget *parent)
     connect(update_button, &QPushButton::clicked, this, &Experimental_Settings::send_data);
     connect(set_load_path, &QPushButton::clicked, this, [=]
     {
-        QString filename = QFileDialog::getOpenFileName(nullptr, "获取配置文件", QDir::homePath(), "配置文件(*.ini);;所有文件(*.*)");
+        QString filename = QFileDialog::getOpenFileName(nullptr, tr("获取配置文件"), QDir::homePath(), tr("配置文件") + "(*.ini);;" + tr("所有文件") + "(*.*)");
         My_X11_Libs::X11_Raise();
         if (!filename.isEmpty())
         {
@@ -245,7 +245,7 @@ Theme_Set_Dialog::Theme_Set_Dialog(QWidget *parent, QColor *m_theme_color, QColo
     checked_icon_path_load_button->resize(85, 40);
     connect(checked_icon_path_load_button, &QPushButton::clicked, this, [=]
     {
-        QString filename = QFileDialog::getOpenFileName(nullptr, "获取图像", QDir::homePath(), "图像文件(*.png *.jpg *.jpeg *.svg *.gif *.bmp);;所有文件(*.*)");
+        QString filename = QFileDialog::getOpenFileName(nullptr, tr("获取图像"), QDir::homePath(), tr("图像文件") + "(*.png *.jpg *.jpeg *.svg *.gif *.bmp);;" + tr("所有文件") + "(*.*)");
         emit Call_X11_Raise();
         if (!filename.isEmpty())
         {
@@ -282,7 +282,7 @@ void Theme_Set_Dialog::set_color(QColor *ptr)
     colorDialog.setOption(QColorDialog::ShowAlphaChannel);
     colorDialog.setCurrentColor(*ptr);
     colorDialog.setParent(nullptr);
-    colorDialog.setWindowTitle("获取颜色");
+    colorDialog.setWindowTitle(tr("获取颜色"));
     if (colorDialog.exec() != QDialog::Accepted)
     {
         return;

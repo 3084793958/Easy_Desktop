@@ -67,7 +67,7 @@ public:
     QAction *set_pos_action = new QAction(tr("设置位置"), this);
     QAction *set_size_action = new QAction(tr("设置大小"), this);
     QAction *close_action = new QAction(tr("关闭窗口"), this);
-    QPushButton *close_button = new QPushButton(tr("×"),this);
+    QPushButton *close_button = new QPushButton(tr("×"), this);
 protected:
     void moveToDesktop(int index);
     void basic_context(QMenu *menu);

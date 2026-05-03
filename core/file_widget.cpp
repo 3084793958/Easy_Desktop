@@ -19,7 +19,7 @@ File_Widget::File_Widget(QWidget *parent)
         movie->setFileName(":/base/folder.svg");
         emit Basic_Widget::size_changed(Carrier->size());
     }
-    this->process_name_label->setText("文件");
+    this->process_name_label->setText(tr("文件"));
     if (set_auto_resize->isChecked())
     {
         auto_set_font_size();
@@ -128,12 +128,12 @@ void File_Widget::contextMenuEvent(QContextMenuEvent *event)
         QString name;
         if (know_what == set_file_as_file)
         {
-            filepath = QFileDialog::getOpenFileName(nullptr, "获取文件", running_path);
+            filepath = QFileDialog::getOpenFileName(nullptr, tr("获取文件"), running_path);
             name = QFileInfo(filepath).fileName();
         }
         else
         {
-            filepath = QFileDialog::getExistingDirectory(nullptr, "获取文件夹", running_path);
+            filepath = QFileDialog::getExistingDirectory(nullptr, tr("获取文件夹"), running_path);
             name = QDir(filepath).dirName();
         }
         My_X11_Libs::X11_Raise();
@@ -142,7 +142,7 @@ void File_Widget::contextMenuEvent(QContextMenuEvent *event)
             return;
         }
         file_path = filepath;
-        QMessageBox::StandardButton name_ans = QMessageBox::question(nullptr, "确认名称", QString("将设为名称:%1\n请确认是否应用").arg(name));
+        QMessageBox::StandardButton name_ans = QMessageBox::question(nullptr, tr("确认名称"), tr("将设为名称:") + name + tr("\n请确认是否应用"));
         if (name_ans == QMessageBox::Yes)
         {
             this->process_name_label->setText(name);
@@ -151,7 +151,7 @@ void File_Widget::contextMenuEvent(QContextMenuEvent *event)
                 auto_set_font_size();
             }
         }
-        QMessageBox::StandardButton image_ans = QMessageBox::question(nullptr, "确认图像", QString("是否使用推测图像"));
+        QMessageBox::StandardButton image_ans = QMessageBox::question(nullptr, tr("确认图像"), tr("是否使用推测图像"));
         if (image_ans == QMessageBox::Yes)
         {
             if (know_what == set_file_as_file)
@@ -242,11 +242,11 @@ void File_Widget::contextMenuEvent(QContextMenuEvent *event)
             }
         }
         process_string = get_running_process(file_path);
-        QMessageBox::StandardButton final_ans = QMessageBox::question(nullptr, "确认进程", QString("默认进程:%1\n请确认是否应用").arg(process_string));
+        QMessageBox::StandardButton final_ans = QMessageBox::question(nullptr, tr("确认进程"), tr("默认进程:") + process_string + tr("\n请确认是否应用"));
         if (final_ans != QMessageBox::Yes)
         {
             bool ok = false;
-            QString final_string = QInputDialog::getText(nullptr, "设置运行进程", "设置运行进程:",QLineEdit::Normal, process_string, &ok);
+            QString final_string = QInputDialog::getText(nullptr, tr("设置运行进程"), tr("设置运行进程:"), QLineEdit::Normal, process_string, &ok);
             if (!ok || final_string.isEmpty())
             {
                 process_string = "";
@@ -462,11 +462,11 @@ void File_Widget::set_file_or_dir(bool file)
     QString filepath;
     if (file)
     {
-        filepath = QFileDialog::getOpenFileName(nullptr, "获取文件", running_path);
+        filepath = QFileDialog::getOpenFileName(nullptr, tr("获取文件"), running_path);
     }
     else
     {
-        filepath = QFileDialog::getExistingDirectory(nullptr, "获取文件夹", running_path);
+        filepath = QFileDialog::getExistingDirectory(nullptr, tr("获取文件夹"), running_path);
     }
     My_X11_Libs::X11_Raise();
     if (filepath.isEmpty())
@@ -475,11 +475,11 @@ void File_Widget::set_file_or_dir(bool file)
     }
     file_path = filepath;
     process_string = get_running_process(file_path);
-    QMessageBox::StandardButton final_ans = QMessageBox::question(nullptr, "确认进程", QString("默认进程:%1\n请确认是否应用").arg(process_string));
+    QMessageBox::StandardButton final_ans = QMessageBox::question(nullptr, tr("确认进程"), tr("默认进程:") + process_string + tr("\n请确认是否应用"));
     if (final_ans != QMessageBox::Yes)
     {
         bool ok = false;
-        QString final_string = QInputDialog::getText(nullptr, "设置运行进程", "设置运行进程:",QLineEdit::Normal, process_string, &ok);
+        QString final_string = QInputDialog::getText(nullptr, tr("设置运行进程"), tr("设置运行进程:"), QLineEdit::Normal, process_string, &ok);
         if (!ok || final_string.isEmpty())
         {
             process_string = "";

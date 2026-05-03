@@ -420,7 +420,7 @@ void Basic_Widget::basic_action_func(QAction *action)
     if (action == move_to_page_action)
     {
         bool ok = false;
-        int new_index = QInputDialog::getInt(nullptr, "获取数值", "移动到桌面数:\n(人类索引,非计算机索引)", *now_page + 1, 1, *desktop_number, 1, &ok);
+        int new_index = QInputDialog::getInt(nullptr, tr("获取数值"), tr("移动到桌面数:\n(人类索引,非计算机索引)"), *now_page + 1, 1, *desktop_number, 1, &ok);
         if (!ok)
         {
             return;
@@ -431,7 +431,7 @@ void Basic_Widget::basic_action_func(QAction *action)
     else if (action == set_background_radius)
     {
         bool ok = false;
-        int new_radius = QInputDialog::getInt(nullptr, "获取数值", "圆角大小:", background_radius, 0, 2147483647, 1, &ok);
+        int new_radius = QInputDialog::getInt(nullptr, tr("获取数值"), tr("圆角大小:"), background_radius, 0, 2147483647, 1, &ok);
         if (!ok)
         {
             return;
@@ -445,7 +445,7 @@ void Basic_Widget::basic_action_func(QAction *action)
         colorDialog.setOption(QColorDialog::ShowAlphaChannel);
         colorDialog.setCurrentColor(background_color);
         colorDialog.setParent(nullptr);
-        colorDialog.setWindowTitle("获取颜色");
+        colorDialog.setWindowTitle(tr("获取颜色"));
         if (colorDialog.exec() != QDialog::Accepted)
         {
             return;
@@ -462,13 +462,13 @@ void Basic_Widget::basic_action_func(QAction *action)
     else if (action == set_pos_action)
     {
         bool ok = false;
-        int new_X = QInputDialog::getInt(nullptr, "获取数值", "X坐标:", x(), -2147483647, 2147483647, 1, &ok);
+        int new_X = QInputDialog::getInt(nullptr, tr("获取数值"), tr("X坐标:"), x(), -2147483647, 2147483647, 1, &ok);
         if (!ok)
         {
             return;
         }
         ok = false;
-        int new_Y = QInputDialog::getInt(nullptr, "获取数值", "Y坐标:", y(),-2147483647 , 2147483647, 1, &ok);
+        int new_Y = QInputDialog::getInt(nullptr, tr("获取数值"), tr("Y坐标:"), y(),-2147483647 , 2147483647, 1, &ok);
         if (!ok)
         {
             return;
@@ -478,13 +478,13 @@ void Basic_Widget::basic_action_func(QAction *action)
     else if (action == set_size_action)
     {
         bool ok = false;
-        int new_X = QInputDialog::getInt(nullptr, "获取数值", "宽度width:", background->width(), 10, 2147483647, 1, &ok);
+        int new_X = QInputDialog::getInt(nullptr, tr("获取数值"), tr("宽度width:"), background->width(), 10, 2147483647, 1, &ok);
         if (!ok)
         {
             return;
         }
         ok = false;
-        int new_Y = QInputDialog::getInt(nullptr, "获取数值", "高度height:", background->height(), 10, 2147483647, 1, &ok);
+        int new_Y = QInputDialog::getInt(nullptr, tr("获取数值"), tr("高度height:"), background->height(), 10, 2147483647, 1, &ok);
         if (!ok)
         {
             return;
