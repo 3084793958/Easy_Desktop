@@ -45,6 +45,8 @@ public:
     explicit Basic_TextEdit(QWidget *parent);
     virtual void H_save(QSettings *settings, QString Token);
     virtual void H_load(QSettings *settings, QString Token);
+    void H_save_no_text(QSettings *settings, QString Token);
+    void H_load_no_text(QSettings *settings, QString Token);
     void set_icon(QString checked_icon_path);
 signals:
     void window_contextmenu(QPoint pos);
@@ -166,8 +168,9 @@ private:
         Basic_TextEdit *textEdit;
     };
     friend class LineNumberArea;
-private:
+public:
     void updateLineNumberAreaWidth();
+private:
     int lineNumberAreaWidth() const;
     void lineNumberAreaPaintEvent(QPaintEvent *event);
     LineNumberArea *lineNumberArea = new LineNumberArea(this);
@@ -179,6 +182,7 @@ private:
     QStatusBar *m_statusBar = new QStatusBar(this);
     QLabel *statusLabel = new QLabel(this);
     QColor statusBar_text_color = QColor(30, 30, 30, 255);
+public:
     void updateStatusBar_style();
     void updateStatusBar();
 };

@@ -713,6 +713,7 @@ void Desktop_Main::contextMenuEvent(QContextMenuEvent *event)
         file_tree->set_desktop_number(&Desktop_NUmber);
         file_tree->set_basic_list(reinterpret_cast<QList<QWidget *> *>(&desktop_core_dock_list));
         file_tree->move(event->globalPos() - basic_pos);
+        file_tree->first_set_preview_pos();
         file_tree_list.append(file_tree);
         file_tree->file_tree_list = &file_tree_list;
         file_tree->file_open_way_process = file_open_way_process;

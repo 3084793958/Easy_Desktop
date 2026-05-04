@@ -6,11 +6,13 @@ void File_Tree::set_icon(QString checked_icon_path)
     single_press_mode_action->setIcon(QIcon(checked_icon_path));
     show_hidden_action->setIcon(QIcon(checked_icon_path));
     m_dialog->set_icon(checked_icon_path);
+    preview_file_widget->set_icon(checked_icon_path);
     Basic_Widget::set_icon(checked_icon_path);
 }
 File_Tree::File_Tree(QWidget *parent)
     :Basic_Widget(parent)
 {
+    preview_file_widget = new Preview_File_Widget(parent, preview_file_action);
     setAcceptDrops(true);
     treeView->F_model = model;
     treeView->proxyModel = proxyModel;
@@ -37,6 +39,10 @@ File_Tree::File_Tree(QWidget *parent)
     show_hidden_action->setIcon(QIcon(":/base/this.svg"));
     show_hidden_action->setIconVisibleInMenu(false);
     control_menu->addAction(show_hidden_action);
+    preview_file_action->setIcon(QIcon(":/base/this.svg"));
+    preview_file_action->setIconVisibleInMenu(false);
+    control_menu->addAction(preview_file_action);
+    control_menu->addSeparator();
     control_menu->addAction(select_all_action);
     control_menu->addAction(clean_selection_action);
     control_menu->addAction(refresh_action);
@@ -448,11 +454,31 @@ File_Tree::File_Tree(QWidget *parent)
     });
     connect(this->treeView->selectionModel(), &QItemSelectionModel::selectionChanged, this, [=]
     {
-        treeView->updateStatusBar();
+        this->treeView->updateStatusBar();
+        if (treeView->selectionModel())
+        {
+            QModelIndexList selectedList = treeView->selectionModel()->selectedIndexes();
+            QStringList filelist = {};
+            for (int i = 0; i < selectedList.count(); i += 4)
+            {
+                filelist << model->filePath(proxyModel->mapToSource(selectedList[i]));
+            }
+            preview_file_widget->updatePreview(filelist, root_path);
+        }
     });
     connect(this->treeView->selectionModel(), &QItemSelectionModel::currentChanged, this, [=]
     {
-        treeView->updateStatusBar();
+        this->treeView->updateStatusBar();
+        if (treeView->selectionModel())
+        {
+            QModelIndexList selectedList = treeView->selectionModel()->selectedIndexes();
+            QStringList filelist = {};
+            for (int i = 0; i < selectedList.count(); i += 4)
+            {
+                filelist << model->filePath(proxyModel->mapToSource(selectedList[i]));
+            }
+            preview_file_widget->updatePreview(filelist, root_path);
+        }
     });
     resize(600, 300);
     show();
@@ -562,6 +588,14 @@ void File_Tree::Pressed(bool from_key)
         }
     }
 }
+void File_Tree::first_set_preview_pos()
+{
+    preview_file_widget->move(this->pos());
+    preview_file_widget->setParent(this->parentWidget());
+    preview_file_widget->set_now_page(now_page);
+    preview_file_widget->set_desktop_number(desktop_number);
+    preview_file_widget->set_basic_list(basic_list);
+}
 void File_Tree::set_tree_view_style()
 {
     treeView->setStyleSheet(QString("QTreeView{background:rgba(255,255,255,0);color:rgb(60,60,60);selection-background-color:rgba(0,0,0,0);}"
@@ -571,6 +605,7 @@ void File_Tree::set_tree_view_style()
 File_Tree::~File_Tree()
 {
     m_dialog->deleteLater();
+    preview_file_widget->deleteLater();
     if (file_tree_list)
     {
         file_tree_list->removeOne(this);
@@ -893,6 +928,7 @@ void File_Tree::contextMenuEvent(QContextMenuEvent *event)
                 {
                     treeView->selectionModel()->clear();
                 }
+                treeView->updateStatusBar();
             }
         }
     }
@@ -909,6 +945,7 @@ void File_Tree::contextMenuEvent(QContextMenuEvent *event)
                 {
                     treeView->selectionModel()->clear();
                 }
+                treeView->updateStatusBar();
             }
         }
     }
@@ -1122,6 +1159,37 @@ void File_Tree::contextMenuEvent(QContextMenuEvent *event)
         {
             show_hidden_action->setIconVisibleInMenu(!show_hidden_action->isIconVisibleInMenu());
             proxyModel->setShowHidden(show_hidden_action->isIconVisibleInMenu());
+        }
+    }
+    else if (know_what == preview_file_action)
+    {
+        if (preview_file_widget && !preview_file_action->isIconVisibleInMenu())
+        {
+            preview_file_widget->show();
+            preview_file_widget->raise();
+            if (treeView->selectionModel())
+            {
+                QModelIndexList selectedList = treeView->selectionModel()->selectedIndexes();
+                if (!selectedList.isEmpty())
+                {
+                    QStringList filelist = {};
+                    for (int i = 0; i < selectedList.count(); i += 4)
+                    {
+                        filelist << model->filePath(proxyModel->mapToSource(selectedList[i]));
+                    }
+                    preview_file_widget->updatePreview(filelist, root_path);
+                }
+                else
+                {
+                    preview_file_widget->updatePreview({}, root_path);
+                }
+            }
+            preview_file_action->setIconVisibleInMenu(true);
+        }
+        else
+        {
+            preview_file_widget->hide();
+            preview_file_action->setIconVisibleInMenu(false);
         }
     }
     else if (know_what == select_all_action)
@@ -1378,6 +1446,7 @@ void File_Tree::contextMenuEvent(QContextMenuEvent *event)
         {
             treeView->selectionModel()->clear();
         }
+        treeView->updateStatusBar();
     }
     else if (know_what == set_icon_size_action)
     {
@@ -1493,6 +1562,7 @@ void File_Tree::dropEvent(QDropEvent *event)
             {
                 treeView->selectionModel()->clear();
             }
+            treeView->updateStatusBar();
         }
         else
         {
@@ -1594,8 +1664,10 @@ void File_Tree::save(QSettings *settings)
     settings->setValue("show_hidden_action", show_hidden_action->isIconVisibleInMenu());
     settings->setValue("treeview_radius", radius);
     settings->setValue("set_show_status_bar", set_show_status_bar->isIconVisibleInMenu());
+    settings->setValue("preview_file_action", preview_file_action->isIconVisibleInMenu());
     treeView->p_save(settings);
     m_dialog->p_save(settings, "file_tree_dialog_");
+    preview_file_widget->save(settings, "file_tree_preview_");
 }
 void File_Tree::load(QSettings *settings)
 {
@@ -1623,6 +1695,12 @@ void File_Tree::load(QSettings *settings)
     treeView->m_statusBar->setVisible(set_show_status_bar->isIconVisibleInMenu());
     treeView->p_load(settings);
     m_dialog->p_load(settings, "file_tree_dialog_");
+    first_set_preview_pos();
+    preview_file_action->setIconVisibleInMenu(settings->value("preview_file_action", false).toBool());
+    preview_file_widget->load(settings, "file_tree_preview_");
+    preview_file_widget->setVisible(preview_file_action->isIconVisibleInMenu());
+    preview_file_widget->updatePreview({}, root_path);
+    treeView->updateStatusBar();
 }
 QIcon My_Icon_Provider::icon(QFileIconProvider::IconType type) const
 {
@@ -1889,7 +1967,7 @@ void My_Tree_View::updateStatusBar()
     for (const QModelIndex &idx : uniqueRows)
     {
         QModelIndex srcIdx = proxyModel->mapToSource(idx);
-        QFileInfo info = F_model->fileInfo(srcIdx);
+        QFileInfo info(F_model->filePath(srcIdx));
         if (info.isFile())
         {
             ++selectedFileCount;
@@ -1942,15 +2020,15 @@ void My_Tree_View::recurseStat(const QModelIndex proxyParent, qint64 &outFileCou
     auto file_list = root_dir.entryList(QDir::Files | QDir::Dirs | QDir::NoDotAndDotDot | QDir::Hidden);
     for (int r = 0; r < file_list.count(); ++r)
     {
-        QFileInfo info(file_list[r]);
-        if (info.isFile())
+        QFileInfo info(root_dir.filePath(file_list[r]));
+        if (info.isDir())
         {
-            ++outFileCount;
-            outFileSize += info.size();
+            ++outFolderCount;
         }
         else
         {
-            ++outFolderCount;
+            ++outFileCount;
+            outFileSize += info.size();
         }
     }
 }
@@ -2117,4 +2195,5 @@ void My_ProxyModel::sort(int column, Qt::SortOrder order)
 void File_Tree::update_style(QColor theme_color, QColor theme_background_color, QColor theme_text_color, QColor select_text_color, QColor disabled_text_color, QString checked_icon_path)
 {
     m_dialog->update_style(theme_color, theme_background_color, theme_text_color, select_text_color, disabled_text_color, checked_icon_path);
+    preview_file_widget->update_style(theme_color, theme_background_color, theme_text_color, select_text_color, disabled_text_color, checked_icon_path);
 }

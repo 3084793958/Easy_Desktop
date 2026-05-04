@@ -21,7 +21,7 @@
 
 #DEFINES += USE_DTK
 DEFINES += USE_CHART
-QT += core gui widgets multimedia multimediawidgets x11extras dbus
+QT += core gui widgets multimedia multimediawidgets x11extras dbus pdf pdfwidgets svg
 contains(DEFINES, USE_DTK) {
     QT += dtkcore dtkgui dtkwidget
 }
@@ -54,7 +54,8 @@ SOURCES += \
     interfaces/pluginsiteminterface.cpp \
     core/tools/my_x11_libs.cpp \
     core/tools/file_control.cpp \
-    core/tools/multilinetextinputdialog.cpp
+    core/tools/multilinetextinputdialog.cpp \
+    core/tools/preview_file_widget.cpp
 contains(DEFINES, USE_CHART) {
     SOURCES += \
         core/chart/basic_chart.cpp \
@@ -89,7 +90,8 @@ HEADERS += \
     interfaces/pluginsiteminterface.h \
     core/tools/my_x11_libs.h \
     core/tools/file_control.h \
-    core/tools/multilinetextinputdialog.h
+    core/tools/multilinetextinputdialog.h \
+    core/tools/preview_file_widget.h
 
 contains(DEFINES, USE_CHART) {
     HEADERS += \

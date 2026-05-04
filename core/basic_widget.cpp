@@ -562,6 +562,56 @@ void Basic_Widget::load(QSettings *settings)
     close_button_pos = static_cast<Button_Pos>(settings->value("close_button_pos", 1).toInt());
     update_close_button_pos();
 }
+void Basic_Widget::save(QSettings *settings, QString Token)
+{
+    settings->setValue(Token + "pos", this->pos());
+    settings->setValue(Token + "size", this->get_self()->size());
+    settings->setValue(Token + "show_close", show_close_button->isIconVisibleInMenu());
+    settings->setValue(Token + "background_color", background_color.rgba());
+    settings->setValue(Token + "background_radius", background_radius);
+    int res = -1;
+    for (int i = 0; i < basic_list->count(); i++)
+    {
+        if (this->parentWidget() != nullptr && this->parentWidget() == basic_list->at(i))
+        {
+            res = i;
+            break;
+        }
+    }
+    settings->setValue(Token + "in_page", res);
+    settings->setValue(Token + "close_button_pos", static_cast<int>(close_button_pos));
+}
+void Basic_Widget::load(QSettings *settings, QString Token)
+{
+    this->move(settings->value(Token + "pos", pos()).toPoint());
+    this->resize(settings->value(Token + "size", size()).toSize());
+    bool show_close_button_bool = settings->value(Token + "show_close", show_close_button->isIconVisibleInMenu()).toBool();
+    show_close_button->setIconVisibleInMenu(show_close_button_bool);
+    close_button->setVisible(show_close_button_bool);
+    background_color = QColor::fromRgba(settings->value(Token + "background_color", background_color.rgba()).toUInt());
+    background_radius = settings->value(Token + "background_radius", background_radius).toInt();
+    background->setStyleSheet(QString("border-radius: %1px %1px;background:rgba(%2,%3,%4,%5)").arg(background_radius).arg(background_color.red()).arg(background_color.green()).arg(background_color.blue()).arg(background_color.alpha()));
+    int save_res = -1;
+    for (int i = 0; i < basic_list->count(); i++)
+    {
+        if (this->parentWidget() != nullptr && this->parentWidget() == basic_list->at(i))
+        {
+            save_res = i;
+            break;
+        }
+    }
+    int res = settings->value(Token + "in_page", save_res).toInt();
+    if (res >= 0)
+    {
+        if (res >= basic_list->count())
+        {
+            res = basic_list->count() - 1;
+        }
+        this->setParent(basic_list->at(res));
+    }
+    close_button_pos = static_cast<Button_Pos>(settings->value(Token + "close_button_pos", static_cast<int>(close_button_pos)).toInt());
+    update_close_button_pos();
+}
 void Basic_Widget::set_icon(QString checked_icon_path)
 {
     show_close_button->setIcon(QIcon(checked_icon_path));

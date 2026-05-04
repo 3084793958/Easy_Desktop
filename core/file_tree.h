@@ -4,6 +4,7 @@
 #include <QTreeView>
 #include <QFileSystemModel>
 #include "core/tools/multilinetextinputdialog.h"
+#include "core/tools/preview_file_widget.h"
 class My_TreeView_Delegate : public QStyledItemDelegate
 {
 public:
@@ -134,6 +135,7 @@ protected:
     QAction *set_as_path_way = new QAction(tr("进入"), this);
     QAction *set_parent_as_path_way = new QAction(tr("返回上级"), this);
     QAction *show_hidden_action = new QAction(tr("显示隐藏文件"), this);
+    QAction *preview_file_action = new QAction(tr("显示预览窗口"), this);
 
     QAction *select_all_action = new QAction(tr("全选"), this);
     QAction *clean_selection_action = new QAction(tr("清除选择"), this);
@@ -178,8 +180,11 @@ private:
     void dragLeaveEvent(QDragLeaveEvent *event);
     virtual void wheelEvent(QWheelEvent *event);
     void Pressed(bool from_key = false);
+public:
+    void first_set_preview_pos();
 private:
     MultiLineTextInputDialog *m_dialog = new MultiLineTextInputDialog(nullptr);
+    Preview_File_Widget *preview_file_widget;
 };
 
 #endif // FILE_TREE_H

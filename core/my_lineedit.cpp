@@ -2191,7 +2191,7 @@ void Basic_TextEdit::H_load(QSettings *settings, QString Token)
     statusBar_text_color = QColor::fromRgba(settings->value(Token + "statusBar_text_color", QColor(30, 30, 30, 255).rgba()).toUInt());
     set_show_status_bar->setIconVisibleInMenu(settings->value(Token + "set_show_status_bar", false).toBool());
     markedLines.clear();
-    QVariantList markList = settings->value(Token + "markedLines").toList();
+    QVariantList markList = settings->value(Token + "markedLines", {}).toList();
     for (const QVariant &v : markList)
     {
         bool ok = false;
@@ -2201,6 +2201,57 @@ void Basic_TextEdit::H_load(QSettings *settings, QString Token)
             markedLines.insert(line);
         }
     }
+    if (lineNumberArea)
+    {
+        lineNumberArea->update();
+    }
+    updateStatusBar_style();
+    updateLineNumberAreaWidth();
+    updateStatusBar();
+}
+void Basic_TextEdit::H_save_no_text(QSettings *settings, QString Token)
+{
+    settings->setValue(Token + "auto_turn_line", auto_turn_line_action->isIconVisibleInMenu());
+    settings->setValue(Token + "read_only", read_only_action->isIconVisibleInMenu());
+    settings->setValue(Token + "center_paste", center_paste_action->isIconVisibleInMenu());
+    settings->setValue(Token + "wheel_change_size", wheel_change_size_action->isIconVisibleInMenu());
+    settings->setValue(Token + "selection_color", selection_color.rgba());
+    settings->setValue(Token + "insert_mode_action", insert_mode_action->isIconVisibleInMenu());
+    settings->setValue(Token + "search_color", search_color.rgba());
+    settings->setValue(Token + "search_and_select_color", search_and_select_color.rgba());
+    settings->setValue(Token + "show_line_num_action", show_line_num_action->isIconVisibleInMenu());
+    settings->setValue(Token + "line_mark_color", line_mark_color.rgba());
+    settings->setValue(Token + "line_text_color", line_text_color.rgba());
+    settings->setValue(Token + "statusBar_text_color", statusBar_text_color.rgba());
+    settings->setValue(Token + "lineArea_left", lineArea_left);
+    settings->setValue(Token + "set_show_status_bar", set_show_status_bar->isIconVisibleInMenu());
+}
+void Basic_TextEdit::H_load_no_text(QSettings *settings, QString Token)
+{
+    bool auto_turn_line = settings->value(Token + "auto_turn_line", false).toBool();
+    auto_turn_line_action->setIconVisibleInMenu(auto_turn_line);
+    setWordWrapMode(auto_turn_line_action->isIconVisibleInMenu()?QTextOption::WrapMode::WrapAnywhere:QTextOption::WrapMode::NoWrap);
+    bool read_only = settings->value(Token + "read_only", false).toBool();
+    read_only_action->setIconVisibleInMenu(read_only);
+    setReadOnly(read_only_action->isIconVisibleInMenu());
+    bool center_paste = settings->value(Token + "center_paste", true).toBool();
+    center_paste_action->setIconVisibleInMenu(center_paste);
+    wheel_change_size_action->setIconVisibleInMenu(settings->value(Token + "wheel_change_size", true).toBool());
+    selection_color = QColor::fromRgba(settings->value(Token + "selection_color", QColor(0, 100, 255, 80).rgba()).toUInt());
+    bool insert_mode = settings->value(Token + "insert_mode_action", false).toBool();
+    insert_mode_action->setIconVisibleInMenu(center_paste);
+    setCursorWidth(insert_mode ? 8 : 2);
+    search_color = QColor::fromRgba(settings->value(Token + "search_color", QColor(255, 255, 0, 255).rgba()).toUInt());
+    search_and_select_color = QColor::fromRgba(settings->value(Token + "search_and_select_color", QColor(0, 129, 255, 255).rgba()).toUInt());
+    show_line_num_action->setIconVisibleInMenu(settings->value(Token + "show_line_num_action", false).toBool());
+    lineArea_left = settings->value(Token + "lineArea_left", true).toBool();
+    set_show_line_pos_left_action->setIconVisibleInMenu(lineArea_left);
+    set_show_line_pos_right_action->setIconVisibleInMenu(!lineArea_left);
+    line_mark_color = QColor::fromRgba(settings->value(Token + "line_mark_color", QColor(255, 0, 0, 255).rgba()).toUInt());
+    line_text_color = QColor::fromRgba(settings->value(Token + "line_text_color", QColor(30, 30, 30, 255).rgba()).toUInt());
+    statusBar_text_color = QColor::fromRgba(settings->value(Token + "statusBar_text_color", QColor(30, 30, 30, 255).rgba()).toUInt());
+    set_show_status_bar->setIconVisibleInMenu(settings->value(Token + "set_show_status_bar", false).toBool());
+    markedLines.clear();
     if (lineNumberArea)
     {
         lineNumberArea->update();

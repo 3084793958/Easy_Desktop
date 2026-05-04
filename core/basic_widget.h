@@ -40,6 +40,8 @@ public:
     void Update_Background();
     virtual void save(QSettings *settings);
     virtual void load(QSettings *settings);
+    virtual void save(QSettings *settings, QString Token);//由于很多派生类已经写死了virtual void save(QSettings *settings);,不可能加个QString Token.
+    virtual void load(QSettings *settings, QString Token);
     virtual void set_icon(QString checked_icon_path);
     enum class Button_Pos
     {
