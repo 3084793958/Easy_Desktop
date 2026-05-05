@@ -1,5 +1,6 @@
 #include "preview_file_widget.h"
 #include <QSvgRenderer>
+#include <QPdfPageNavigation>
 
 Preview_File_Widget::Preview_File_Widget(QWidget *parent, QAction *m_preview_action)
     :Basic_Widget(parent)
@@ -10,11 +11,39 @@ Preview_File_Widget::Preview_File_Widget(QWidget *parent, QAction *m_preview_act
     //m_textEdit->setReadOnly(true); //玩就玩吧,反正改不了
     m_imageViewer->hide();
     m_pdfViewer->hide();
-    m_videoWidget->hide();
-    m_audioWidget->hide();
+    m_videoViewer->hide();
     this->auto_close = false;
     menu->addAction(prevAction);
     menu->addAction(nextAction);
+    prevButton->setEnabled(false);
+    nextButton->setEnabled(false);
+    menu->addSeparator();
+    textEdit_Mode_TEXT->setIcon(QIcon(":/base/this.svg"));
+    textEdit_Mode_TEXT->setIconVisibleInMenu(true);
+    textEdit_View_Mode_Menu->addAction(textEdit_Mode_TEXT);
+    textEdit_Mode_HTML->setIcon(QIcon(":/base/this.svg"));
+    textEdit_Mode_HTML->setIconVisibleInMenu(false);
+    textEdit_View_Mode_Menu->addAction(textEdit_Mode_HTML);
+    textEdit_Mode_MARKDOWN->setIcon(QIcon(":/base/this.svg"));
+    textEdit_Mode_MARKDOWN->setIconVisibleInMenu(false);
+    textEdit_View_Mode_Menu->addAction(textEdit_Mode_MARKDOWN);
+    textEdit_Mode_SVG->setIcon(QIcon(":/base/this.svg"));
+    textEdit_Mode_SVG->setIconVisibleInMenu(false);
+    textEdit_View_Mode_Menu->addAction(textEdit_Mode_SVG);
+    menu->addMenu(textEdit_View_Mode_Menu);
+    textEdit_View_Mode_Menu->setEnabled(false);
+    menu->addSeparator();
+    menu->addAction(prevPage);
+    menu->addAction(nextPage);
+    prevPage->setEnabled(false);
+    nextPage->setEnabled(false);
+    menu->addSeparator();
+    menu->addAction(play_action);
+    menu->addAction(stop_action);
+    play_action->setEnabled(false);
+    stop_action->setEnabled(false);
+    menu->addAction(media_control_action);
+    media_control_action->setEnabled(false);
     Basic_Widget::basic_context(menu);
     connect(this, &Basic_Widget::close_signals, this, [=]
     {
@@ -27,21 +56,44 @@ Preview_File_Widget::Preview_File_Widget(QWidget *parent, QAction *m_preview_act
         m_infoWidget->resize(size.width() - 20, 100);
         m_textModeCombo->move(size.width() - 80 - m_textModeCombo->width(), 7);
         m_textModeCombo->resize(m_textModeCombo->width(), 30);
+        nextPageButton->move(prevButton->x() - 5 - nextPageButton->width(), 5);
+        prevPageButton->move(nextPageButton->x() - 5 - prevPageButton->width(), 5);
+        stopButton->move(prevButton->x() - 5 - stopButton->width(), 5);
+        playButton->move(stopButton->x() - 5 - playButton->width(), 5);
         m_textEdit->resize(size - QSize(10, 150));
         m_imageViewer->resize(size - QSize(10, 150));
         m_pdfViewer->resize(size - QSize(10, 150));
+        m_videoViewer->resize(size - QSize(10, 150));
     });
-    prevButton->setEnabled(false);
-    nextButton->setEnabled(false);
 
     prevButton->resize(30, 30);
-    prevButton->setFocusPolicy(Qt::NoFocus);
     prevButton->setStyleSheet("QPushButton{border-radius:10px 10px;background:rgba(255,255,255,150)}"
                               "QPushButton:hover{border-radius:10px 10px;background:rgba(255,255,255,200)}"
                               "QPushButton:pressed{border-radius:10px 10px;background:rgba(255,255,255,150)}");
     nextButton->resize(30, 30);
-    nextButton->setFocusPolicy(Qt::NoFocus);
     nextButton->setStyleSheet("QPushButton{border-radius:10px 10px;background:rgba(255,255,255,150)}"
+                              "QPushButton:hover{border-radius:10px 10px;background:rgba(255,255,255,200)}"
+                              "QPushButton:pressed{border-radius:10px 10px;background:rgba(255,255,255,150)}");
+
+    prevPageButton->hide();
+    prevPageButton->resize(50, 30);
+    prevPageButton->setStyleSheet("QPushButton{border-radius:10px 10px;background:rgba(255,255,255,150)}"
+                              "QPushButton:hover{border-radius:10px 10px;background:rgba(255,255,255,200)}"
+                              "QPushButton:pressed{border-radius:10px 10px;background:rgba(255,255,255,150)}");
+    nextPageButton->hide();
+    nextPageButton->resize(50, 30);
+    nextPageButton->setStyleSheet("QPushButton{border-radius:10px 10px;background:rgba(255,255,255,150)}"
+                              "QPushButton:hover{border-radius:10px 10px;background:rgba(255,255,255,200)}"
+                              "QPushButton:pressed{border-radius:10px 10px;background:rgba(255,255,255,150)}");
+
+    playButton->hide();
+    playButton->resize(50, 30);
+    playButton->setStyleSheet("QPushButton{border-radius:10px 10px;background:rgba(255,255,255,150)}"
+                              "QPushButton:hover{border-radius:10px 10px;background:rgba(255,255,255,200)}"
+                              "QPushButton:pressed{border-radius:10px 10px;background:rgba(255,255,255,150)}");
+    stopButton->hide();
+    stopButton->resize(50, 30);
+    stopButton->setStyleSheet("QPushButton{border-radius:10px 10px;background:rgba(255,255,255,150)}"
                               "QPushButton:hover{border-radius:10px 10px;background:rgba(255,255,255,200)}"
                               "QPushButton:pressed{border-radius:10px 10px;background:rgba(255,255,255,150)}");
 
@@ -58,16 +110,87 @@ Preview_File_Widget::Preview_File_Widget(QWidget *parent, QAction *m_preview_act
     m_textEdit->move(5, 145);
     m_imageViewer->move(5, 145);
     m_pdfViewer->move(5, 145);
+    m_videoViewer->move(5, 145);
     clearCurrentPreview();
 
     connect(prevButton, &QPushButton::clicked, this, &Preview_File_Widget::onPrevClicked);
     connect(nextButton, &QPushButton::clicked, this, &Preview_File_Widget::onNextClicked);
+    connect(prevPageButton, &QPushButton::clicked, this, &Preview_File_Widget::prevPdfPage);
+    connect(nextPageButton, &QPushButton::clicked, this, &Preview_File_Widget::nextPdfPage);
+    connect(playButton, &QPushButton::clicked, this, [=]
+    {
+        if (m_imageViewer->isVisible())
+        {
+            m_imageViewer->gif_movie->setPaused(false);
+        }
+        if (!m_mediaPlayer->media().isNull())
+        {
+            m_mediaPlayer->play();
+        }
+    });
+    connect(stopButton, &QPushButton::clicked, this, [=]
+    {
+        m_imageViewer->gif_movie->setPaused(true);
+        m_mediaPlayer->pause();
+    });
     connect(m_textModeCombo, QOverload<int>::of(&QComboBox::currentIndexChanged), this, [=]
     {
         clearCurrentPreview();
         setupTextPreview(currentFileInfos[currentIndex]);
     });
+    connect(media_control_action, &Media_WidgetAction::change_signals_P, this, [=](int value)
+    {
+        Set_Position(value);
+    });
+    connect(media_control_action, &Media_WidgetAction::change_signals_V, this, [=](int value)
+    {
+        Set_Volume(value);
+    });
+    connect(media_control_action, &Media_WidgetAction::change_signals_S, this, [=](int value)
+    {
+        Set_Speed(value);
+    });
+    connect(this, &Preview_File_Widget::send_position, this, [=](int value, QString text)
+    {
+        media_control_action->set_second(value, text);
+    });
+    holding_pos_timer->setInterval(50);
+    connect(holding_pos_timer, &QTimer::timeout, this, [=]
+    {
+        if (holding_time < holding_max_time && !m_mediaPlayer->media().isNull())
+        {
+            holding_time++;//可能不优雅,但想不到更好的方法.positionChanged(qint64 position)并不稳定,load时无效
+            if (m_mediaPlayer->duration() != 0)
+            {
+                m_mediaPlayer->setPosition(m_mediaPlayer->duration() * holding_value / 100);
+                holding_pos_timer->stop();
+                holding_time = 0;
+            }
+        }
+        else
+        {
+            holding_pos_timer->stop();
+            holding_time = 0;
+        }
+    });
     resize(350, 400);
+}
+void Preview_File_Widget::Set_Speed(int value)
+{
+    qreal result = static_cast<qreal>(value) / 100;
+    m_mediaPlayer->setPlaybackRate(result);
+    m_imageViewer->gif_movie->setSpeed(value);
+}
+void Preview_File_Widget::Set_Volume(int value)
+{
+    m_mediaPlayer->setVolume(value);
+}
+void Preview_File_Widget::Set_Position(int value)
+{
+    holding_value = value;
+    holding_time = 0;
+    holding_pos_timer->start();
+    m_imageViewer->gif_movie->jumpToFrame(static_cast<int>(static_cast<double>(m_imageViewer->gif_movie->frameCount() * value) / 100));
 }
 Preview_File_Widget::~Preview_File_Widget()
 {}
@@ -108,10 +231,14 @@ void Preview_File_Widget::load(QSettings *settings, QString Token)
 void Preview_File_Widget::set_icon(QString checked_icon_path)
 {
     Basic_Widget::set_icon(checked_icon_path);//预留点,可能不会添加,这段话是在构造这个类的时候写的.
+    textEdit_Mode_TEXT->setIcon(QIcon(checked_icon_path));
+    textEdit_Mode_HTML->setIcon(QIcon(checked_icon_path));
+    textEdit_Mode_MARKDOWN->setIcon(QIcon(checked_icon_path));
+    textEdit_Mode_SVG->setIcon(QIcon(checked_icon_path));
 }
-void Preview_File_Widget::updatePreview(QStringList selectionFileList, QString parent_dir)
+void Preview_File_Widget::updatePreview(QStringList selectionFileList, QString parent_dir, bool force_update)
 {
-    if (!isVisible())
+    if (!isVisible() && !force_update)
     {
         return;
     }
@@ -140,6 +267,9 @@ void Preview_File_Widget::updateCurrentPreview()
     QFileInfo &info = currentFileInfos[currentIndex];
     m_infoWidget->Set_Data(info);
     ContentType type = getContentType(info);
+    textEdit_View_Mode_Menu->setEnabled(type == ContentType::TypeText);
+    prevPage->setEnabled(false);
+    nextPage->setEnabled(false);
     switch (type)
     {
     case ContentType::TypeText:
@@ -179,6 +309,7 @@ void Preview_File_Widget::updateCurrentPreview()
 }
 void Preview_File_Widget::clearCurrentPreview()
 {
+    media_control_action->setEnabled(false);
     m_textEdit->hide();
     m_textEdit->clear();
     m_textModeCombo->hide();
@@ -186,10 +317,23 @@ void Preview_File_Widget::clearCurrentPreview()
     m_imageViewer->hide();
     m_imageViewer->clear();
     m_pdfViewer->hide();
-    m_pdfViewer->clear();
+    m_pdfDocument->close();
+    m_pdfViewer->setDocument(nullptr);
+    prevPageButton->hide();
+    nextPageButton->hide();
+    prevPage->setEnabled(false);
+    nextPage->setEnabled(false);
+    play_action->setEnabled(false);
+    stop_action->setEnabled(false);
+    playButton->hide();
+    stopButton->hide();
+    m_mediaPlayer->stop();
+    m_mediaPlayer->setMedia(nullptr);
+    m_mediaPlayer->disconnect();
 
-    m_videoWidget->hide();
-    m_audioWidget->hide();
+    m_videoViewer->hide();
+    m_videoViewer->clear();
+    //m_videoWidget->hide();
 }
 void Preview_File_Widget::setupTextPreview(const QFileInfo &info)
 {
@@ -240,6 +384,8 @@ void Preview_File_Widget::setupTextPreview(const QFileInfo &info)
 }
 void Preview_File_Widget::setupPdfPreview(const QFileInfo &info)
 {
+    prevPageButton->show();
+    nextPageButton->show();
     m_pdfDocument->load(info.filePath());
     if (m_pdfDocument->pageCount() == 0)
     {
@@ -247,18 +393,27 @@ void Preview_File_Widget::setupPdfPreview(const QFileInfo &info)
         m_textEdit->show();
         return;
     }
+    pdf_currentIndex = 0;
     QSize pageSize = m_pdfDocument->pageSize(0).toSize();
     if (pageSize.isEmpty())
     {
         pageSize = QSize(500, 500);
     }
-    QImage image(pageSize, QImage::Format_ARGB32);
-    image.fill(Qt::white);
-    image = m_pdfDocument->render(0, pageSize);
-    QPainter painter(&image);
-    painter.setRenderHint(QPainter::Antialiasing);
-    painter.end();
-    m_pdfViewer->setImage(image);
+    m_pdfViewer->setDocument(m_pdfDocument);
+    m_pdfViewer->setZoomFactor(GraphicsViewer::get_scaled(pageSize, m_pdfViewer->size()));
+    pdf_currentIndex = 0;
+    prevPage->setEnabled(pdf_currentIndex > 0);
+    nextPage->setEnabled(pdf_currentIndex < m_pdfDocument->pageCount() - 1);
+    prevPageButton->setEnabled(pdf_currentIndex > 0);
+    nextPageButton->setEnabled(pdf_currentIndex < m_pdfDocument->pageCount() - 1);
+    connect(m_pdfViewer->pageNavigation(), &QPdfPageNavigation::currentPageChanged, this, [=]
+    {
+        pdf_currentIndex = m_pdfViewer->pageNavigation()->currentPage();
+        prevPage->setEnabled(pdf_currentIndex > 0);
+        nextPage->setEnabled(pdf_currentIndex < m_pdfDocument->pageCount() - 1);
+        prevPageButton->setEnabled(pdf_currentIndex > 0);
+        nextPageButton->setEnabled(pdf_currentIndex < m_pdfDocument->pageCount() - 1);
+    });
     m_pdfViewer->show();
 }
 void Preview_File_Widget::setupImagePreview(const QFileInfo &info)
@@ -273,6 +428,11 @@ void Preview_File_Widget::setupImagePreview(const QFileInfo &info)
     }
     if (mimeName == "image/gif")
     {
+        play_action->setEnabled(true);
+        stop_action->setEnabled(true);
+        playButton->show();
+        stopButton->show();
+        media_control_action->setEnabled(true);
         m_imageViewer->setGif(info);
         m_imageViewer->show();
         return;
@@ -289,9 +449,81 @@ void Preview_File_Widget::setupImagePreview(const QFileInfo &info)
     m_imageViewer->show();
 }
 void Preview_File_Widget::setupVideoPreview(const QFileInfo &info)
-{}
+{
+    play_action->setEnabled(true);
+    stop_action->setEnabled(true);
+    playButton->show();
+    stopButton->show();
+    media_control_action->setEnabled(true);
+    m_mediaPlayer->stop();
+    m_mediaPlayer->setMedia(nullptr);
+    m_mediaPlayer->setMedia(QUrl::fromLocalFile(info.filePath()));
+    auto video_item = new QGraphicsVideoItem;
+    m_mediaPlayer->setVideoOutput(video_item);
+    m_videoViewer->clear();
+    m_videoViewer->setGraphicsItem(video_item);
+    m_videoViewer->show();
+    connect(m_mediaPlayer, &QMediaPlayer::positionChanged, this, [=](qint64 position)
+    {
+        qint64 all_position = m_mediaPlayer->duration();
+        if (all_position <= 0)
+        {
+            return;
+        }
+        int result = static_cast<int>(position * 100 / all_position);
+        position /= 1000;//mSec
+        int sec = position % 60;
+        int min = static_cast<int>(position / 60);
+        QString text;
+        if (min < 10)
+        {
+            text = "0";
+        }
+        text += QString::number(min);
+        text += ":";
+        if (sec < 10)
+        {
+            text += "0";
+        }
+        text += QString::number(sec);
+        emit send_position(result, text);
+    });
+}
 void Preview_File_Widget::setupAudioPreview(const QFileInfo &info)
-{}
+{
+    play_action->setEnabled(true);
+    stop_action->setEnabled(true);
+    playButton->show();
+    stopButton->show();
+    media_control_action->setEnabled(true);
+    m_mediaPlayer->stop();
+    m_mediaPlayer->setMedia(QUrl::fromLocalFile(info.filePath()));
+    connect(m_mediaPlayer, &QMediaPlayer::positionChanged, this, [=](qint64 position)
+    {
+        qint64 all_position = m_mediaPlayer->duration();
+        if (all_position <= 0)
+        {
+            return;
+        }
+        int result = static_cast<int>(position * 100 / all_position);
+        position /= 1000;//mSec
+        int sec = position % 60;
+        int min = static_cast<int>(position / 60);
+        QString text;
+        if (min < 10)
+        {
+            text = "0";
+        }
+        text += QString::number(min);
+        text += ":";
+        if (sec < 10)
+        {
+            text += "0";
+        }
+        text += QString::number(sec);
+        emit send_position(result, text);
+    });
+}
 void Preview_File_Widget::setupSvgPreview(const QFileInfo &info)
 {
     auto Item = new QGraphicsSvgItem(info.filePath());
@@ -330,10 +562,92 @@ void Preview_File_Widget::contextMenuEvent(QContextMenuEvent *event)
     {
         onNextClicked();
     }
+    else if (know_what == textEdit_Mode_TEXT)
+    {
+        textEdit_Mode_TEXT->setIconVisibleInMenu(true);
+        textEdit_Mode_HTML->setIconVisibleInMenu(false);
+        textEdit_Mode_MARKDOWN->setIconVisibleInMenu(false);
+        textEdit_Mode_SVG->setIconVisibleInMenu(false);
+        m_textModeCombo->setCurrentIndex(0);
+        clearCurrentPreview();
+        setupTextPreview(currentFileInfos[currentIndex]);
+    }
+    else if (know_what == textEdit_Mode_HTML)
+    {
+        textEdit_Mode_TEXT->setIconVisibleInMenu(false);
+        textEdit_Mode_HTML->setIconVisibleInMenu(true);
+        textEdit_Mode_MARKDOWN->setIconVisibleInMenu(false);
+        textEdit_Mode_SVG->setIconVisibleInMenu(false);
+        m_textModeCombo->setCurrentIndex(1);
+        clearCurrentPreview();
+        setupTextPreview(currentFileInfos[currentIndex]);
+    }
+    else if (know_what == textEdit_Mode_MARKDOWN)
+    {
+        textEdit_Mode_TEXT->setIconVisibleInMenu(false);
+        textEdit_Mode_HTML->setIconVisibleInMenu(false);
+        textEdit_Mode_MARKDOWN->setIconVisibleInMenu(true);
+        textEdit_Mode_SVG->setIconVisibleInMenu(false);
+        m_textModeCombo->setCurrentIndex(2);
+        clearCurrentPreview();
+        setupTextPreview(currentFileInfos[currentIndex]);
+    }
+    else if (know_what == textEdit_Mode_SVG)
+    {
+        textEdit_Mode_TEXT->setIconVisibleInMenu(false);
+        textEdit_Mode_HTML->setIconVisibleInMenu(false);
+        textEdit_Mode_MARKDOWN->setIconVisibleInMenu(false);
+        textEdit_Mode_SVG->setIconVisibleInMenu(true);
+        m_textModeCombo->setCurrentIndex(3);
+        clearCurrentPreview();
+        setupTextPreview(currentFileInfos[currentIndex]);
+    }
+    else if (know_what == prevPage)
+    {
+        prevPdfPage();
+    }
+    else if (know_what == nextPage)
+    {
+        nextPdfPage();
+    }
+    else if (know_what == play_action)
+    {
+        if (m_imageViewer->isVisible())
+        {
+            m_imageViewer->gif_movie->setPaused(false);
+        }
+        if (!m_mediaPlayer->media().isNull())
+        {
+            m_mediaPlayer->play();
+        }
+    }
+    else if (know_what == stop_action)
+    {
+        m_imageViewer->gif_movie->setPaused(true);
+        m_mediaPlayer->pause();
+    }
     else
     {
         Basic_Widget::basic_action_func(know_what);
     }
+}
+void Preview_File_Widget::prevPdfPage()
+{
+    m_pdfViewer->pageNavigation()->goToPreviousPage();
+    pdf_currentIndex = m_pdfViewer->pageNavigation()->currentPage();
+    prevPage->setEnabled(pdf_currentIndex > 0);
+    nextPage->setEnabled(pdf_currentIndex < m_pdfDocument->pageCount() - 1);
+    prevPageButton->setEnabled(pdf_currentIndex > 0);
+    nextPageButton->setEnabled(pdf_currentIndex < m_pdfDocument->pageCount() - 1);
+}
+void Preview_File_Widget::nextPdfPage()
+{
+    m_pdfViewer->pageNavigation()->goToNextPage();
+    pdf_currentIndex = m_pdfViewer->pageNavigation()->currentPage();
+    prevPage->setEnabled(pdf_currentIndex > 0);
+    nextPage->setEnabled(pdf_currentIndex < m_pdfDocument->pageCount() - 1);
+    prevPageButton->setEnabled(pdf_currentIndex > 0);
+    nextPageButton->setEnabled(pdf_currentIndex < m_pdfDocument->pageCount() - 1);
 }
 QSize Preview_File_Widget::get_Image_Size(QString path)
 {
@@ -525,6 +839,17 @@ void Preview_File_Widget::update_style(QColor theme_color, QColor theme_backgrou
                                                    "QScrollBar::handle:horizontal:hover{background:rgba(0,0,0,125);}"
                                                    "QScrollBar::add-line:horizontal,QScrollBar::sub-line:horizontal{width:0px;}"
                                                    "QScrollBar::add-page:horizontal,QScrollBar::sub-page:horizontal{background:none;}");
+    m_videoViewer->verticalScrollBar()->setStyleSheet("QScrollBar:vertical{border:none;background:rgba(0,0,0,0);width:8px;margin:0px0px0px0px;}"
+                                                 "QScrollBar::handle:vertical{background:rgba(0,0,0,75);border-radius:4px;min-height:20px;}"
+                                                 "QScrollBar::handle:vertical:hover{background:rgba(0,0,0,125);}"
+                                                 "QScrollBar::add-line:vertical,QScrollBar::sub-line:vertical{height:0px;}"
+                                                 "QScrollBar::add-page:vertical,QScrollBar::sub-page:vertical{background:none;}");
+    m_videoViewer->horizontalScrollBar()->setStyleSheet("QScrollBar:horizontal{border:none;background:rgba(0,0,0,0);height:8px;margin:0px0px0px0px;}"
+                                                   "QScrollBar::handle:horizontal{background:rgba(0,0,0,75);border-radius:4px;min-width:20px;}"
+                                                   "QScrollBar::handle:horizontal:hover{background:rgba(0,0,0,125);}"
+                                                   "QScrollBar::add-line:horizontal,QScrollBar::sub-line:horizontal{width:0px;}"
+                                                   "QScrollBar::add-page:horizontal,QScrollBar::sub-page:horizontal{background:none;}");
+    this->media_control_action->set_color(theme_text_color);
 }
 Info_Widget::Info_Widget(QWidget *parent)
     :QWidget(parent)
@@ -626,8 +951,9 @@ void Info_Widget::resizeEvent(QResizeEvent *event)
     type_name_label->move(icon_showing->geometry().topRight() + QPoint(5, 3 * ((event->size().height() - 25) / 4 + 5)));
     type_name_label->resize(event->size().width() - type_name_label->x() - 5, (event->size().height() - 25) / 4);
 }
-GraphicsViewer::GraphicsViewer(QWidget *parent)
+GraphicsViewer::GraphicsViewer(QWidget *parent, Preview_File_Widget *m_preview_ptr)
     :QGraphicsView(parent)
+    ,preview_ptr(m_preview_ptr)
 {
     setScene(m_scene);
     setDragMode(QGraphicsView::NoDrag);
@@ -637,6 +963,7 @@ GraphicsViewer::GraphicsViewer(QWidget *parent)
     setHorizontalScrollBarPolicy(Qt::ScrollBarAsNeeded);
     setVerticalScrollBarPolicy(Qt::ScrollBarAsNeeded);
     setStyleSheet("background: transparent; border: none;");
+    gif_movie->setCacheMode(QMovie::CacheAll);
 }
 void GraphicsViewer::setGif(const QFileInfo &info)
 {
@@ -657,6 +984,10 @@ void GraphicsViewer::setGif(const QFileInfo &info)
     connect(gif_movie, &QMovie::frameChanged, this, [=]
     {
         m_item->setPixmap(gif_movie->currentPixmap());
+        if (preview_ptr)
+        {
+            emit preview_ptr->send_position(static_cast<int>((static_cast<double>(gif_movie->currentFrameNumber()) / gif_movie->frameCount()) * 100), QString("%1/%2").arg(gif_movie->currentFrameNumber()).arg(gif_movie->frameCount()));
+        }
     });
     gif_movie->start();
 }
@@ -757,5 +1088,90 @@ void GraphicsViewer::mouseReleaseEvent(QMouseEvent *event)
     {
         m_panning = false;
         setCursor(Qt::ArrowCursor);
+    }
+}
+PdfViewer::PdfViewer(QWidget *parent)
+    : QPdfView(parent)
+{
+    setAcceptDrops(false);
+    setPageMode(QPdfView::PageMode::MultiPage);
+    setZoomMode(QPdfView::ZoomMode::CustomZoom);
+    setCursor(Qt::ArrowCursor);
+    setAttribute(Qt::WA_TranslucentBackground);
+    setStyleSheet("background: transparent;");
+    setAutoFillBackground(false);
+    if (viewport())
+    {
+        viewport()->setStyleSheet("background: transparent;");
+        viewport()->setAutoFillBackground(false);
+    }
+}
+void PdfViewer::wheelEvent(QWheelEvent *event)
+{
+    if (!document() || document()->pageCount() == 0)
+    {
+        event->ignore();
+        return;
+    }
+    qreal zoomDelta = 1.1;
+    if (event->angleDelta().y() < 0)
+    {
+        zoomDelta = 1.0 / zoomDelta;
+    }
+    QPoint viewPos = event->position().toPoint();
+    qreal oldZoom = zoomFactor();
+    QPointF docPos;
+    int hScrollValue = horizontalScrollBar()->value();
+    int vScrollValue = verticalScrollBar()->value();
+    docPos.rx() = (viewPos.x() + hScrollValue) / oldZoom;
+    docPos.ry() = (viewPos.y() + vScrollValue) / oldZoom;
+    qreal newZoom = oldZoom * zoomDelta;
+    newZoom = qBound(0.1, newZoom, 10.0);
+    if (qFuzzyCompare(newZoom, oldZoom))
+    {
+        event->accept();
+        return;
+    }
+    bool updatesWereEnabled = updatesEnabled();
+    setUpdatesEnabled(false);
+    setZoomFactor(newZoom);
+    int newHScrollValue = static_cast<int>(docPos.x() * newZoom - viewPos.x());
+    int newVScrollValue = static_cast<int>(docPos.y() * newZoom - viewPos.y());
+    newHScrollValue = qBound(0, newHScrollValue, horizontalScrollBar()->maximum());
+    newVScrollValue = qBound(0, newVScrollValue, verticalScrollBar()->maximum());
+    horizontalScrollBar()->setValue(newHScrollValue);
+    verticalScrollBar()->setValue(newVScrollValue);
+    setUpdatesEnabled(updatesWereEnabled);
+    update();
+    event->accept();
+}
+void PdfViewer::mousePressEvent(QMouseEvent *event)
+{
+    if (event->button() == Qt::LeftButton)
+    {
+        m_panning = true;
+        m_lastPanPoint = event->pos();
+        setCursor(Qt::ClosedHandCursor);
+        event->accept();
+    }
+}
+void PdfViewer::mouseMoveEvent(QMouseEvent *event)
+{
+    if (m_panning)
+    {
+        QPoint delta = event->pos() - m_lastPanPoint;
+        horizontalScrollBar()->setValue(horizontalScrollBar()->value() - delta.x());
+        verticalScrollBar()->setValue(verticalScrollBar()->value() - delta.y());
+        m_lastPanPoint = event->pos();
+        event->accept();
+    }
+}
+void PdfViewer::mouseReleaseEvent(QMouseEvent *event)
+{
+    if (event->button() == Qt::LeftButton)
+    {
+        m_panning = false;
+        setCursor(Qt::ArrowCursor);
+        event->accept();
     }
 }

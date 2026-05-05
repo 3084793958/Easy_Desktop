@@ -1699,7 +1699,7 @@ void File_Tree::load(QSettings *settings)
     preview_file_action->setIconVisibleInMenu(settings->value("preview_file_action", false).toBool());
     preview_file_widget->load(settings, "file_tree_preview_");
     preview_file_widget->setVisible(preview_file_action->isIconVisibleInMenu());
-    preview_file_widget->updatePreview({}, root_path);
+    preview_file_widget->updatePreview({}, root_path, true);
     treeView->updateStatusBar();
 }
 QIcon My_Icon_Provider::icon(QFileIconProvider::IconType type) const

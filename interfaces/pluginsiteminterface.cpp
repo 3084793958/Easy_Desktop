@@ -10,6 +10,22 @@ P_Version::P_Version(uint m_Major_Version, uint m_Minor_Version, uint m_Patch_Ve
     Minor_Version = m_Minor_Version;
     Patch_Version = m_Patch_Version;
 }
+P_Version::P_Version(QString Version_Name)
+{
+    auto list = Version_Name.split(".");
+    if (list.count() == 3)
+    {
+        Major_Version = list[0].toUInt();
+        Minor_Version = list[1].toUInt();
+        Patch_Version = list[2].toUInt();
+    }
+    else
+    {
+        Major_Version = 0;
+        Minor_Version = 0;
+        Patch_Version = 0;
+    }
+}
 bool P_Version::operator==(P_Version m_version) const
 {
     return Major_Version == m_version.Major_Version && Minor_Version == m_version.Minor_Version && Patch_Version == m_version.Patch_Version;

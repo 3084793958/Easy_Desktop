@@ -540,7 +540,7 @@ void Desktop_Background::Set_Position(int value)
     holding_value = value;
     holding_time = 0;
     holding_pos_timer->start();
-    image_movie->jumpToFrame(image_movie->frameCount() * value / 100);
+    image_movie->jumpToFrame(static_cast<int>(static_cast<double>(image_movie->frameCount() * value) / 100));
 }
 static bool sort_data(Path_Info list1, Path_Info list2)
 {

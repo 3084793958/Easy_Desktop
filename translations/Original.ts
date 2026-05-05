@@ -1430,48 +1430,48 @@
 <context>
     <name>Info_Widget</name>
     <message>
-        <location filename="../core/tools/preview_file_widget.cpp" line="558"/>
+        <location filename="../core/tools/preview_file_widget.cpp" line="883"/>
         <source>名称:%1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../core/tools/preview_file_widget.cpp" line="567"/>
-        <location filename="../core/tools/preview_file_widget.cpp" line="581"/>
+        <location filename="../core/tools/preview_file_widget.cpp" line="892"/>
+        <location filename="../core/tools/preview_file_widget.cpp" line="906"/>
         <source>文件夹</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../core/tools/preview_file_widget.cpp" line="573"/>
+        <location filename="../core/tools/preview_file_widget.cpp" line="898"/>
         <source>大小:%1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../core/tools/preview_file_widget.cpp" line="576"/>
+        <location filename="../core/tools/preview_file_widget.cpp" line="901"/>
         <source>修改时间:%1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../core/tools/preview_file_widget.cpp" line="585"/>
+        <location filename="../core/tools/preview_file_widget.cpp" line="910"/>
         <source>符号链接</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../core/tools/preview_file_widget.cpp" line="592"/>
+        <location filename="../core/tools/preview_file_widget.cpp" line="917"/>
         <source>文件</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../core/tools/preview_file_widget.cpp" line="596"/>
+        <location filename="../core/tools/preview_file_widget.cpp" line="921"/>
         <source>%1 文件</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../core/tools/preview_file_widget.cpp" line="601"/>
+        <location filename="../core/tools/preview_file_widget.cpp" line="926"/>
         <source>未知</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../core/tools/preview_file_widget.cpp" line="603"/>
+        <location filename="../core/tools/preview_file_widget.cpp" line="928"/>
         <source>类型:%1</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2259,62 +2259,95 @@ PID:</source>
 <context>
     <name>Preview_File_Widget</name>
     <message>
-        <location filename="../core/tools/preview_file_widget.cpp" line="52"/>
+        <location filename="../core/tools/preview_file_widget.cpp" line="104"/>
+        <location filename="../core/tools/preview_file_widget.h" line="131"/>
         <source>纯文本</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../core/tools/preview_file_widget.cpp" line="53"/>
+        <location filename="../core/tools/preview_file_widget.cpp" line="105"/>
+        <location filename="../core/tools/preview_file_widget.h" line="132"/>
         <source>HTML</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../core/tools/preview_file_widget.cpp" line="54"/>
+        <location filename="../core/tools/preview_file_widget.cpp" line="106"/>
+        <location filename="../core/tools/preview_file_widget.h" line="133"/>
         <source>Markdown</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../core/tools/preview_file_widget.cpp" line="55"/>
+        <location filename="../core/tools/preview_file_widget.cpp" line="107"/>
+        <location filename="../core/tools/preview_file_widget.h" line="134"/>
         <source>查看svg</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../core/tools/preview_file_widget.cpp" line="232"/>
+        <location filename="../core/tools/preview_file_widget.cpp" line="376"/>
         <source>无法读取文件:%1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../core/tools/preview_file_widget.cpp" line="246"/>
+        <location filename="../core/tools/preview_file_widget.cpp" line="392"/>
         <source>无法加载 PDF文件或文件为空</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../core/tools/preview_file_widget.cpp" line="284"/>
+        <location filename="../core/tools/preview_file_widget.cpp" line="444"/>
         <source>无法加载图片:%1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../core/tools/preview_file_widget.cpp" line="302"/>
+        <location filename="../core/tools/preview_file_widget.cpp" line="534"/>
         <source>无法加载SVG文件:%1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../core/tools/preview_file_widget.h" line="102"/>
+        <location filename="../core/tools/preview_file_widget.h" line="127"/>
         <source>上一个</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../core/tools/preview_file_widget.h" line="103"/>
+        <location filename="../core/tools/preview_file_widget.h" line="128"/>
         <source>下一个</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../core/tools/preview_file_widget.h" line="105"/>
+        <location filename="../core/tools/preview_file_widget.h" line="130"/>
+        <source>文本查看方式</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../core/tools/preview_file_widget.h" line="136"/>
+        <location filename="../core/tools/preview_file_widget.h" line="144"/>
+        <source>上一页</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../core/tools/preview_file_widget.h" line="137"/>
+        <location filename="../core/tools/preview_file_widget.h" line="145"/>
+        <source>下一页</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../core/tools/preview_file_widget.h" line="138"/>
+        <location filename="../core/tools/preview_file_widget.h" line="146"/>
+        <source>播放</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../core/tools/preview_file_widget.h" line="139"/>
+        <location filename="../core/tools/preview_file_widget.h" line="147"/>
+        <source>暂停</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../core/tools/preview_file_widget.h" line="142"/>
         <source>&lt;</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../core/tools/preview_file_widget.h" line="106"/>
+        <location filename="../core/tools/preview_file_widget.h" line="143"/>
         <source>&gt;</source>
         <translation type="unfinished"></translation>
     </message>

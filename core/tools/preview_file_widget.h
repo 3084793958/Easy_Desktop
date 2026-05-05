@@ -7,17 +7,20 @@
 #include <QVideoWidget>
 #include <QGraphicsItem>
 #include <QGraphicsSvgItem>
+#include <QGraphicsVideoItem>
+#include "media_widgetaction.h"
 #pragma push_macro("Status")
 #undef Status
 #include <QPdfDocument>
 #include <QPdfView>
 #pragma pop_macro("Status")
 
+class Preview_File_Widget;
 class GraphicsViewer : public QGraphicsView
 {
     Q_OBJECT
 public:
-    explicit GraphicsViewer(QWidget *parent = nullptr);
+    explicit GraphicsViewer(QWidget *parent = nullptr, Preview_File_Widget *m_preview_ptr = nullptr);
     void setImage(const QImage &image);
     void setPixmap(const QPixmap &pixmap);
     void setGif(const QFileInfo &info);
@@ -36,7 +39,24 @@ private:
     bool m_panning = false;
     char m_padding[7];
     qreal m_currentScale = 0.5;
+    Preview_File_Widget *preview_ptr = nullptr;
+public:
     QMovie *gif_movie = new QMovie(this);
+};
+class PdfViewer : public QPdfView
+{
+    Q_OBJECT
+public:
+    explicit PdfViewer(QWidget *parent = nullptr);
+protected:
+    void wheelEvent(QWheelEvent *event) override;
+    void mousePressEvent(QMouseEvent *event) override;
+    void mouseMoveEvent(QMouseEvent *event) override;
+    void mouseReleaseEvent(QMouseEvent *event) override;
+private:
+    bool m_panning = false;
+    char m_padding[7];
+    QPoint m_lastPanPoint;
 };
 class Info_Widget : public QWidget
 {
@@ -73,11 +93,13 @@ public:
     virtual void save(QSettings *settings, QString Token) override;
     virtual void load(QSettings *settings, QString Token) override;
     virtual void set_icon(QString checked_icon_path) override;
-    void updatePreview(QStringList selectionFileList, QString parent_dir);
+    void updatePreview(QStringList selectionFileList, QString parent_dir, bool force_update = false);
     static QIcon get_icon(const QFileInfo &info);
     static QSize get_Image_Size(QString path);
     static ContentType getContentType(const QFileInfo &info);
     void update_style(QColor theme_color, QColor theme_background_color, QColor theme_text_color, QColor select_text_color, QColor disabled_text_color, QString checked_icon_path);
+signals:
+    void send_position(int value, QString text);
 protected:
     void resizeEvent(QResizeEvent *event) override;
     void showEvent(QShowEvent *event) override;
@@ -97,30 +119,58 @@ private:
     void setupSvgPreview(const QFileInfo &info);
 private:
     QAction *preview_action = nullptr;
+private slots:
+    void prevPdfPage();
+    void nextPdfPage();
 private:
     QMenu *menu = new QMenu(this);
     QAction *prevAction = new QAction(tr("上一个"), this);
     QAction *nextAction = new QAction(tr("下一个"), this);
+
+    QMenu *textEdit_View_Mode_Menu = new QMenu(tr("文本查看方式"), this);
+    QAction *textEdit_Mode_TEXT = new QAction(tr("纯文本"), this);
+    QAction *textEdit_Mode_HTML = new QAction(tr("HTML"), this);
+    QAction *textEdit_Mode_MARKDOWN = new QAction(tr("Markdown"), this);
+    QAction *textEdit_Mode_SVG = new QAction(tr("查看svg"), this);
+
+    QAction *prevPage = new QAction(tr("上一页"), this);
+    QAction *nextPage = new QAction(tr("下一页"), this);
+    QAction *play_action = new QAction(tr("播放"), this);
+    QAction *stop_action = new QAction(tr("暂停"), this);
+    Media_WidgetAction *media_control_action = new Media_WidgetAction(this);
 private:
     QPushButton *prevButton = new QPushButton(tr("<"), this->get_self());
     QPushButton *nextButton = new QPushButton(tr(">"), this->get_self());
+    QPushButton *prevPageButton = new QPushButton(tr("上一页"), this->get_self());
+    QPushButton *nextPageButton = new QPushButton(tr("下一页"), this->get_self());
+    QPushButton *playButton = new QPushButton(tr("播放"), this->get_self());
+    QPushButton *stopButton = new QPushButton(tr("暂停"), this->get_self());
     QList<QFileInfo> currentFileInfos = {};
     QString m_parent_dir = "";
     int currentIndex = 0;
+    int pdf_currentIndex = 0;
 
     Basic_TextEdit *m_textEdit = new Basic_TextEdit(this->get_self());
     QComboBox *m_textModeCombo = new QComboBox(this->get_self());
 
     QPdfDocument *m_pdfDocument = new QPdfDocument(this);
-    GraphicsViewer *m_pdfViewer = new GraphicsViewer(this->get_self());
+    PdfViewer *m_pdfViewer = new PdfViewer(this->get_self());
 
-    GraphicsViewer *m_imageViewer = new GraphicsViewer(this->get_self());
+    GraphicsViewer *m_imageViewer = new GraphicsViewer(this->get_self(), this);
 
     QMediaPlayer *m_mediaPlayer = new QMediaPlayer(this);
-    QVideoWidget *m_videoWidget = new QVideoWidget(this->get_self());
-    QWidget *m_audioWidget = new QWidget(this->get_self());
+    GraphicsViewer *m_videoViewer = new GraphicsViewer(this->get_self(), this);
 
     Info_Widget *m_infoWidget = new Info_Widget(this->get_self());
+private:
+    QTimer *holding_pos_timer = new QTimer(this);
+    int holding_time = 0;
+    int holding_value = 0;
+    int holding_max_time = 10;
+private:
+    void Set_Speed(int value);
+    void Set_Volume(int value);
+    void Set_Position(int value);
 };
 
 #endif // PREVIEW_FILE_WIDGET_H

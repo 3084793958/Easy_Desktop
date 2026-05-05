@@ -20,6 +20,7 @@ struct P_Version
     uint Minor_Version;
     uint Patch_Version;
     P_Version(uint m_Major_Version, uint m_Minor_Version, uint m_Patch_Version);
+    P_Version(QString Version_Name);
     bool operator==(P_Version m_version) const;
     bool operator!=(P_Version m_version) const;
     bool operator>(P_Version m_version) const;
