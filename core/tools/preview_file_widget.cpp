@@ -1,6 +1,7 @@
 #include "preview_file_widget.h"
 #include <QSvgRenderer>
 #include <QPdfPageNavigation>
+#include <QtConcurrent/QtConcurrent>
 
 Preview_File_Widget::Preview_File_Widget(QWidget *parent, QAction *m_preview_action)
     :Basic_Widget(parent)
@@ -37,6 +38,12 @@ Preview_File_Widget::Preview_File_Widget(QWidget *parent, QAction *m_preview_act
     menu->addAction(nextPage);
     prevPage->setEnabled(false);
     nextPage->setEnabled(false);
+    menu->addSeparator();
+    menu->addAction(reset_size_action);
+    auto_play_action->setIcon(QIcon(":/base/this.svg"));
+    auto_play_action->setIconVisibleInMenu(false);
+    menu->addAction(auto_play_action);
+    menu->addAction(force_read_action);
     menu->addSeparator();
     menu->addAction(play_action);
     menu->addAction(stop_action);
@@ -100,11 +107,18 @@ Preview_File_Widget::Preview_File_Widget(QWidget *parent, QAction *m_preview_act
     m_infoWidget->move(10, 40);
     m_infoWidget->show();
 
+    force_read_Button->resize(100, 30);
+    force_read_Button->move(5, 5);
+    force_read_Button->setStyleSheet("QPushButton{border-radius:10px 10px;background:rgba(255,255,255,150)}"
+                              "QPushButton:hover{border-radius:10px 10px;background:rgba(255,255,255,200)}"
+                              "QPushButton:pressed{border-radius:10px 10px;background:rgba(255,255,255,150)}");
+
     //105
     m_textModeCombo->addItem(tr("纯文本"));
     m_textModeCombo->addItem(tr("HTML"));
     m_textModeCombo->addItem(tr("Markdown"));
     m_textModeCombo->addItem(tr("查看svg"));
+    m_textModeCombo->addItem(tr("十六进制"));
     m_textModeCombo->setCurrentIndex(0);
     m_textModeCombo->hide();
     m_textEdit->move(5, 145);
@@ -117,6 +131,7 @@ Preview_File_Widget::Preview_File_Widget(QWidget *parent, QAction *m_preview_act
     connect(nextButton, &QPushButton::clicked, this, &Preview_File_Widget::onNextClicked);
     connect(prevPageButton, &QPushButton::clicked, this, &Preview_File_Widget::prevPdfPage);
     connect(nextPageButton, &QPushButton::clicked, this, &Preview_File_Widget::nextPdfPage);
+    connect(force_read_Button, &QPushButton::clicked, this, &Preview_File_Widget::force_read_file);
     connect(playButton, &QPushButton::clicked, this, [=]
     {
         if (m_imageViewer->isVisible())
@@ -125,6 +140,10 @@ Preview_File_Widget::Preview_File_Widget(QWidget *parent, QAction *m_preview_act
         }
         if (!m_mediaPlayer->media().isNull())
         {
+            if (m_mediaPlayer->state() == QMediaPlayer::State::StoppedState)
+            {
+                m_mediaPlayer->setMedia(QUrl::fromLocalFile(currentFileInfos[currentIndex].filePath()));
+            }
             m_mediaPlayer->play();
         }
     });
@@ -222,11 +241,13 @@ void Preview_File_Widget::save(QSettings *settings, QString Token)
 {
     Basic_Widget::save(settings, Token);
     m_textEdit->H_save_no_text(settings, Token + "preview_textedit_");
+    settings->setValue("auto_play_action", auto_play_action->isIconVisibleInMenu());
 }
 void Preview_File_Widget::load(QSettings *settings, QString Token)
 {
     Basic_Widget::load(settings, Token);
     m_textEdit->H_load_no_text(settings, Token + "preview_textedit_");
+    auto_play_action->setIconVisibleInMenu(settings->value("auto_play_action", false).toBool());
 }
 void Preview_File_Widget::set_icon(QString checked_icon_path)
 {
@@ -235,6 +256,7 @@ void Preview_File_Widget::set_icon(QString checked_icon_path)
     textEdit_Mode_HTML->setIcon(QIcon(checked_icon_path));
     textEdit_Mode_MARKDOWN->setIcon(QIcon(checked_icon_path));
     textEdit_Mode_SVG->setIcon(QIcon(checked_icon_path));
+    auto_play_action->setIcon(QIcon(checked_icon_path));
 }
 void Preview_File_Widget::updatePreview(QStringList selectionFileList, QString parent_dir, bool force_update)
 {
@@ -301,6 +323,11 @@ void Preview_File_Widget::updateCurrentPreview()
     {
         break;
     }
+    case ContentType::TypeFont:
+    {
+        setupFontPreview(info);
+        break;
+    }
     default:
     {
         break;
@@ -333,7 +360,23 @@ void Preview_File_Widget::clearCurrentPreview()
 
     m_videoViewer->hide();
     m_videoViewer->clear();
-    //m_videoWidget->hide();
+
+    force_read_Button->setEnabled(false);
+    force_read_action->setEnabled(false);
+    if (!currentFileInfos.isEmpty())
+    {
+        if (currentFileInfos[currentIndex].isFile())
+        {
+            force_read_Button->setEnabled(true);
+            force_read_action->setEnabled(true);
+        }
+    }
+    if (m_currentFontId != -1)
+    {
+        QFontDatabase::removeApplicationFont(m_currentFontId);
+        m_currentFontId = -1;
+        m_textEdit->setFont(QFontDatabase::systemFont(QFontDatabase::FixedFont));
+    }
 }
 void Preview_File_Widget::setupTextPreview(const QFileInfo &info)
 {
@@ -367,6 +410,41 @@ void Preview_File_Widget::setupTextPreview(const QFileInfo &info)
             m_textModeCombo->show();
             return;
             break;
+        }
+        case 4:
+        {
+            file.close();
+            if (file.open(QIODevice::ReadOnly))
+            {
+                QByteArray data = file.readAll();
+                QString hexText;
+                const int bytesPerLine = 16;
+                for (int i = 0; i < data.size(); i += bytesPerLine)
+                {
+                    QString hexLine;
+                    QString asciiLine;
+                    for (int j = 0; j < bytesPerLine && i + j < data.size(); ++j)
+                    {
+                        unsigned char byte = static_cast<unsigned char>(data[i + j]);
+                        hexLine.append(QString("%1 ").arg(byte, 2, 16, QChar('0')));
+                        if (byte >= 0x20 && byte <= 0x7E)
+                        {
+                            asciiLine.append(static_cast<char>(byte));
+                        }
+                        else
+                        {
+                            asciiLine.append('.');
+                        }
+                    }
+                    hexLine = hexLine.leftJustified(bytesPerLine * 3, ' ');
+                    hexText += QString("%1: %2 | %3\n").arg(i, 8, 16, QChar('0')).arg(hexLine).arg(asciiLine);
+                }
+                m_textEdit->setPlainText(hexText);
+            }
+            else
+            {
+                m_textEdit->setPlainText(tr("无法读取文件:%1").arg(file.errorString()));
+            }
         }
         }
         file.close();
@@ -463,6 +541,7 @@ void Preview_File_Widget::setupVideoPreview(const QFileInfo &info)
     m_videoViewer->clear();
     m_videoViewer->setGraphicsItem(video_item);
     m_videoViewer->show();
+    m_mediaPlayer->setPosition(0);
     connect(m_mediaPlayer, &QMediaPlayer::positionChanged, this, [=](qint64 position)
     {
         qint64 all_position = m_mediaPlayer->duration();
@@ -488,6 +567,28 @@ void Preview_File_Widget::setupVideoPreview(const QFileInfo &info)
         text += QString::number(sec);
         emit send_position(result, text);
     });
+    connect(m_mediaPlayer, &QMediaPlayer::mediaStatusChanged, this, [=](QMediaPlayer::MediaStatus status)
+    {
+        if (status == QMediaPlayer::LoadedMedia)
+        {
+            m_mediaPlayer->setPosition(0);
+            m_mediaPlayer->pause();
+            m_videoViewer->resetZoom();
+        }
+        else if (status == QMediaPlayer::EndOfMedia)
+        {
+            m_mediaPlayer->setMedia(QUrl::fromLocalFile(info.filePath()));
+        }
+    });
+    if (m_mediaPlayer->mediaStatus() == QMediaPlayer::LoadedMedia)
+    {
+        m_mediaPlayer->setPosition(0);
+        m_mediaPlayer->pause();
+    }
+    if (auto_play_action->isIconVisibleInMenu())
+    {
+        m_mediaPlayer->play();
+    }
 }
 void Preview_File_Widget::setupAudioPreview(const QFileInfo &info)
 {
@@ -523,6 +624,10 @@ void Preview_File_Widget::setupAudioPreview(const QFileInfo &info)
         text += QString::number(sec);
         emit send_position(result, text);
     });
+    if (auto_play_action->isIconVisibleInMenu())
+    {
+        m_mediaPlayer->play();
+    }
 }
 void Preview_File_Widget::setupSvgPreview(const QFileInfo &info)
 {
@@ -537,6 +642,49 @@ void Preview_File_Widget::setupSvgPreview(const QFileInfo &info)
     }
     m_imageViewer->setGraphicsItem(Item);
     m_imageViewer->show();
+}
+void Preview_File_Widget::setupFontPreview(const QFileInfo &info)
+{
+    clearCurrentPreview();
+    m_textEdit->clear();
+    m_textEdit->show();
+    int fontId = QFontDatabase::addApplicationFont(info.filePath());
+    if (fontId == -1)
+    {
+        m_textEdit->setPlainText(tr("无法加载字体文件"));
+        return;
+    }
+    m_currentFontId = fontId;
+    QStringList families = QFontDatabase::applicationFontFamilies(fontId);
+    if (families.isEmpty())
+    {
+        m_textEdit->setPlainText(tr("字体文件未包含任何有效字体族"));
+        return;
+    }
+    QString primaryFamily = families.first();
+    QTextCursor cursor = m_textEdit->textCursor();
+    QTextCharFormat defaultFormat;
+    QFont sampleFont(primaryFamily);
+    defaultFormat.setFont(sampleFont);
+    cursor.insertText(tr("文件名: %1\n").arg(info.fileName()), defaultFormat);
+    cursor.insertText(tr("文件大小: %1\n").arg(Info_Widget::formatSize(info.size())), defaultFormat);
+    cursor.insertText(tr("字体族名称: %1\n").arg(primaryFamily), defaultFormat);
+    if (families.size() > 1)
+    {
+        QString allFamilies = families.join(", ");
+        cursor.insertText(tr("其他族名: %1\n").arg(allFamilies), defaultFormat);
+    }
+    QFontDatabase fontDb;
+    QStringList styles = fontDb.styles(primaryFamily);
+    if (!styles.isEmpty())
+    {
+        cursor.insertText(tr("可用样式: %1\n").arg(styles.join(", ")), defaultFormat);
+    }
+    cursor.insertBlock();
+    m_textEdit->setTextCursor(cursor);
+    m_textEdit->updateStatusBar_style();
+    m_textEdit->updateLineNumberAreaWidth();
+    m_textEdit->updateStatusBar();
 }
 void Preview_File_Widget::resizeEvent(QResizeEvent *event)
 {
@@ -626,6 +774,29 @@ void Preview_File_Widget::contextMenuEvent(QContextMenuEvent *event)
         m_imageViewer->gif_movie->setPaused(true);
         m_mediaPlayer->pause();
     }
+    else if (know_what == reset_size_action)
+    {
+        if (m_imageViewer->isVisible())
+        {
+            m_imageViewer->resetZoom();
+        }
+        else if (m_pdfViewer->isVisible())
+        {
+            m_pdfViewer->resetZoom();
+        }
+        else if (m_videoViewer->isVisible())
+        {
+            m_videoViewer->resetZoom();
+        }
+    }
+    else if (know_what == auto_play_action)
+    {
+        auto_play_action->setIconVisibleInMenu(!auto_play_action->isIconVisibleInMenu());
+    }
+    else if (know_what == force_read_action)
+    {
+        Preview_File_Widget::force_read_file();
+    }
     else
     {
         Basic_Widget::basic_action_func(know_what);
@@ -648,6 +819,25 @@ void Preview_File_Widget::nextPdfPage()
     nextPage->setEnabled(pdf_currentIndex < m_pdfDocument->pageCount() - 1);
     prevPageButton->setEnabled(pdf_currentIndex > 0);
     nextPageButton->setEnabled(pdf_currentIndex < m_pdfDocument->pageCount() - 1);
+}
+void Preview_File_Widget::force_read_file()
+{
+    if (currentFileInfos.isEmpty())
+    {
+        return;
+    }
+    if (currentFileInfos[currentIndex].isDir())
+    {
+        return;
+    }
+    QMessageBox::StandardButton _ans = QMessageBox::question(nullptr, tr("是否强制读取?"), tr("是否强制读取?"));
+    if (_ans == QMessageBox::Yes)
+    {
+        m_textModeCombo->setCurrentIndex(4);
+        clearCurrentPreview();
+        QFileInfo &info = currentFileInfos[currentIndex];
+        setupTextPreview(info);
+    }
 }
 QSize Preview_File_Widget::get_Image_Size(QString path)
 {
@@ -725,6 +915,18 @@ Preview_File_Widget::ContentType Preview_File_Widget::getContentType(const QFile
     if (mimeName == "application/pdf")
     {
         return ContentType::TypePdf;
+    }
+    if (mimeName == "font/ttf" || mimeName == "font/otf" ||
+        mimeName == "application/x-font-ttf" || mimeName == "application/x-font-otf" ||
+        mimeName == "font/collection" || mimeName == "application/font-woff" ||
+        mimeName == "application/font-woff2")
+    {
+        return ContentType::TypeFont;
+    }
+    if (suffix == "ttf" || suffix == "otf" || suffix == "ttc" ||
+        suffix == "woff" || suffix == "woff2")
+    {
+        return ContentType::TypeFont;
     }
     return ContentType::TypeUnKnown;
 }
@@ -857,6 +1059,20 @@ Info_Widget::Info_Widget(QWidget *parent)
     setStyleSheet("border-radius: 7px; background:rgba(255,255,255,25)");
     icon_showing->setStyleSheet("background:rgba(255,255,255,50);border-radius: 10px;");
     icon_showing->move(5, 5);
+    icon_showing->setAlignment(Qt::AlignCenter);
+    m_sizeUpdateTimer->setInterval(1000);
+    m_sizeUpdateTimer->setSingleShot(false);
+    connect(m_sizeUpdateTimer, &QTimer::timeout, this, &Info_Widget::updateFolderSize);
+    connect(m_futureWatcher, &QFutureWatcher<qint64>::finished, this, &Info_Widget::onSizeCalculated);
+}
+Info_Widget::~Info_Widget()
+{
+    m_sizeUpdateTimer->stop();
+    if (m_futureWatcher->isRunning())
+    {
+        m_futureWatcher->cancel();
+        m_futureWatcher->waitForFinished();
+    }
 }
 void Info_Widget::Set_Data(QFileInfo &info)
 {
@@ -889,14 +1105,32 @@ void Info_Widget::Set_Data(QFileInfo &info)
     QString sizeStr;
     if (info.isDir())
     {
-        sizeStr = tr("文件夹");
+        if (m_currentDirPath != info.filePath())
+        {
+            m_currentDirPath = info.filePath();
+            m_sizeUpdateTimer->stop();
+            if (m_futureWatcher->isRunning())
+            {
+                m_futureWatcher->cancel();
+                m_futureWatcher->waitForFinished();
+            }
+            size_label->setText(tr("大小:文件夹"));
+            m_sizeUpdateTimer->start();
+            updateFolderSize();
+        }
     }
     else
     {
+        m_sizeUpdateTimer->stop();
+        if (m_futureWatcher->isRunning())
+        {
+            m_futureWatcher->cancel();
+            m_futureWatcher->waitForFinished();
+        }
+        m_currentDirPath.clear();
         sizeStr = Info_Widget::formatSize(size);
+        size_label->setText(tr("大小:%1").arg(sizeStr));
     }
-    size_label->setText(tr("大小:%1").arg(sizeStr));
-
     QString timeStr = info.lastModified().toString(Qt::SystemLocaleShortDate);
     change_time_label->setText(tr("修改时间:%1").arg(timeStr));
 
@@ -926,6 +1160,62 @@ void Info_Widget::Set_Data(QFileInfo &info)
         typeStr = tr("未知");
     }
     type_name_label->setText(tr("类型:%1").arg(typeStr));
+}
+void Info_Widget::updateFolderSize()
+{
+    if (m_currentDirPath.isEmpty())
+    {
+        return;
+    }
+    if (m_futureWatcher->isRunning())
+    {
+        return;
+    }
+    // 异步计算
+    QFuture<qint64> future = QtConcurrent::run([this]() -> qint64
+    {
+        QDir dir(m_currentDirPath);
+        qint64 total = 0;
+        QStack<QString> stack;
+        stack.push(dir.absolutePath());
+        while (!stack.isEmpty())
+        {
+            QString currentPath = stack.pop();
+            QDir currentDir(currentPath);
+            QFileInfoList entries = currentDir.entryInfoList(QDir::Files | QDir::Dirs | QDir::NoDotAndDotDot);
+            for (const QFileInfo &entry : entries)
+            {
+                if (entry.isDir())
+                {
+                    stack.push(entry.absoluteFilePath());
+                }
+                else if (entry.isFile())
+                {
+                    total += entry.size();
+                }
+            }
+        }
+        return total;
+    });
+    m_futureWatcher->setFuture(future);
+}
+void Info_Widget::onSizeCalculated()
+{
+    if (!m_futureWatcher || !m_futureWatcher->isFinished())
+    {
+        return;
+    }
+    QFuture<long long> future = m_futureWatcher->future();
+    if (!future.isResultReadyAt(0))
+    {
+        return;
+    }
+    qint64 size = future.result();
+    if (!m_currentDirPath.isEmpty() && QDir(m_currentDirPath).exists())
+    {
+        QString sizeStr = formatSize(size);
+        size_label->setText(tr("大小:%1").arg(sizeStr));
+    }
 }
 QString Info_Widget::formatSize(qint64 bytes)
 {
@@ -975,9 +1265,10 @@ void GraphicsViewer::setGif(const QFileInfo &info)
         gif_movie->jumpToNextFrame();
         firstFrame = gif_movie->currentPixmap();
     }
+    m_originalSize = firstFrame.size();
     m_item = m_scene->addPixmap(firstFrame);
     m_scene->setSceneRect(m_item->boundingRect());
-    fitInView(m_item, Qt::KeepAspectRatio);
+
     resetTransform();
     m_currentScale = get_scaled(firstFrame.size(), this->size());
     scale(m_currentScale, m_currentScale);
@@ -1002,6 +1293,7 @@ void GraphicsViewer::setPixmap(const QPixmap &pixmap)
     {
         return;
     }
+    m_originalSize = pixmap.size();
     m_item = m_scene->addPixmap(pixmap);
     m_scene->setSceneRect(m_item->boundingRect());
     fitInView(m_item, Qt::KeepAspectRatio);
@@ -1032,6 +1324,7 @@ void GraphicsViewer::setGraphicsItem(QGraphicsItem *item)
     {
         return;
     }
+    m_originalSize = item->boundingRect().size().toSize();
     m_scene->addItem(item);
     m_scene->setSceneRect(item->boundingRect());
     fitInView(item, Qt::KeepAspectRatio);
@@ -1090,6 +1383,25 @@ void GraphicsViewer::mouseReleaseEvent(QMouseEvent *event)
         setCursor(Qt::ArrowCursor);
     }
 }
+void GraphicsViewer::resetZoom()
+{
+    if (m_originalSize.isEmpty())
+    {
+        qreal newScale = get_scaled(this->items().first()->boundingRect().size().toSize(), this->size());
+        resetTransform();
+        scale(newScale, newScale);
+        m_currentScale = newScale;
+        horizontalScrollBar()->setValue(0);
+        verticalScrollBar()->setValue(0);
+        return;
+    }
+    qreal newScale = get_scaled(m_originalSize, this->size());
+    resetTransform();
+    scale(newScale, newScale);
+    m_currentScale = newScale;
+    horizontalScrollBar()->setValue(0);
+    verticalScrollBar()->setValue(0);
+}
 PdfViewer::PdfViewer(QWidget *parent)
     : QPdfView(parent)
 {
@@ -1105,6 +1417,33 @@ PdfViewer::PdfViewer(QWidget *parent)
         viewport()->setStyleSheet("background: transparent;");
         viewport()->setAutoFillBackground(false);
     }
+}
+void PdfViewer::resetZoom()
+{
+    if (!document() || document()->pageCount() == 0)
+    {
+        return;
+    }
+    QSizeF pageSizeF = document()->pageSize(0);
+    if (pageSizeF.isEmpty())
+    {
+        return;
+    }
+    QSize pageSize = pageSizeF.toSize();
+    double scaleX = static_cast<double>(viewport()->width()) / pageSize.width();
+    double scaleY = static_cast<double>(viewport()->height()) / pageSize.height();
+    qreal newZoom = qMin(scaleX, scaleY);
+    newZoom = qBound(0.1, newZoom, 10.0);
+    if (qFuzzyCompare(newZoom, zoomFactor()))
+    {
+        return;
+    }
+    setUpdatesEnabled(false);
+    setZoomFactor(newZoom);
+    horizontalScrollBar()->setValue(0);
+    verticalScrollBar()->setValue(0);
+    setUpdatesEnabled(true);
+    update();
 }
 void PdfViewer::wheelEvent(QWheelEvent *event)
 {

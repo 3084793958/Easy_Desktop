@@ -42,12 +42,16 @@ private:
     Preview_File_Widget *preview_ptr = nullptr;
 public:
     QMovie *gif_movie = new QMovie(this);
+    void resetZoom();
+private:
+    QSize m_originalSize = QSize();
 };
 class PdfViewer : public QPdfView
 {
     Q_OBJECT
 public:
     explicit PdfViewer(QWidget *parent = nullptr);
+    void resetZoom();
 protected:
     void wheelEvent(QWheelEvent *event) override;
     void mousePressEvent(QMouseEvent *event) override;
@@ -63,6 +67,7 @@ class Info_Widget : public QWidget
     Q_OBJECT
 public:
     explicit Info_Widget(QWidget *parent);
+    ~Info_Widget() override;
     void Set_Data(QFileInfo &info);
     static QString formatSize(qint64 bytes);
 protected:
@@ -73,6 +78,13 @@ private:
     QLabel *size_label = new QLabel(this);
     QLabel *change_time_label = new QLabel(this);
     QLabel *type_name_label = new QLabel(this);
+private:
+    QTimer *m_sizeUpdateTimer = new QTimer(this);
+    QFutureWatcher<qint64> *m_futureWatcher = new QFutureWatcher<qint64>(this);
+    QString m_currentDirPath = QString();
+private slots:
+    void updateFolderSize();
+    void onSizeCalculated();
 };
 class Preview_File_Widget : public Basic_Widget
 {
@@ -86,6 +98,7 @@ public:
         TypeAudio,
         TypePdf,
         TypeFolder,
+        TypeFont,
         TypeUnKnown
     };
     explicit Preview_File_Widget(QWidget *parent, QAction *m_preview_action);
@@ -117,11 +130,13 @@ private:
     void setupVideoPreview(const QFileInfo &info);
     void setupAudioPreview(const QFileInfo &info);
     void setupSvgPreview(const QFileInfo &info);
+    void setupFontPreview(const QFileInfo &info);
 private:
     QAction *preview_action = nullptr;
 private slots:
     void prevPdfPage();
     void nextPdfPage();
+    void force_read_file();
 private:
     QMenu *menu = new QMenu(this);
     QAction *prevAction = new QAction(tr("上一个"), this);
@@ -132,9 +147,13 @@ private:
     QAction *textEdit_Mode_HTML = new QAction(tr("HTML"), this);
     QAction *textEdit_Mode_MARKDOWN = new QAction(tr("Markdown"), this);
     QAction *textEdit_Mode_SVG = new QAction(tr("查看svg"), this);
+    QAction *textEdit_Mode_HEX = new QAction(tr("十六进制"), this);
 
     QAction *prevPage = new QAction(tr("上一页"), this);
     QAction *nextPage = new QAction(tr("下一页"), this);
+    QAction *reset_size_action = new QAction(tr("重置大小"), this);
+    QAction *auto_play_action = new QAction(tr("音视频自动播放"), this);
+    QAction *force_read_action = new QAction(tr("强制文本读取"), this);
     QAction *play_action = new QAction(tr("播放"), this);
     QAction *stop_action = new QAction(tr("暂停"), this);
     Media_WidgetAction *media_control_action = new Media_WidgetAction(this);
@@ -145,6 +164,7 @@ private:
     QPushButton *nextPageButton = new QPushButton(tr("下一页"), this->get_self());
     QPushButton *playButton = new QPushButton(tr("播放"), this->get_self());
     QPushButton *stopButton = new QPushButton(tr("暂停"), this->get_self());
+    QPushButton *force_read_Button = new QPushButton(tr("强制文本读取"), this->get_self());
     QList<QFileInfo> currentFileInfos = {};
     QString m_parent_dir = "";
     int currentIndex = 0;
@@ -171,6 +191,8 @@ private:
     void Set_Speed(int value);
     void Set_Volume(int value);
     void Set_Position(int value);
+private:
+    int m_currentFontId = -1;
 };
 
 #endif // PREVIEW_FILE_WIDGET_H
