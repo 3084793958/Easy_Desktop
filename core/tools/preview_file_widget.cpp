@@ -2,7 +2,7 @@
 #include <QSvgRenderer>
 #include <QPdfPageNavigation>
 #include <QtConcurrent/QtConcurrent>
-
+#include <core/tools/my_rsvg_support.h>
 Preview_File_Widget::Preview_File_Widget(QWidget *parent, QAction *m_preview_action)
     :Basic_Widget(parent)
     ,preview_action(m_preview_action)
@@ -19,6 +19,11 @@ Preview_File_Widget::Preview_File_Widget(QWidget *parent, QAction *m_preview_act
     prevButton->setEnabled(false);
     nextButton->setEnabled(false);
     menu->addSeparator();
+    Ext_Preview_Plugin_Control_Menu->addAction(Ext_Preview_Plugin_Control_Add_Action);
+    Ext_Preview_Plugin_Control_Menu->addAction(Ext_Preview_Plugin_Control_Set_Index_Action);
+    Ext_Preview_Plugin_Control_Menu->addAction(Ext_Preview_Plugin_Control_Remove_Action);
+    menu->addMenu(Ext_Preview_Plugin_Control_Menu);
+    menu->addSeparator();
     textEdit_Mode_TEXT->setIcon(QIcon(":/base/this.svg"));
     textEdit_Mode_TEXT->setIconVisibleInMenu(true);
     textEdit_View_Mode_Menu->addAction(textEdit_Mode_TEXT);
@@ -31,6 +36,9 @@ Preview_File_Widget::Preview_File_Widget(QWidget *parent, QAction *m_preview_act
     textEdit_Mode_SVG->setIcon(QIcon(":/base/this.svg"));
     textEdit_Mode_SVG->setIconVisibleInMenu(false);
     textEdit_View_Mode_Menu->addAction(textEdit_Mode_SVG);
+    textEdit_Mode_HEX->setIcon(QIcon(":/base/this.svg"));
+    textEdit_Mode_HEX->setIconVisibleInMenu(false);
+    textEdit_View_Mode_Menu->addAction(textEdit_Mode_HEX);
     menu->addMenu(textEdit_View_Mode_Menu);
     textEdit_View_Mode_Menu->setEnabled(false);
     menu->addSeparator();
@@ -71,6 +79,22 @@ Preview_File_Widget::Preview_File_Widget(QWidget *parent, QAction *m_preview_act
         m_imageViewer->resize(size - QSize(10, 150));
         m_pdfViewer->resize(size - QSize(10, 150));
         m_videoViewer->resize(size - QSize(10, 150));
+        for (int i = 0; i < preview_file_plugin_list.count(); ++i)
+        {
+            if (preview_file_plugin_list[i])
+            {
+                if (preview_file_plugin_list[i]->Plugin_Version >= P_Version{0, 0, 1})
+                {
+                    if (preview_file_plugin_list[i]->inited)
+                    {
+                        if (preview_file_plugin_list[i]->previewItem())
+                        {
+                            preview_file_plugin_list[i]->previewItem()->resize(size - QSize(10, 150));
+                        }
+                    }
+                }
+            }
+        }
     });
 
     prevButton->resize(30, 30);
@@ -242,12 +266,32 @@ void Preview_File_Widget::save(QSettings *settings, QString Token)
     Basic_Widget::save(settings, Token);
     m_textEdit->H_save_no_text(settings, Token + "preview_textedit_");
     settings->setValue("auto_play_action", auto_play_action->isIconVisibleInMenu());
+    QStringList plugin_path_list = {};
+    for (int i = 0; i < preview_file_plugin_list.count(); ++i)
+    {
+        if (preview_file_plugin_list[i])
+        {
+            if (preview_file_plugin_list[i]->Plugin_Version >= P_Version{0, 0, 1})
+            {
+                if (preview_file_plugin_list[i]->inited)
+                {
+                    plugin_path_list << preview_file_plugin_list[i]->plugin_path;
+                }
+            }
+        }
+    }
+    settings->setValue("plugin_path_list", plugin_path_list);
 }
 void Preview_File_Widget::load(QSettings *settings, QString Token)
 {
     Basic_Widget::load(settings, Token);
     m_textEdit->H_load_no_text(settings, Token + "preview_textedit_");
     auto_play_action->setIconVisibleInMenu(settings->value("auto_play_action", false).toBool());
+    QStringList plugin_path_list = settings->value("plugin_path_list").toStringList();
+    for (int i = 0; i < plugin_path_list.count(); ++i)
+    {
+        load_plugin(plugin_path_list[i]);
+    }
 }
 void Preview_File_Widget::set_icon(QString checked_icon_path)
 {
@@ -256,6 +300,7 @@ void Preview_File_Widget::set_icon(QString checked_icon_path)
     textEdit_Mode_HTML->setIcon(QIcon(checked_icon_path));
     textEdit_Mode_MARKDOWN->setIcon(QIcon(checked_icon_path));
     textEdit_Mode_SVG->setIcon(QIcon(checked_icon_path));
+    textEdit_Mode_HEX->setIcon(QIcon(checked_icon_path));
     auto_play_action->setIcon(QIcon(checked_icon_path));
 }
 void Preview_File_Widget::updatePreview(QStringList selectionFileList, QString parent_dir, bool force_update)
@@ -288,6 +333,34 @@ void Preview_File_Widget::updateCurrentPreview()
     }
     QFileInfo &info = currentFileInfos[currentIndex];
     m_infoWidget->Set_Data(info);
+
+    for (int i = 0; i < preview_file_plugin_list.count(); ++i)
+    {
+        if (preview_file_plugin_list[i])
+        {
+            if (preview_file_plugin_list[i]->Plugin_Version >= P_Version{0, 0, 1})
+            {
+                if (preview_file_plugin_list[i]->inited)
+                {
+                    if (preview_file_plugin_list[i]->previewFile(info))
+                    {
+                        if (preview_file_plugin_list[i]->previewItem())
+                        {
+                            preview_file_plugin_list[i]->previewItem()->setParent(this->get_self());
+                            preview_file_plugin_list[i]->previewItem()->move(5, 145);
+                            preview_file_plugin_list[i]->previewItem()->resize(this->get_self()->size() - QSize(10, 150));
+                            preview_file_plugin_list[i]->previewItem()->show();
+                        }
+                        if (!preview_file_plugin_list[i]->willThrowFileToNextPreview())
+                        {
+                            return;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     ContentType type = getContentType(info);
     textEdit_View_Mode_Menu->setEnabled(type == ContentType::TypeText);
     prevPage->setEnabled(false);
@@ -363,12 +436,14 @@ void Preview_File_Widget::clearCurrentPreview()
 
     force_read_Button->setEnabled(false);
     force_read_action->setEnabled(false);
+    force_read_Button->hide();
     if (!currentFileInfos.isEmpty())
     {
-        if (currentFileInfos[currentIndex].isFile())
+        if (currentFileInfos[currentIndex].isFile() && getContentType(currentFileInfos[currentIndex]) != ContentType::TypeText)
         {
             force_read_Button->setEnabled(true);
             force_read_action->setEnabled(true);
+            force_read_Button->show();
         }
     }
     if (m_currentFontId != -1)
@@ -376,6 +451,23 @@ void Preview_File_Widget::clearCurrentPreview()
         QFontDatabase::removeApplicationFont(m_currentFontId);
         m_currentFontId = -1;
         m_textEdit->setFont(QFontDatabase::systemFont(QFontDatabase::FixedFont));
+    }
+    for (int i = 0; i < preview_file_plugin_list.count(); ++i)
+    {
+        if (preview_file_plugin_list[i])
+        {
+            if (preview_file_plugin_list[i]->Plugin_Version >= P_Version{0, 0, 1})
+            {
+                if (preview_file_plugin_list[i]->inited)
+                {
+                    if (preview_file_plugin_list[i]->previewItem())
+                    {
+                        preview_file_plugin_list[i]->previewItem()->hide();
+                    }
+                    preview_file_plugin_list[i]->clear();
+                }
+            }
+        }
     }
 }
 void Preview_File_Widget::setupTextPreview(const QFileInfo &info)
@@ -631,10 +723,10 @@ void Preview_File_Widget::setupAudioPreview(const QFileInfo &info)
 }
 void Preview_File_Widget::setupSvgPreview(const QFileInfo &info)
 {
-    auto Item = new QGraphicsSvgItem(info.filePath());
-    if (!Item->renderer()->isValid())
+    auto Item = new RsvgGraphicsItem(info.filePath());
+    if (!Item->isValid())
     {
-        Item->deleteLater();
+        delete Item;
         Item = nullptr;
         m_textEdit->setPlainText(tr("无法加载SVG文件:%1").arg(info.fileName()));
         m_textEdit->show();
@@ -680,7 +772,45 @@ void Preview_File_Widget::setupFontPreview(const QFileInfo &info)
     {
         cursor.insertText(tr("可用样式: %1\n").arg(styles.join(", ")), defaultFormat);
     }
+    cursor.insertText(tr("示例:\n"
+                         "void Info_Widget::updateFolderSize()"
+                         "\n" "{"
+                         "\n" "    if (!this->isVisible())"
+                         "\n" "    {"
+                         "\n" "        if (m_futureWatcher->isRunning())"
+                         "\n" "        {"
+                         "\n" "            m_cancelCalculation = true;"
+                         "\n" "            m_futureWatcher->setPaused(true);"
+                         "\n" "            m_futureWatcher->cancel();"
+                         "\n" "            m_futureWatcher->future().cancel();"
+                         "\n" "        }"
+                         "\n" "        return;"
+                         "\n" "    }"
+                         "\n" "    if (m_currentDirPath.isEmpty())"
+                         "\n" "    {"
+                         "\n" "        return;"
+                         "\n" "    }"
+                         "\n" "    m_cancelCalculation = false;"
+                         "\n" "    // 异步计算"
+                         "\n" "    QFuture<qint64> future = QtConcurrent::run([this]() -> qint64"
+                         "\n" "    {"
+                         "\n" "        temp_folder_total_size = 0;"
+                         "\n" "        QDirIterator it(m_currentDirPath, QDir::Files | QDir::Hidden | QDir::NoSymLinks, QDirIterator::Subdirectories);"
+                         "\n" "        while (it.hasNext())"
+                         "\n" "        {"
+                         "\n" "            if (m_cancelCalculation.load())"
+                         "\n" "            {"
+                         "\n" "                return temp_folder_total_size;"
+                         "\n" "            }"
+                         "\n" "            it.next();//QDirIterator特性"
+                         "\n" "            temp_folder_total_size += it.fileInfo().size();"
+                         "\n" "        }"
+                         "\n" "        return temp_folder_total_size;"
+                         "\n" "    });"
+                         "\n" "    m_futureWatcher->setFuture(future);"
+                         "\n" "}"), defaultFormat);
     cursor.insertBlock();
+    cursor.setPosition(0);
     m_textEdit->setTextCursor(cursor);
     m_textEdit->updateStatusBar_style();
     m_textEdit->updateLineNumberAreaWidth();
@@ -716,6 +846,7 @@ void Preview_File_Widget::contextMenuEvent(QContextMenuEvent *event)
         textEdit_Mode_HTML->setIconVisibleInMenu(false);
         textEdit_Mode_MARKDOWN->setIconVisibleInMenu(false);
         textEdit_Mode_SVG->setIconVisibleInMenu(false);
+        textEdit_Mode_HEX->setIconVisibleInMenu(false);
         m_textModeCombo->setCurrentIndex(0);
         clearCurrentPreview();
         setupTextPreview(currentFileInfos[currentIndex]);
@@ -726,6 +857,7 @@ void Preview_File_Widget::contextMenuEvent(QContextMenuEvent *event)
         textEdit_Mode_HTML->setIconVisibleInMenu(true);
         textEdit_Mode_MARKDOWN->setIconVisibleInMenu(false);
         textEdit_Mode_SVG->setIconVisibleInMenu(false);
+        textEdit_Mode_HEX->setIconVisibleInMenu(false);
         m_textModeCombo->setCurrentIndex(1);
         clearCurrentPreview();
         setupTextPreview(currentFileInfos[currentIndex]);
@@ -736,6 +868,7 @@ void Preview_File_Widget::contextMenuEvent(QContextMenuEvent *event)
         textEdit_Mode_HTML->setIconVisibleInMenu(false);
         textEdit_Mode_MARKDOWN->setIconVisibleInMenu(true);
         textEdit_Mode_SVG->setIconVisibleInMenu(false);
+        textEdit_Mode_HEX->setIconVisibleInMenu(false);
         m_textModeCombo->setCurrentIndex(2);
         clearCurrentPreview();
         setupTextPreview(currentFileInfos[currentIndex]);
@@ -746,7 +879,19 @@ void Preview_File_Widget::contextMenuEvent(QContextMenuEvent *event)
         textEdit_Mode_HTML->setIconVisibleInMenu(false);
         textEdit_Mode_MARKDOWN->setIconVisibleInMenu(false);
         textEdit_Mode_SVG->setIconVisibleInMenu(true);
+        textEdit_Mode_HEX->setIconVisibleInMenu(false);
         m_textModeCombo->setCurrentIndex(3);
+        clearCurrentPreview();
+        setupTextPreview(currentFileInfos[currentIndex]);
+    }
+    else if (know_what == textEdit_Mode_HEX)
+    {
+        textEdit_Mode_TEXT->setIconVisibleInMenu(false);
+        textEdit_Mode_HTML->setIconVisibleInMenu(false);
+        textEdit_Mode_MARKDOWN->setIconVisibleInMenu(false);
+        textEdit_Mode_SVG->setIconVisibleInMenu(false);
+        textEdit_Mode_HEX->setIconVisibleInMenu(true);
+        m_textModeCombo->setCurrentIndex(4);
         clearCurrentPreview();
         setupTextPreview(currentFileInfos[currentIndex]);
     }
@@ -788,6 +933,20 @@ void Preview_File_Widget::contextMenuEvent(QContextMenuEvent *event)
         {
             m_videoViewer->resetZoom();
         }
+        for (int i = 0; i < preview_file_plugin_list.count(); ++i)
+        {
+            if (preview_file_plugin_list[i])
+            {
+                if (preview_file_plugin_list[i]->Plugin_Version >= P_Version{0, 0, 1})
+                {
+                    if (preview_file_plugin_list[i]->inited)
+                    {
+                        preview_file_plugin_list[i]->resetZoom();
+                    }
+                }
+
+            }
+        }
     }
     else if (know_what == auto_play_action)
     {
@@ -796,6 +955,96 @@ void Preview_File_Widget::contextMenuEvent(QContextMenuEvent *event)
     else if (know_what == force_read_action)
     {
         Preview_File_Widget::force_read_file();
+    }
+    else if (know_what == Ext_Preview_Plugin_Control_Add_Action)
+    {
+        QString plugin_filename = QFileDialog::getOpenFileName(nullptr, tr("获取插件"), QDir::homePath(), tr("插件") + "(*.so);;" + tr("所有文件") + "(*.*)");
+        My_X11_Libs::X11_Raise();
+        if (!plugin_filename.isEmpty())
+        {
+            QFileInfo fileinfo(plugin_filename);
+            if (fileinfo.isReadable())
+            {
+                load_plugin(plugin_filename);
+            }
+        }
+    }
+    else if (know_what == Ext_Preview_Plugin_Control_Set_Index_Action)
+    {
+        if (preview_file_plugin_list.isEmpty())
+        {
+            return;
+        }
+        QStringList items = {};
+        for (int i = 0; i < preview_file_plugin_list.count(); ++i)
+        {
+            QString name = "[无效项]";
+            if (preview_file_plugin_list[i])
+            {
+                if (preview_file_plugin_list[i]->Plugin_Version >= P_Version{0, 0, 1})
+                {
+                    if (preview_file_plugin_list[i]->inited)
+                    {
+                        name = preview_file_plugin_list[i]->Plugin_Name();
+                    }
+                }
+            }
+            name += "[" + QString::number(i) + "]";
+            items << name;
+        }
+        bool ok = false;
+        QString selected = QInputDialog::getItem(nullptr, tr("移动插件"), tr("请选择要移动的插件:"), items, 0, false, &ok);
+        if (ok)
+        {
+            int remove_index = items.indexOf(selected);
+            ok = false;
+            int move_to_index = QInputDialog::getInt(nullptr, tr("移动插件"), tr("移动到索引(0始):"), remove_index, 0, preview_file_plugin_list.count() - 1, 1, &ok);
+            if (ok && remove_index != move_to_index)
+            {
+                preview_file_plugin_list.move(remove_index, move_to_index);
+            }
+        }
+    }
+    else if (know_what == Ext_Preview_Plugin_Control_Remove_Action)
+    {
+        if (preview_file_plugin_list.isEmpty())
+        {
+            return;
+        }
+        QStringList items = {};
+        for (int i = 0; i < preview_file_plugin_list.count(); ++i)
+        {
+            QString name = "[无效项]";
+            if (preview_file_plugin_list[i])
+            {
+                if (preview_file_plugin_list[i]->Plugin_Version >= P_Version{0, 0, 1})
+                {
+                    if (preview_file_plugin_list[i]->inited)
+                    {
+                        name = preview_file_plugin_list[i]->Plugin_Name();
+                    }
+                }
+            }
+            name += "[" + QString::number(i) + "]";
+            items << name;
+        }
+        bool ok = false;
+        QString selected = QInputDialog::getItem(this, tr("移除插件"), tr("请选择要移除的插件:"), items, 0, false, &ok);
+        if (ok)
+        {
+            int remove_index = items.indexOf(selected);
+            if (preview_file_plugin_list[remove_index]->Plugin_Version >= P_Version{0, 0, 1})
+            {
+                QPluginLoader *loader = preview_file_plugin_list[remove_index]->your_plugin_loader;
+                preview_file_plugin_list[remove_index]->RemovePlugin();
+                if (loader)
+                {
+                    loader->unload();
+                    loader->deleteLater();
+                }
+            }
+            preview_file_plugin_list.removeAt(remove_index);
+        }
     }
     else
     {
@@ -994,6 +1243,12 @@ QIcon Preview_File_Widget::get_icon(const QFileInfo &info)
 }
 void Preview_File_Widget::update_style(QColor theme_color, QColor theme_background_color, QColor theme_text_color, QColor select_text_color, QColor disabled_text_color, QString checked_icon_path)
 {
+    m_theme_color = &theme_color;
+    m_theme_background_color = &theme_background_color;
+    m_theme_text_color = &theme_text_color;
+    m_select_text_color = &select_text_color;
+    m_disabled_text_color = &disabled_text_color;
+    m_checked_icon_path = &checked_icon_path;
     m_textEdit->setStyleSheet(QString("QWidget{background:rgba(0,0,0,0);color:rgba(0,0,0,255)}"
                                       "QMenu{border-radius:10px 10px;background:rgba(%1,%2,%3,%4);margin:0px -1px 0px -1px;padding-top:8px;padding-bottom:8px;icon-size:20px;border-radius:10px 10px}"
                                       "QMenu::item{color:rgba(%5,%6,%7,%8);background:rgba(0,0,0,0);}"
@@ -1052,6 +1307,19 @@ void Preview_File_Widget::update_style(QColor theme_color, QColor theme_backgrou
                                                    "QScrollBar::add-line:horizontal,QScrollBar::sub-line:horizontal{width:0px;}"
                                                    "QScrollBar::add-page:horizontal,QScrollBar::sub-page:horizontal{background:none;}");
     this->media_control_action->set_color(theme_text_color);
+    for (int i = 0; i < preview_file_plugin_list.count(); ++i)
+    {
+        if (preview_file_plugin_list[i])
+        {
+            if (preview_file_plugin_list[i]->Plugin_Version >= P_Version{0, 0, 1})
+            {
+                if (preview_file_plugin_list[i]->inited)
+                {
+                    preview_file_plugin_list[i]->update_style(theme_color, theme_background_color, theme_text_color, select_text_color, disabled_text_color, checked_icon_path);
+                }
+            }
+        }
+    }
 }
 Info_Widget::Info_Widget(QWidget *parent)
     :QWidget(parent)
@@ -1061,8 +1329,10 @@ Info_Widget::Info_Widget(QWidget *parent)
     icon_showing->move(5, 5);
     icon_showing->setAlignment(Qt::AlignCenter);
     m_sizeUpdateTimer->setInterval(1000);
-    m_sizeUpdateTimer->setSingleShot(false);
-    connect(m_sizeUpdateTimer, &QTimer::timeout, this, &Info_Widget::updateFolderSize);
+    connect(m_sizeUpdateTimer, &QTimer::timeout, this, [=]()
+    {
+        Info_Widget::onSizeCalculated();
+    });
     connect(m_futureWatcher, &QFutureWatcher<qint64>::finished, this, &Info_Widget::onSizeCalculated);
 }
 Info_Widget::~Info_Widget()
@@ -1070,12 +1340,16 @@ Info_Widget::~Info_Widget()
     m_sizeUpdateTimer->stop();
     if (m_futureWatcher->isRunning())
     {
+        m_cancelCalculation = true;
         m_futureWatcher->cancel();
-        m_futureWatcher->waitForFinished();
     }
 }
 void Info_Widget::Set_Data(QFileInfo &info)
 {
+    if (!this->isVisible())
+    {
+        return;
+    }
     QIcon icon = Preview_File_Widget::get_icon(info);//icon不可能为空
     QPixmap pixmap = icon.pixmap(icon_showing->size());
     QSize pic_size = Preview_File_Widget::get_Image_Size(info.filePath());
@@ -1107,16 +1381,20 @@ void Info_Widget::Set_Data(QFileInfo &info)
     {
         if (m_currentDirPath != info.filePath())
         {
+            m_cancelCalculation = false;
+            temp_folder_total_size = 0;
             m_currentDirPath = info.filePath();
-            m_sizeUpdateTimer->stop();
             if (m_futureWatcher->isRunning())
             {
+                m_cancelCalculation = true;
+                m_futureWatcher->setPaused(true);
                 m_futureWatcher->cancel();
-                m_futureWatcher->waitForFinished();
+                m_futureWatcher->future().cancel();
+                //m_futureWatcher->waitForFinished(); //delay no more [doge]
             }
             size_label->setText(tr("大小:文件夹"));
-            m_sizeUpdateTimer->start();
             updateFolderSize();
+            m_sizeUpdateTimer->start();
         }
     }
     else
@@ -1124,8 +1402,10 @@ void Info_Widget::Set_Data(QFileInfo &info)
         m_sizeUpdateTimer->stop();
         if (m_futureWatcher->isRunning())
         {
+            m_cancelCalculation = true;
+            m_futureWatcher->setPaused(true);
             m_futureWatcher->cancel();
-            m_futureWatcher->waitForFinished();
+            m_futureWatcher->future().cancel();
         }
         m_currentDirPath.clear();
         sizeStr = Info_Widget::formatSize(size);
@@ -1163,46 +1443,58 @@ void Info_Widget::Set_Data(QFileInfo &info)
 }
 void Info_Widget::updateFolderSize()
 {
+    if (!this->isVisible())
+    {
+        if (m_futureWatcher->isRunning())
+        {
+            m_cancelCalculation = true;
+            m_futureWatcher->setPaused(true);
+            m_futureWatcher->cancel();
+            m_futureWatcher->future().cancel();
+        }
+        return;
+    }
     if (m_currentDirPath.isEmpty())
     {
         return;
     }
-    if (m_futureWatcher->isRunning())
-    {
-        return;
-    }
+    m_cancelCalculation = false;
     // 异步计算
     QFuture<qint64> future = QtConcurrent::run([this]() -> qint64
     {
-        QDir dir(m_currentDirPath);
-        qint64 total = 0;
-        QStack<QString> stack;
-        stack.push(dir.absolutePath());
-        while (!stack.isEmpty())
+        temp_folder_total_size = 0;
+        QDirIterator it(m_currentDirPath, QDir::Files | QDir::Hidden | QDir::NoSymLinks, QDirIterator::Subdirectories);
+        while (it.hasNext())
         {
-            QString currentPath = stack.pop();
-            QDir currentDir(currentPath);
-            QFileInfoList entries = currentDir.entryInfoList(QDir::Files | QDir::Dirs | QDir::NoDotAndDotDot);
-            for (const QFileInfo &entry : entries)
+            if (m_cancelCalculation.load())
             {
-                if (entry.isDir())
-                {
-                    stack.push(entry.absoluteFilePath());
-                }
-                else if (entry.isFile())
-                {
-                    total += entry.size();
-                }
+                return temp_folder_total_size;
             }
+            it.next();//QDirIterator特性
+            temp_folder_total_size += it.fileInfo().size();
         }
-        return total;
+        return temp_folder_total_size;
     });
     m_futureWatcher->setFuture(future);
 }
 void Info_Widget::onSizeCalculated()
 {
-    if (!m_futureWatcher || !m_futureWatcher->isFinished())
+    if (!this->isVisible())
     {
+        return;
+    }
+    if (!m_futureWatcher)
+    {
+        return;
+    }
+    if (m_currentDirPath.isEmpty() || !QDir(m_currentDirPath).exists())
+    {
+        return;
+    }
+    if (!m_futureWatcher->isFinished())
+    {
+        QString sizeStr = formatSize(temp_folder_total_size);
+        size_label->setText(tr("大小:%1(计算中)").arg(sizeStr));
         return;
     }
     QFuture<long long> future = m_futureWatcher->future();
@@ -1210,12 +1502,9 @@ void Info_Widget::onSizeCalculated()
     {
         return;
     }
-    qint64 size = future.result();
-    if (!m_currentDirPath.isEmpty() && QDir(m_currentDirPath).exists())
-    {
-        QString sizeStr = formatSize(size);
-        size_label->setText(tr("大小:%1").arg(sizeStr));
-    }
+    m_sizeUpdateTimer->stop();
+    QString sizeStr = formatSize(future.result());
+    size_label->setText(tr("大小:%1").arg(sizeStr));
 }
 QString Info_Widget::formatSize(qint64 bytes)
 {
@@ -1355,6 +1644,7 @@ void GraphicsViewer::wheelEvent(QWheelEvent *event)
     QPointF delta = oldScenePos - newScenePos;//这里需要反向一下(已实现)
     horizontalScrollBar()->setValue(horizontalScrollBar()->value() + static_cast<int>(delta.x()));
     verticalScrollBar()->setValue(verticalScrollBar()->value() + static_cast<int>(delta.y()));
+    event->accept();
 }
 void GraphicsViewer::mousePressEvent(QMouseEvent *event)
 {
@@ -1513,4 +1803,179 @@ void PdfViewer::mouseReleaseEvent(QMouseEvent *event)
         setCursor(Qt::ArrowCursor);
         event->accept();
     }
+}
+QAction *Preview_File_Widget::get_prevAction()
+{
+    return prevAction;
+}
+QAction *Preview_File_Widget::get_nextAction()
+{
+    return nextAction;
+}
+QMenu *Preview_File_Widget::get_textEdit_View_Mode_Menu()
+{
+    return textEdit_View_Mode_Menu;
+}
+QAction *Preview_File_Widget::get_textEdit_Mode_TEXT()
+{
+    return textEdit_Mode_TEXT;
+}
+QAction *Preview_File_Widget::get_textEdit_Mode_HTML()
+{
+    return textEdit_Mode_HTML;
+}
+QAction *Preview_File_Widget::get_textEdit_Mode_MARKDOWN()
+{
+    return textEdit_Mode_MARKDOWN;
+}
+QAction *Preview_File_Widget::get_textEdit_Mode_SVG()
+{
+    return textEdit_Mode_SVG;
+}
+QAction *Preview_File_Widget::get_textEdit_Mode_HEX()
+{
+    return textEdit_Mode_HEX;
+}
+QAction *Preview_File_Widget::get_prevPage()
+{
+    return prevPage;
+}
+QAction *Preview_File_Widget::get_nextPage()
+{
+    return nextPage;
+}
+QAction *Preview_File_Widget::get_reset_size_action()
+{
+    return reset_size_action;
+}
+QAction *Preview_File_Widget::get_auto_play_action()
+{
+    return auto_play_action;
+}
+QAction *Preview_File_Widget::get_force_read_action()
+{
+    return force_read_action;
+}
+QAction *Preview_File_Widget::get_play_action()
+{
+    return play_action;
+}
+QAction *Preview_File_Widget::get_stop_action()
+{
+    return stop_action;
+}
+QPushButton *Preview_File_Widget::get_prevButton()
+{
+    return prevButton;
+}
+QPushButton *Preview_File_Widget::get_nextButton()
+{
+    return nextButton;
+}
+QPushButton *Preview_File_Widget::get_prevPageButton()
+{
+    return prevPageButton;
+}
+QPushButton *Preview_File_Widget::get_nextPageButton()
+{
+    return nextPageButton;
+}
+QPushButton *Preview_File_Widget::get_playButton()
+{
+    return playButton;
+}
+QPushButton *Preview_File_Widget::get_stopButton()
+{
+    return stopButton;
+}
+QPushButton *Preview_File_Widget::get_force_read_Button()
+{
+    return force_read_Button;
+}
+Basic_TextEdit *Preview_File_Widget::get_m_textEdit()
+{
+    return m_textEdit;
+}
+QComboBox *Preview_File_Widget::get_m_textModeCombo()
+{
+    return m_textModeCombo;
+}
+QPdfDocument *Preview_File_Widget::get_m_pdfDocument()
+{
+    return m_pdfDocument;
+}
+PdfViewer *Preview_File_Widget::get_m_pdfViewer()
+{
+    return m_pdfViewer;
+}
+GraphicsViewer *Preview_File_Widget::get_m_imageViewer()
+{
+    return m_imageViewer;
+}
+QMediaPlayer *Preview_File_Widget::get_m_mediaPlayer()
+{
+    return m_mediaPlayer;
+}
+GraphicsViewer *Preview_File_Widget::get_m_videoViewer()
+{
+    return m_videoViewer;
+}
+Info_Widget *Preview_File_Widget::get_m_infoWidget()
+{
+    return m_infoWidget;
+}
+Media_WidgetAction *Preview_File_Widget::get_media_control_action()
+{
+    return media_control_action;
+}
+#include <QPluginLoader>
+void Preview_File_Widget::load_plugin(QString filepath)
+{
+    QPluginLoader *plugin_loader = new QPluginLoader(this);
+    if (filepath.isEmpty()) return;
+    plugin_loader->setFileName(filepath);
+    if (!plugin_loader->load())
+    {
+        qDebug() << tr("插件导入失败:") << plugin_loader->errorString();
+        return;
+    }
+    QObject *pluginInstance = plugin_loader->instance();
+    if (!pluginInstance)
+    {
+        plugin_loader->unload();
+        return;
+    }
+    Ext_Preview_PluginInterface *plugin_interface = qobject_cast<Ext_Preview_PluginInterface *>(pluginInstance);
+    if (plugin_interface)
+    {
+        if (is_Ext_plugin(plugin_loader))
+        {
+            if (Preview_File_Widget::Contains_Ext_Plugin(plugin_interface->Ext_Name, "Easy_Desktop_Preview"))
+            {
+                if (plugin_interface->Plugin_Version >= P_Version{0, 0, 1})
+                {
+                    plugin_interface->init(this, this->get_self());
+                    plugin_interface->your_plugin_loader = plugin_loader;
+                    plugin_interface->plugin_path = filepath;
+                    plugin_interface->inited = true;
+                    plugin_interface->update_style(*m_theme_color, *m_theme_background_color, *m_theme_text_color, *m_select_text_color, *m_disabled_text_color, *m_checked_icon_path);
+                }
+                preview_file_plugin_list << plugin_interface;
+            }
+        }
+    }
+}
+bool Preview_File_Widget::is_Ext_plugin(QPluginLoader *plugin_loader)
+{
+    QJsonObject root_obj = plugin_loader->metaData();
+    if (!root_obj.contains("MetaData")) return false;
+    QJsonValue meta_value = root_obj.value("MetaData");
+    if (!meta_value.isObject()) return false;
+    QJsonObject meta_obj = meta_value.toObject();
+    return meta_obj.contains("Ext_Preview_Plugin");
+}
+bool Preview_File_Widget::Contains_Ext_Plugin(QString Ext_name, QString plugin_controller_name)
+{
+    QStringList ext_list = Ext_name.split("|");
+    return ext_list.contains(plugin_controller_name);
 }

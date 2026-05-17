@@ -112,6 +112,18 @@ private:
     void wheelEvent(QWheelEvent *event);
     void dropEvent(QDropEvent *event);
     void dragEnterEvent(QDragEnterEvent *event);
+private:
+    QRubberBand *m_rubberBand = new QRubberBand(QRubberBand::Rectangle, this);
+    QPoint origin_pos = QPoint();
+    bool setup_rubber = false;
+    char my_padding[7];
+    void mousePressEvent(QMouseEvent *event);
+    void mouseReleaseEvent(QMouseEvent *event);
+    void mouseMoveEvent(QMouseEvent *event);
+    QList<Basic_Widget *> select_basic_widget_list = {};
+    virtual void select_mousePressEvent(QMouseEvent *event, Basic_Widget *sender);
+    virtual void select_mouseReleaseEvent(QMouseEvent *event, Basic_Widget *sender);
+    virtual void select_mouseMoveEvent(QMouseEvent *event, Basic_Widget *sender);
 };
 
 #endif // MY_PROCESS_CARRIER_H

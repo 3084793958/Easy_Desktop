@@ -9,7 +9,7 @@
 
 #include <QtCore>
 
-enum class DockPart;//ADD
+//PluginProxyInterface是不能随便新增函数的
 
 class PluginsItemInterface;
 class PluginProxyInterface
@@ -46,7 +46,7 @@ public:
     /// \brief requestContextMenu
     /// request show context menu
     ///
-    virtual void requestContextMenu(PluginsItemInterface * const itemInter, const QString &itemKey) = 0;//OPEN
+    //virtual void requestContextMenu(PluginsItemInterface * const itemInter, const QString &itemKey) = 0;
 
     virtual void requestWindowAutoHide(PluginsItemInterface * const itemInter, const QString &itemKey, const bool autoHide) = 0;
     virtual void requestRefreshWindowVisible(PluginsItemInterface * const itemInter, const QString &itemKey) = 0;
@@ -78,8 +78,6 @@ public:
     /// SeeAlse: saveValue
     ///
     virtual void removeValue(PluginsItemInterface *const itemInter, const QStringList &keyList) = 0;
-
-    virtual void updateDockInfo(PluginsItemInterface *const, const DockPart &) {}//ADD
 };
 
 #endif // PLUGINPROXYINTERFACE_H

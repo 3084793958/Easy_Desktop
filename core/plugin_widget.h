@@ -2,7 +2,7 @@
 #define PLUGIN_WIDGET_H
 #include <QPluginLoader>
 #include <QCoreApplication>
-#include <interfaces/pluginsiteminterface.h>
+#include <interfaces/dde-dock/pluginsiteminterface.h>
 #include "basic_widget.h"
 class Plugin_Root;
 class PluginController : public QObject, public PluginProxyInterface
@@ -20,9 +20,6 @@ public:
     virtual void saveValue(PluginsItemInterface * const itemInter, const QString &key, const QVariant &value) override;
     virtual const QVariant getValue(PluginsItemInterface *const itemInter, const QString &key, const QVariant& fallback = QVariant()) override;
     virtual void removeValue(PluginsItemInterface *const itemInter, const QStringList &keyList) override;
-
-    virtual void updateDockInfo(PluginsItemInterface *const, const DockPart &) override;//ADD
-    virtual void requestContextMenu(PluginsItemInterface * const itemInter, const QString &itemKey) override;//OPEN
 private:
     Plugin_Root *root = nullptr;
     QSettings *m_settings = nullptr;

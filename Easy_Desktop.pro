@@ -28,6 +28,10 @@ contains(DEFINES, USE_DTK) {
 contains(DEFINES, USE_CHART) {
     QT += charts
 }
+
+CONFIG += link_pkgconfig
+PKGCONFIG += librsvg-2.0
+
 LIBS += -lX11 -lXtst -lpulse
 CONFIG += c++11
 TARGET = Easy_Desktop
@@ -51,11 +55,12 @@ SOURCES += \
     experimental_settings.cpp \
     core/file_tree.cpp \
     core/plugin_widget.cpp \
-    interfaces/pluginsiteminterface.cpp \
     core/tools/my_x11_libs.cpp \
     core/tools/file_control.cpp \
     core/tools/multilinetextinputdialog.cpp \
-    core/tools/preview_file_widget.cpp
+    core/tools/preview_file_widget.cpp \
+    core/tools/my_rsvg_support.cpp \
+    interfaces/easy_desktop_class.cpp
 contains(DEFINES, USE_CHART) {
     SOURCES += \
         core/chart/basic_chart.cpp \
@@ -85,13 +90,17 @@ HEADERS += \
     experimental_settings.h \
     core/file_tree.h \
     core/plugin_widget.h \
-    interfaces/constants.h \
-    interfaces/pluginproxyinterface.h \
-    interfaces/pluginsiteminterface.h \
+    interfaces/dde-dock/constants.h \
+    interfaces/dde-dock/pluginproxyinterface.h \
+    interfaces/dde-dock/pluginsiteminterface.h \
     core/tools/my_x11_libs.h \
     core/tools/file_control.h \
     core/tools/multilinetextinputdialog.h \
-    core/tools/preview_file_widget.h
+    core/tools/preview_file_widget.h \
+    core/tools/my_rsvg_support.h \
+    interfaces/file-preview/file_preview_plugin.h \
+    interfaces/easy_desktop_class.h \
+    interfaces/file-preview/preview_file_interface.h
 
 contains(DEFINES, USE_CHART) {
     HEADERS += \

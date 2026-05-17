@@ -14,6 +14,29 @@ enum class Towards
     Bottom_Left,
     Bottom_Right
 };
+class Basic_Widget;
+class Desktop_Main_MouseSig_Event : public QWidget
+{
+    Q_OBJECT
+public:
+    explicit Desktop_Main_MouseSig_Event(QWidget *parent) : QWidget(parent) {}
+    virtual ~Desktop_Main_MouseSig_Event() {}
+    virtual void select_mousePressEvent(QMouseEvent *event, Basic_Widget *sender)
+    {
+        (void) event;
+        (void) sender;
+    }
+    virtual void select_mouseReleaseEvent(QMouseEvent *event, Basic_Widget *sender)
+    {
+        (void) event;
+        (void) sender;
+    }
+    virtual void select_mouseMoveEvent(QMouseEvent *event, Basic_Widget *sender)
+    {
+        (void) event;
+        (void) sender;
+    }
+};
 class Out_line_Label : public QLabel
 {
     Q_OBJECT
@@ -25,19 +48,30 @@ public:
 private:
     void paintEvent(QPaintEvent *event);
 };
-class Basic_Widget : public QWidget
+class Basic_Widget : public Desktop_Main_MouseSig_Event
 {
     Q_OBJECT
 public:
     explicit Basic_Widget(QWidget *parent);
+    ~Basic_Widget();
     QWidget* get_self();
     void resize(int w, int h);
     void resize(QSize size);
+    void setParent(QWidget *parent);
     void setGeometry(QRect rect);
     void set_now_page(int *m_now_page);
     void set_desktop_number(int *m_desktop_number);
     void set_basic_list(QList<QWidget *> *m_basic_list);
     void Update_Background();
+    bool set_select(bool select);
+    void sig_mousePressEvent(QMouseEvent *event);
+    void sig_mouseReleaseEvent(QMouseEvent *event);
+    void sig_mouseMoveEvent(QMouseEvent *event);
+signals:
+    void sig_select_mousePressEvent(QMouseEvent *event, Basic_Widget *sender);
+    void sig_select_mouseReleaseEvent(QMouseEvent *event, Basic_Widget *sender);
+    void sig_select_mouseMoveEvent(QMouseEvent *event, Basic_Widget *sender);
+public:
     virtual void save(QSettings *settings);
     virtual void load(QSettings *settings);
     virtual void save(QSettings *settings, QString Token);//由于很多派生类已经写死了virtual void save(QSettings *settings);,不可能加个QString Token.
@@ -65,11 +99,19 @@ public:
     QAction *close_button_pos_bottom_left = new QAction(tr("左下"), this);
     QAction *close_button_pos_bottom_right = new QAction(tr("右下"), this);
     Button_Pos close_button_pos = Button_Pos::Top_Right;
+    QAction *show_select_button = new QAction(tr("允许选择"), this);
+    QMenu *select_button_pos_menu = new QMenu(tr("选择按钮位置"), this);
+    QAction *select_button_pos_top_left = new QAction(tr("左上"), this);
+    QAction *select_button_pos_top_right = new QAction(tr("右上"), this);
+    QAction *select_button_pos_bottom_left = new QAction(tr("左下"), this);
+    QAction *select_button_pos_bottom_right = new QAction(tr("右下"), this);
+    Button_Pos select_button_pos = Button_Pos::Top_Left;
     void update_close_button_pos();
     QAction *set_pos_action = new QAction(tr("设置位置"), this);
     QAction *set_size_action = new QAction(tr("设置大小"), this);
     QAction *close_action = new QAction(tr("关闭窗口"), this);
     QPushButton *close_button = new QPushButton(tr("×"), this);
+    QPushButton *select_button = new QPushButton(this);
 protected:
     void moveToDesktop(int index);
     void basic_context(QMenu *menu);
@@ -78,6 +120,7 @@ protected:
     int *desktop_number;
     QList<QWidget *> *basic_list;
     bool auto_close = true;
+    bool select_tags = false;
 protected:
     int background_radius = 10;
     QColor background_color = QColor(0,0,0,50);
@@ -88,6 +131,8 @@ private:
     Towards press_towards = Towards::No;
     QPoint resize_point;
     bool press_resize = false;
+protected:
+    Desktop_Main_MouseSig_Event *save_sig_ptr = nullptr;
 private:
     Towards get_towards(QPoint point, QRect rect);
 protected:

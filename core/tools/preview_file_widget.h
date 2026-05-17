@@ -14,6 +14,10 @@
 #include <QPdfDocument>
 #include <QPdfView>
 #pragma pop_macro("Status")
+#include <atomic>
+
+#include "interfaces/file-preview/preview_file_interface.h"
+#include "interfaces/file-preview/file_preview_plugin.h"
 
 class Preview_File_Widget;
 class GraphicsViewer : public QGraphicsView
@@ -46,7 +50,7 @@ public:
 private:
     QSize m_originalSize = QSize();
 };
-class PdfViewer : public QPdfView
+class PdfViewer : public QPdfView//QPdfView似乎有足够的能力渲染svg,先不改
 {
     Q_OBJECT
 public:
@@ -82,11 +86,14 @@ private:
     QTimer *m_sizeUpdateTimer = new QTimer(this);
     QFutureWatcher<qint64> *m_futureWatcher = new QFutureWatcher<qint64>(this);
     QString m_currentDirPath = QString();
+    std::atomic<qint64> temp_folder_total_size{0};
+    std::atomic<bool> m_cancelCalculation{false};
+    char m_padding[7];
 private slots:
     void updateFolderSize();
     void onSizeCalculated();
 };
-class Preview_File_Widget : public Basic_Widget
+class Preview_File_Widget : public Basic_Widget, public Preview_File_Interface
 {
     Q_OBJECT
 public:
@@ -119,24 +126,24 @@ protected:
     void hideEvent(QHideEvent *event) override;
     void contextMenuEvent(QContextMenuEvent *event) override;
 private slots:
-    void onPrevClicked();
-    void onNextClicked();
+    void onPrevClicked() override;
+    void onNextClicked() override;
 private:
-    void updateCurrentPreview();
-    void clearCurrentPreview();
-    void setupTextPreview(const QFileInfo &info);
-    void setupPdfPreview(const QFileInfo &info);
-    void setupImagePreview(const QFileInfo &info);
-    void setupVideoPreview(const QFileInfo &info);
-    void setupAudioPreview(const QFileInfo &info);
-    void setupSvgPreview(const QFileInfo &info);
-    void setupFontPreview(const QFileInfo &info);
+    void updateCurrentPreview() override;
+    void clearCurrentPreview() override;
+    void setupTextPreview(const QFileInfo &info) override;
+    void setupPdfPreview(const QFileInfo &info) override;
+    void setupImagePreview(const QFileInfo &info) override;
+    void setupVideoPreview(const QFileInfo &info) override;
+    void setupAudioPreview(const QFileInfo &info) override;
+    void setupSvgPreview(const QFileInfo &info) override;
+    void setupFontPreview(const QFileInfo &info) override;
 private:
     QAction *preview_action = nullptr;
 private slots:
-    void prevPdfPage();
-    void nextPdfPage();
-    void force_read_file();
+    void prevPdfPage() override;
+    void nextPdfPage() override;
+    void force_read_file() override;
 private:
     QMenu *menu = new QMenu(this);
     QAction *prevAction = new QAction(tr("上一个"), this);
@@ -188,11 +195,60 @@ private:
     int holding_value = 0;
     int holding_max_time = 10;
 private:
-    void Set_Speed(int value);
-    void Set_Volume(int value);
-    void Set_Position(int value);
+    void Set_Speed(int value) override;
+    void Set_Volume(int value) override;
+    void Set_Position(int value) override;
 private:
     int m_currentFontId = -1;
+public:
+    virtual QAction *get_prevAction() override;
+    virtual QAction *get_nextAction() override;
+    virtual QMenu *get_textEdit_View_Mode_Menu() override;
+    virtual QAction *get_textEdit_Mode_TEXT() override;
+    virtual QAction *get_textEdit_Mode_HTML() override;
+    virtual QAction *get_textEdit_Mode_MARKDOWN() override;
+    virtual QAction *get_textEdit_Mode_SVG() override;
+    virtual QAction *get_textEdit_Mode_HEX() override;
+    virtual QAction *get_prevPage() override;
+    virtual QAction *get_nextPage() override;
+    virtual QAction *get_reset_size_action() override;
+    virtual QAction *get_auto_play_action() override;
+    virtual QAction *get_force_read_action() override;
+    virtual QAction *get_play_action() override;
+    virtual QAction *get_stop_action() override;
+    virtual Media_WidgetAction *get_media_control_action() override;
+public:
+    virtual QPushButton *get_prevButton() override;
+    virtual QPushButton *get_nextButton() override;
+    virtual QPushButton *get_prevPageButton() override;
+    virtual QPushButton *get_nextPageButton() override;
+    virtual QPushButton *get_playButton() override;
+    virtual QPushButton *get_stopButton() override;
+    virtual QPushButton *get_force_read_Button() override;
+
+    virtual Basic_TextEdit *get_m_textEdit() override;
+    virtual QComboBox *get_m_textModeCombo() override;
+    virtual QPdfDocument *get_m_pdfDocument() override;
+    virtual PdfViewer *get_m_pdfViewer() override;
+    virtual GraphicsViewer *get_m_imageViewer() override;
+    virtual QMediaPlayer *get_m_mediaPlayer() override;
+    virtual GraphicsViewer *get_m_videoViewer() override;
+    virtual Info_Widget *get_m_infoWidget() override;
+private:
+     QList<Ext_Preview_PluginInterface *> preview_file_plugin_list = {};
+     QMenu *Ext_Preview_Plugin_Control_Menu = new QMenu(tr("插件控制"), this);
+     QAction *Ext_Preview_Plugin_Control_Add_Action = new QAction(tr("载入插件"), this);
+     QAction *Ext_Preview_Plugin_Control_Set_Index_Action = new QAction(tr("设置插件索引"), this);
+     QAction *Ext_Preview_Plugin_Control_Remove_Action = new QAction(tr("移除插件"), this);
+     void load_plugin(QString filepath);
+     static bool Contains_Ext_Plugin(QString Ext_name, QString plugin_controller_name);
+     bool is_Ext_plugin(QPluginLoader *plugin_loader);
+     QColor *m_theme_color = nullptr;
+     QColor *m_theme_background_color = nullptr;
+     QColor *m_theme_text_color = nullptr;
+     QColor *m_select_text_color = nullptr;
+     QColor *m_disabled_text_color = nullptr;
+     QString *m_checked_icon_path = nullptr;
 };
 
 #endif // PREVIEW_FILE_WIDGET_H

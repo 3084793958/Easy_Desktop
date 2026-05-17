@@ -1,8 +1,4 @@
-// SPDX-FileCopyrightText: 2026 github.com:3084793958
-//
-// SPDX-License-Identifier: LGPL-3.0-or-later
-
-#include "pluginsiteminterface.h"
+#include "easy_desktop_class.h"
 
 P_Version::P_Version(uint m_Major_Version, uint m_Minor_Version, uint m_Patch_Version)
 {

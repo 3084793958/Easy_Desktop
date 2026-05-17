@@ -393,7 +393,7 @@ File_Tree::File_Tree(QWidget *parent)
     search_img_action->setIcon(QIcon(":/base/search.svg"));
     search_edit->addAction(search_img_action, QLineEdit::LeadingPosition);
     search_del_action->setIcon(QIcon(":/base/del.svg"));
-    model->setFilter(QDir::AllEntries | QDir::NoDotAndDotDot | QDir::Hidden);
+    model->setFilter(QDir::Files | QDir::Dirs | QDir::NoDotAndDotDot | QDir::Hidden);
     model->setRootPath(QDir::rootPath());
     model->setIconProvider(icon_provider);
     proxyModel->setSourceModel(model);
@@ -1792,6 +1792,21 @@ My_Tree_View::My_Tree_View(QWidget *parent)
     setDragDropMode(QAbstractItemView::NoDragDrop);
     setMouseTracking(true);
     setTabletTracking(true);
+    m_sizeUpdateTimer->setInterval(1000);
+    connect(m_sizeUpdateTimer, &QTimer::timeout, this, [=]()
+    {
+        My_Tree_View::onSizeCalculated();
+    });
+    connect(m_futureWatcher, &QFutureWatcher<qint64>::finished, this, &My_Tree_View::onSizeCalculated);
+}
+My_Tree_View::~My_Tree_View()
+{
+    m_sizeUpdateTimer->stop();
+    if (m_futureWatcher->isRunning())
+    {
+        m_cancelCalculation = true;
+        m_futureWatcher->cancel();
+    }
 }
 void My_Tree_View::p_save(QSettings *settings)
 {
@@ -1949,6 +1964,19 @@ void My_Tree_View::updateStatusBar()
     QMargins margin = viewportMargins();
     margin.setBottom(m_statusBar->height() * m_statusBar->isVisible());
     this->setViewportMargins(margin);
+    temp_folder_total_size = 0;
+    if (!m_statusBar->isVisible())
+    {
+        m_sizeUpdateTimer->stop();
+        if (m_futureWatcher->isRunning())
+        {
+            m_cancelCalculation = true;
+            m_futureWatcher->setPaused(true);
+            m_futureWatcher->cancel();
+            m_futureWatcher->future().cancel();
+        }
+        m_currentDirPath.clear();
+    }
     if (!m_statusBar->isVisible() || !F_model || !proxyModel || !selectionModel())
     {
         return;
@@ -1983,15 +2011,131 @@ void My_Tree_View::updateStatusBar()
     qint64 totalFileCount = 0, totalFileSize = 0;
     qint64 totalFolderCount = 0;
     recurseStat(rootProxy, totalFileCount, totalFileSize, totalFolderCount);
-    QString statusText = tr("选择: %1 个文件 (共 %2)  %3 个文件夹(包含 %4 项) |根文件夹: 总文件: %6 个 (共 %7)  总文件夹: %8 个")
+
+    QStringList path_list;
+    for (int i = 0; i < selected.count(); i += 4)
+    {
+        path_list << F_model->filePath(proxyModel->mapToSource(selected[i]));
+    }
+    if (path_list != m_currentDirPath)
+    {
+        m_currentDirPath = path_list;
+        if (!m_currentDirPath.isEmpty())
+        {
+            if (m_futureWatcher->isRunning())
+            {
+                m_cancelCalculation = true;
+                m_futureWatcher->setPaused(true);
+                m_futureWatcher->cancel();
+                m_futureWatcher->future().cancel();
+                //m_futureWatcher->waitForFinished(); //delay no more [doge]
+            }
+            m_cancelCalculation = false;
+            temp_folder_total_size = 0;
+            updateFolderSize();
+            m_sizeUpdateTimer->start();
+            for_bar_text = tr("选择: %1 个文件 (共 %2)  %3 个文件夹(包含 %4 项) [总选择大小:%8] |根文件夹: 总文件: %5 个 (共 %6)  总文件夹: %7 个")
+                    .arg(selectedFileCount)
+                    .arg(formatSize(selectedFileSize))
+                    .arg(selectedFolderCount)
+                    .arg(selectedFolderChildrenCount)
+                    .arg(totalFileCount)
+                    .arg(formatSize(totalFileSize))
+                    .arg(totalFolderCount);
+        }
+    }
+
+    QString statusText = tr("选择: %1 个文件 (共 %2)  %3 个文件夹(包含 %4 项) [总选择大小:%5] |根文件夹: 总文件: %6 个 (共 %7)  总文件夹: %8 个")
             .arg(selectedFileCount)
             .arg(formatSize(selectedFileSize))
             .arg(selectedFolderCount)
             .arg(selectedFolderChildrenCount)
+            .arg(temp_folder_total_size)
             .arg(totalFileCount)
             .arg(formatSize(totalFileSize))
             .arg(totalFolderCount);
     statusLabel->setText(statusText);
+}
+#include <QtConcurrent/QtConcurrent>
+void My_Tree_View::updateFolderSize()
+{
+    if (!this->statusLabel->isVisible())
+    {
+        if (m_futureWatcher->isRunning())
+        {
+            m_cancelCalculation = true;
+            m_futureWatcher->setPaused(true);
+            m_futureWatcher->cancel();
+            m_futureWatcher->future().cancel();
+        }
+        return;
+    }
+    if (m_currentDirPath.isEmpty())
+    {
+        return;
+    }
+    m_cancelCalculation = false;
+    // 异步计算
+    QFuture<qint64> future = QtConcurrent::run([this]() -> qint64
+    {
+        temp_folder_total_size = 0;
+        for (int i = 0; i < m_currentDirPath.count(); ++i)
+        {
+            QFileInfo fileinfo(m_currentDirPath[i]);
+            if (fileinfo.isFile())
+            {
+                if (m_cancelCalculation.load())
+                {
+                    return temp_folder_total_size;
+                }
+                temp_folder_total_size += fileinfo.size();
+            }
+            else if (fileinfo.isDir())
+            {
+                QDirIterator it(m_currentDirPath[i], QDir::Files | QDir::Hidden | QDir::NoSymLinks, QDirIterator::Subdirectories);
+                while (it.hasNext())
+                {
+                    if (m_cancelCalculation.load())
+                    {
+                        return temp_folder_total_size;
+                    }
+                    it.next();//QDirIterator特性
+                    temp_folder_total_size += it.fileInfo().size();
+                }
+            }
+        }
+        return temp_folder_total_size;
+    });
+    m_futureWatcher->setFuture(future);
+}
+void My_Tree_View::onSizeCalculated()
+{
+    if (!this->statusLabel->isVisible())
+    {
+        return;
+    }
+    if (!m_futureWatcher)
+    {
+        return;
+    }
+    if (m_currentDirPath.isEmpty())
+    {
+        return;
+    }
+    if (!m_futureWatcher->isFinished())
+    {
+        QString sizeStr = formatSize(temp_folder_total_size);
+        statusLabel->setText(for_bar_text.arg(sizeStr + tr("(计算中)")));
+        return;
+    }
+    QFuture<long long> future = m_futureWatcher->future();
+    if (!future.isResultReadyAt(0))
+    {
+        return;
+    }
+    m_sizeUpdateTimer->stop();
+    QString sizeStr = formatSize(future.result());
+    statusLabel->setText(for_bar_text.arg(sizeStr));
 }
 void My_Tree_View::resizeEvent(QResizeEvent *event)
 {

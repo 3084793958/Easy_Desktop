@@ -726,6 +726,7 @@ void Basic_TextEdit::wheelEvent(QWheelEvent *event)
     else
     {
         QTextEdit::wheelEvent(event);
+        event->accept();
     }
 }
 void Basic_TextEdit::updateColumnSelection()

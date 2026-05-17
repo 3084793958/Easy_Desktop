@@ -116,7 +116,7 @@ void PluginController::removeValue(PluginsItemInterface * const itemInter, const
         m_settings->remove(fullKey);
     }
 }
-void PluginController::updateDockInfo(PluginsItemInterface * const itemInter, const DockPart &)
+/*void PluginController::updateDockInfo(PluginsItemInterface * const itemInter, const DockPart &)
 {
     PluginController::itemUpdate(itemInter, root->plugin_itemKey);//DockPart对于Easy_Desktop没有意义
 }
@@ -126,7 +126,8 @@ void PluginController::requestContextMenu(PluginsItemInterface * const itemInter
     //由于不知道需要使用谁的ContextMenu,故默认使用item_carrier的
     QAction *know_what = root->item_carrier->menu->exec(root->item_carrier->rect().center());
     root->item_carrier->context_menu_event(know_what);
-}
+}*/
+//由于PluginProxyInterface不能随便新增函数,这两个函数不能实现,但留在这里,等待科技进步
 Plugin_Root::Plugin_Root(QWidget *parent)
     :QObject(parent)
 {

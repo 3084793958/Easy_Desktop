@@ -41,7 +41,7 @@ void Out_line_Label::paintEvent(QPaintEvent *event)
     }
 }
 Basic_Widget::Basic_Widget(QWidget *parent)
-    :QWidget(parent)
+    :Desktop_Main_MouseSig_Event(parent)
 {
     basic_control->addAction(move_to_page_action);
     basic_control->addAction(set_background_radius);
@@ -60,6 +60,24 @@ Basic_Widget::Basic_Widget(QWidget *parent)
     close_button_pos_bottom_right->setIcon(QIcon(":/base/this.svg"));
     close_button_pos_menu->addAction(close_button_pos_bottom_right);
     basic_control->addMenu(close_button_pos_menu);
+
+    basic_control->addAction(show_select_button);
+    show_select_button->setIconVisibleInMenu(true);
+    show_select_button->setIcon(QIcon(":/base/this.svg"));
+    select_button_pos_top_left->setIconVisibleInMenu(true);
+    select_button_pos_top_left->setIcon(QIcon(":/base/this.svg"));
+    select_button_pos_menu->addAction(select_button_pos_top_left);
+    select_button_pos_top_right->setIconVisibleInMenu(false);
+    select_button_pos_top_right->setIcon(QIcon(":/base/this.svg"));
+    select_button_pos_menu->addAction(select_button_pos_top_right);
+    select_button_pos_bottom_left->setIconVisibleInMenu(false);
+    select_button_pos_bottom_left->setIcon(QIcon(":/base/this.svg"));
+    select_button_pos_menu->addAction(select_button_pos_bottom_left);
+    select_button_pos_bottom_right->setIconVisibleInMenu(false);
+    select_button_pos_bottom_right->setIcon(QIcon(":/base/this.svg"));
+    select_button_pos_menu->addAction(select_button_pos_bottom_right);
+    basic_control->addMenu(select_button_pos_menu);
+
     basic_control->addAction(set_pos_action);
     basic_control->addAction(set_size_action);
     basic_control->addAction(close_action);
@@ -70,6 +88,15 @@ Basic_Widget::Basic_Widget(QWidget *parent)
     close_button->setStyleSheet("QPushButton{border-radius:12px 12px;background:rgba(255,255,255,150)}"
                                 "QPushButton:hover{border-radius:12px 12px;background:rgba(255,255,255,200)}"
                                 "QPushButton:pressed{border-radius:12px 12px;background:rgba(255,255,255,150)}");
+    select_button->resize(24, 24);
+    select_button->setFocusPolicy(Qt::NoFocus);
+    select_button->setIcon(QIcon(":/base/select.svg"));
+    select_button->setIconSize(QSize(24, 24));
+    select_button->setStyleSheet("QPushButton{border-radius:12px 12px;background:rgba(255,255,255,0)}"
+                                 "QPushButton:hover{border-radius:12px 12px;background:rgba(255,255,255,0)}"
+                                 "QPushButton:pressed{border-radius:12px 12px;background:rgba(255,255,255,0)}");
+    select_button->hide();
+    select_button->raise();
     Update_Background();
     connect(close_button, &QPushButton::released, this, [=]
     {
@@ -84,9 +111,24 @@ Basic_Widget::Basic_Widget(QWidget *parent)
     background->setMouseTracking(true);
     resize(200, 100);
 }
+Basic_Widget::~Basic_Widget()
+{
+    disconnect();
+}
 void Basic_Widget::Update_Background()
 {
     background->setStyleSheet(QString("border-radius: %1px %1px;background:rgba(%2,%3,%4,%5)").arg(background_radius).arg(background_color.red()).arg(background_color.green()).arg(background_color.blue()).arg(background_color.alpha()));
+}
+bool Basic_Widget::set_select(bool select)
+{
+    if (!show_select_button->isIconVisibleInMenu())
+    {
+        return false;
+    }
+    select_tags = select;
+    select_button->setVisible(select_tags);
+    select_button->raise();
+    return true;
 }
 QWidget* Basic_Widget::get_self()
 {
@@ -97,12 +139,33 @@ void Basic_Widget::resize(int w, int h)
     background->move(5, 10);
     background->resize(w, h);
     update_close_button_pos();
+    select_button->raise();
     QWidget::resize(w + 15 ,h + 15);
     emit size_changed(background->size());
 }
 void Basic_Widget::resize(QSize size)
 {
     Basic_Widget::resize(size.width(), size.height());
+}
+void Basic_Widget::setParent(QWidget *parent)
+{
+    QWidget::setParent(parent);
+    if (save_sig_ptr != parent->parent())
+    {
+        if (save_sig_ptr)
+        {
+            disconnect(this, &Basic_Widget::sig_select_mouseMoveEvent, save_sig_ptr, &Desktop_Main_MouseSig_Event::select_mouseMoveEvent);
+            disconnect(this, &Basic_Widget::sig_select_mousePressEvent, save_sig_ptr, &Desktop_Main_MouseSig_Event::select_mousePressEvent);
+            disconnect(this, &Basic_Widget::sig_select_mouseReleaseEvent, save_sig_ptr, &Desktop_Main_MouseSig_Event::select_mouseReleaseEvent);
+        }
+        save_sig_ptr = reinterpret_cast<Desktop_Main_MouseSig_Event *>(this->parent()->parent());
+        if (save_sig_ptr)
+        {
+            connect(this, &Basic_Widget::sig_select_mouseMoveEvent, save_sig_ptr, &Desktop_Main_MouseSig_Event::select_mouseMoveEvent);
+            connect(this, &Basic_Widget::sig_select_mousePressEvent, save_sig_ptr, &Desktop_Main_MouseSig_Event::select_mousePressEvent);
+            connect(this, &Basic_Widget::sig_select_mouseReleaseEvent, save_sig_ptr, &Desktop_Main_MouseSig_Event::select_mouseReleaseEvent);
+        }
+    }
 }
 void Basic_Widget::setGeometry(QRect rect)
 {
@@ -127,6 +190,7 @@ void Basic_Widget::mousePressEvent(QMouseEvent *event)
         {
             press_point = event->pos();
             on_press = true;
+            if (select_tags) emit sig_select_mousePressEvent(event, this);
         }
         else
         {
@@ -148,6 +212,7 @@ void Basic_Widget::mouseReleaseEvent(QMouseEvent *event)
     if (event->button() == Qt::LeftButton)
     {
         on_press = false;
+        if (select_tags) emit sig_select_mouseReleaseEvent(event, this);
         press_resize = false;
         setCursor(Qt::CursorShape::ArrowCursor);
     }
@@ -156,6 +221,7 @@ void Basic_Widget::mouseMoveEvent(QMouseEvent *event)
 {
     if (on_press)
     {
+        if (select_tags) emit sig_select_mouseMoveEvent(event, this);
         move(this->pos() + event->pos() - press_point);
         setCursor(Qt::CursorShape::SizeAllCursor);
     }
@@ -309,6 +375,39 @@ void Basic_Widget::mouseMoveEvent(QMouseEvent *event)
             }
             }
         }
+    }
+}
+void Basic_Widget::sig_mousePressEvent(QMouseEvent *event)
+{
+    raise();
+    close_button->raise();
+    if (close_button->isVisible() && close_button->geometry().contains(event->pos()))
+    {
+        on_press = false;
+        press_resize = false;
+        return;
+    }
+    if (event->button() == Qt::LeftButton)
+    {
+        press_point = event->pos();
+        on_press = true;
+    }
+}
+void Basic_Widget::sig_mouseReleaseEvent(QMouseEvent *event)
+{
+    if (event->button() == Qt::LeftButton)
+    {
+        on_press = false;
+        press_resize = false;
+        setCursor(Qt::CursorShape::ArrowCursor);
+    }
+}
+void Basic_Widget::sig_mouseMoveEvent(QMouseEvent *event)
+{
+    if (on_press)
+    {
+        move(this->pos() + event->pos() - press_point);
+        setCursor(Qt::CursorShape::SizeAllCursor);
     }
 }
 Towards Basic_Widget::get_towards(QPoint point, QRect rect)
@@ -520,6 +619,36 @@ void Basic_Widget::basic_action_func(QAction *action)
         close_button_pos = Button_Pos::Bottom_Right;
         update_close_button_pos();
     }
+    else if (action == show_select_button)
+    {
+        show_select_button->setIconVisibleInMenu(!show_select_button->isIconVisibleInMenu());
+        if (!show_select_button->isIconVisibleInMenu())
+        {
+            select_tags = false;
+            select_button->setVisible(false);
+            select_button->raise();
+        }
+    }
+    else if (action == select_button_pos_top_left)
+    {
+        select_button_pos = Button_Pos::Top_Left;
+        update_close_button_pos();
+    }
+    else if (action == select_button_pos_top_right)
+    {
+        select_button_pos = Button_Pos::Top_Right;
+        update_close_button_pos();
+    }
+    else if (action == select_button_pos_bottom_left)
+    {
+        select_button_pos = Button_Pos::Bottom_Left;
+        update_close_button_pos();
+    }
+    else if (action == select_button_pos_bottom_right)
+    {
+        select_button_pos = Button_Pos::Bottom_Right;
+        update_close_button_pos();
+    }
 }
 void Basic_Widget::save(QSettings *settings)
 {
@@ -539,6 +668,8 @@ void Basic_Widget::save(QSettings *settings)
     }
     settings->setValue("in_page", res);
     settings->setValue("close_button_pos", static_cast<int>(close_button_pos));
+    settings->setValue("show_select", show_select_button->isIconVisibleInMenu());
+    settings->setValue("select_button_pos", static_cast<int>(select_button_pos));
 }
 void Basic_Widget::load(QSettings *settings)
 {
@@ -560,6 +691,9 @@ void Basic_Widget::load(QSettings *settings)
         this->setParent(basic_list->at(res));
     }
     close_button_pos = static_cast<Button_Pos>(settings->value("close_button_pos", 1).toInt());
+    bool show_select_button_bool = settings->value("show_select", true).toBool();
+    show_select_button->setIconVisibleInMenu(show_select_button_bool);
+    select_button_pos = static_cast<Button_Pos>(settings->value("select_button_pos", 0).toInt());
     update_close_button_pos();
 }
 void Basic_Widget::save(QSettings *settings, QString Token)
@@ -580,6 +714,8 @@ void Basic_Widget::save(QSettings *settings, QString Token)
     }
     settings->setValue(Token + "in_page", res);
     settings->setValue(Token + "close_button_pos", static_cast<int>(close_button_pos));
+    settings->setValue(Token + "show_select", show_select_button->isIconVisibleInMenu());
+    settings->setValue(Token + "select_button_pos", static_cast<int>(select_button_pos));
 }
 void Basic_Widget::load(QSettings *settings, QString Token)
 {
@@ -610,6 +746,9 @@ void Basic_Widget::load(QSettings *settings, QString Token)
         this->setParent(basic_list->at(res));
     }
     close_button_pos = static_cast<Button_Pos>(settings->value(Token + "close_button_pos", static_cast<int>(close_button_pos)).toInt());
+    bool show_select_button_bool = settings->value(Token + "show_select", true).toBool();
+    show_select_button->setIconVisibleInMenu(show_select_button_bool);
+    select_button_pos = static_cast<Button_Pos>(settings->value(Token + "select_button_pos", 0).toInt());
     update_close_button_pos();
 }
 void Basic_Widget::set_icon(QString checked_icon_path)
@@ -619,6 +758,10 @@ void Basic_Widget::set_icon(QString checked_icon_path)
     close_button_pos_top_right->setIcon(QIcon(checked_icon_path));
     close_button_pos_bottom_left->setIcon(QIcon(checked_icon_path));
     close_button_pos_bottom_right->setIcon(QIcon(checked_icon_path));
+    select_button_pos_top_left->setIcon(QIcon(checked_icon_path));
+    select_button_pos_top_right->setIcon(QIcon(checked_icon_path));
+    select_button_pos_bottom_left->setIcon(QIcon(checked_icon_path));
+    select_button_pos_bottom_right->setIcon(QIcon(checked_icon_path));
 }
 void Basic_Widget::update_close_button_pos()
 {
@@ -663,4 +806,45 @@ void Basic_Widget::update_close_button_pos()
     }
     }
     close_button->raise();
+
+    switch (select_button_pos)
+    {
+    case Button_Pos::Top_Left:
+    {
+        select_button_pos_top_left->setIconVisibleInMenu(true);
+        select_button_pos_top_right->setIconVisibleInMenu(false);
+        select_button_pos_bottom_left->setIconVisibleInMenu(false);
+        select_button_pos_bottom_right->setIconVisibleInMenu(false);
+        select_button->move(0, 0);
+        break;
+    }
+    case Button_Pos::Top_Right:
+    {
+        select_button_pos_top_left->setIconVisibleInMenu(false);
+        select_button_pos_top_right->setIconVisibleInMenu(true);
+        select_button_pos_bottom_left->setIconVisibleInMenu(false);
+        select_button_pos_bottom_right->setIconVisibleInMenu(false);
+        select_button->move(size.width() - 9, 0);
+        break;
+    }
+    case Button_Pos::Bottom_Left:
+    {
+        select_button_pos_top_left->setIconVisibleInMenu(false);
+        select_button_pos_top_right->setIconVisibleInMenu(false);
+        select_button_pos_bottom_left->setIconVisibleInMenu(true);
+        select_button_pos_bottom_right->setIconVisibleInMenu(false);
+        select_button->move(0, size.height() - 9);
+        break;
+    }
+    case Button_Pos::Bottom_Right:
+    {
+        select_button_pos_top_left->setIconVisibleInMenu(false);
+        select_button_pos_top_right->setIconVisibleInMenu(false);
+        select_button_pos_bottom_left->setIconVisibleInMenu(false);
+        select_button_pos_bottom_right->setIconVisibleInMenu(true);
+        select_button->move(size.width() - 9, size.height() - 9);
+        break;
+    }
+    }
+    select_button->raise();
 }

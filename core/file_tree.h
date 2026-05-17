@@ -38,6 +38,7 @@ class My_Tree_View : public QTreeView
     Q_OBJECT
 public:
     explicit My_Tree_View(QWidget *parent);
+    ~My_Tree_View() override;
     void p_save(QSettings *settings);
     void p_load(QSettings *settings);
     QFileSystemModel *F_model = nullptr;
@@ -69,6 +70,17 @@ protected:
 private:
     QString formatSize(qint64 bytes);
     void recurseStat(const QModelIndex proxyParent, qint64 &outFileCount, qint64 &outFileSize, qint64 &outFolderCount);
+private:
+    QTimer *m_sizeUpdateTimer = new QTimer(this);
+    QFutureWatcher<qint64> *m_futureWatcher = new QFutureWatcher<qint64>(this);
+    QStringList m_currentDirPath = {};
+    std::atomic<qint64> temp_folder_total_size{0};
+    std::atomic<bool> m_cancelCalculation{false};
+    char m_padding[7];
+    QString for_bar_text = "";
+private slots:
+    void updateFolderSize();
+    void onSizeCalculated();
 };
 class My_Icon_Provider : public QFileIconProvider
 {
@@ -148,7 +160,7 @@ protected:
     QAction *delete_action = new QAction(tr("删除"), this);
     QAction *show_info = new QAction(tr("属性"), this);
 
-    QMenu *tree_setting = new QMenu(tr("树状视图操作"), this);
+    QMenu *tree_setting = new QMenu(tr("树状视图控制"), this);
     QAction *single_press_mode_action = new QAction(tr("单击模式"), this);
     QAction *set_dir_path = new QAction(tr("设置文件夹路径"), this);
     QMenu *set_style_menu = new QMenu(tr("设置外观"), this);

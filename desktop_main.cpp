@@ -291,7 +291,7 @@ void Desktop_Control_Dock::contextMenuEvent(QContextMenuEvent *event)
     }
 }
 Desktop_Main::Desktop_Main(QWidget *parent)
-    :QWidget(parent)
+    :Desktop_Main_MouseSig_Event(parent)
 {
     background_Add_Action->addAction(my_clock_action);
     background_Add_Action->addAction(text_edit_action);
@@ -339,6 +339,11 @@ Desktop_Main::Desktop_Main(QWidget *parent)
     move_Timer->setInterval(30);
     connect(move_Timer, &QTimer::timeout, this, &Desktop_Main::Timer_End);
     control_Dock->basic_pos = &basic_pos;
+    m_rubberBand->hide();
+}
+Desktop_Main::~Desktop_Main()
+{
+    disconnect();
 }
 void Desktop_Main::Connection_Update()
 {
@@ -824,6 +829,96 @@ void Desktop_Main::dragEnterEvent(QDragEnterEvent *event)
     if (*allow_drop && event->mimeData()->hasUrls())
     {
         event->accept();
+    }
+}
+void Desktop_Main::mousePressEvent(QMouseEvent *event)
+{
+    QWidget::mousePressEvent(event);
+    if (!(QApplication::keyboardModifiers() & Qt::ControlModifier || QApplication::keyboardModifiers() & Qt::ShiftModifier))
+    {
+        for (int i = 0; i < select_basic_widget_list.count(); ++i)
+        {
+            select_basic_widget_list[i]->set_select(false);
+        }
+        select_basic_widget_list.clear();
+    }
+    if (!event->isAccepted())
+    {
+        if (event->button() == Qt::LeftButton)
+        {
+            setup_rubber = true;
+            origin_pos = event->pos();
+            m_rubberBand->setGeometry(QRect(origin_pos, QSize()));
+            m_rubberBand->show();
+        }
+    }
+}
+void Desktop_Main::mouseReleaseEvent(QMouseEvent *event)
+{
+    QWidget::mouseReleaseEvent(event);
+    if (event->button() == Qt::LeftButton && setup_rubber)
+    {
+        setup_rubber = false;
+        m_rubberBand->hide();
+        for (int i = 0; i < desktop_core_dock_list[now_page]->children().count(); ++i)
+        {
+            auto *ptr = qobject_cast<Basic_Widget *>(desktop_core_dock_list[now_page]->children()[i]);
+            if (ptr)
+            {
+                if (ptr->geometry().intersects(m_rubberBand->geometry()))
+                {
+                    if (ptr->set_select(true) && !select_basic_widget_list.contains(ptr))
+                    {
+                        select_basic_widget_list << ptr;
+                    }
+                }
+            }
+        }
+    }
+}
+void Desktop_Main::mouseMoveEvent(QMouseEvent *event)
+{
+    if (event->buttons() & Qt::LeftButton)
+    {
+        if (setup_rubber && m_rubberBand->isVisible())
+        {
+            QRect rect = QRect(origin_pos, event->pos()).normalized();
+            m_rubberBand->setGeometry(rect);
+        }
+    }
+    QWidget::mouseMoveEvent(event);
+}
+void Desktop_Main::select_mousePressEvent(QMouseEvent *event, Basic_Widget *sender)
+{
+    for (int i = 0; i < select_basic_widget_list.count(); ++i)
+    {
+        if (sender == select_basic_widget_list[i])
+        {
+            continue;
+        }
+        select_basic_widget_list[i]->sig_mousePressEvent(event);
+    }
+}
+void Desktop_Main::select_mouseReleaseEvent(QMouseEvent *event, Basic_Widget *sender)
+{
+    for (int i = 0; i < select_basic_widget_list.count(); ++i)
+    {
+        if (sender == select_basic_widget_list[i])
+        {
+            continue;
+        }
+        select_basic_widget_list[i]->sig_mouseReleaseEvent(event);
+    }
+}
+void Desktop_Main::select_mouseMoveEvent(QMouseEvent *event, Basic_Widget *sender)
+{
+    for (int i = 0; i < select_basic_widget_list.count(); ++i)
+    {
+        if (sender == select_basic_widget_list[i])
+        {
+            continue;
+        }
+        select_basic_widget_list[i]->sig_mouseMoveEvent(event);
     }
 }
 void Desktop_Main::set_Desktop_Size(int d_width, int d_height)

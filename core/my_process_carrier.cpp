@@ -41,8 +41,117 @@ My_Process_Carrier::My_Process_Carrier(QWidget *parent)
     connect(move_Timer, &QTimer::timeout, this, &My_Process_Carrier::Timer_End);
     show();
     close_button->raise();
+    m_rubberBand->hide();
 }
-
+void My_Process_Carrier::mousePressEvent(QMouseEvent *event)
+{
+    if (!(QApplication::keyboardModifiers() & Qt::ControlModifier || QApplication::keyboardModifiers() & Qt::ShiftModifier))
+    {
+        for (int i = 0; i < select_basic_widget_list.count(); ++i)
+        {
+            select_basic_widget_list[i]->set_select(false);
+        }
+        select_basic_widget_list.clear();
+    }
+    if ((QApplication::keyboardModifiers() & Qt::ControlModifier || QApplication::keyboardModifiers() & Qt::ShiftModifier))
+    {
+        if (event->button() == Qt::LeftButton)
+        {
+            setup_rubber = true;
+            origin_pos = event->pos();
+            m_rubberBand->setGeometry(QRect(origin_pos, QSize()));
+            m_rubberBand->show();
+        }
+    }
+    else
+    {
+        Basic_Widget::mousePressEvent(event);
+    }
+}
+void My_Process_Carrier::mouseReleaseEvent(QMouseEvent *event)
+{
+    if (event->button() == Qt::LeftButton && setup_rubber)
+    {
+        m_rubberBand->hide();
+    }
+    if ((QApplication::keyboardModifiers() & Qt::ControlModifier || QApplication::keyboardModifiers() & Qt::ShiftModifier))
+    {
+        if (event->button() == Qt::LeftButton && setup_rubber)
+        {
+            setup_rubber = false;
+            m_rubberBand->hide();
+            for (int i = 0; i < carrier_widget_list[carrier_now_page]->children().count(); ++i)
+            {
+                auto *ptr = qobject_cast<Basic_Widget *>(carrier_widget_list[carrier_now_page]->children()[i]);
+                if (ptr)
+                {
+                    if (ptr->geometry().intersects(m_rubberBand->geometry()))
+                    {
+                        if (ptr->set_select(true) && !select_basic_widget_list.contains(ptr))
+                        {
+                            select_basic_widget_list << ptr;
+                        }
+                    }
+                }
+            }
+        }
+    }
+    else
+    {
+        Basic_Widget::mouseReleaseEvent(event);
+    }
+}
+void My_Process_Carrier::mouseMoveEvent(QMouseEvent *event)
+{
+    if ((QApplication::keyboardModifiers() & Qt::ControlModifier || QApplication::keyboardModifiers() & Qt::ShiftModifier))
+    {
+        if (event->buttons() & Qt::LeftButton)
+        {
+            if (setup_rubber && m_rubberBand->isVisible())
+            {
+                QRect rect = QRect(origin_pos, event->pos()).normalized();
+                m_rubberBand->setGeometry(rect);
+            }
+        }
+    }
+    else
+    {
+        Basic_Widget::mouseMoveEvent(event);
+    }
+}
+void My_Process_Carrier::select_mousePressEvent(QMouseEvent *event, Basic_Widget *sender)
+{
+    for (int i = 0; i < select_basic_widget_list.count(); ++i)
+    {
+        if (sender == select_basic_widget_list[i])
+        {
+            continue;
+        }
+        select_basic_widget_list[i]->sig_mousePressEvent(event);
+    }
+}
+void My_Process_Carrier::select_mouseReleaseEvent(QMouseEvent *event, Basic_Widget *sender)
+{
+    for (int i = 0; i < select_basic_widget_list.count(); ++i)
+    {
+        if (sender == select_basic_widget_list[i])
+        {
+            continue;
+        }
+        select_basic_widget_list[i]->sig_mouseReleaseEvent(event);
+    }
+}
+void My_Process_Carrier::select_mouseMoveEvent(QMouseEvent *event, Basic_Widget *sender)
+{
+    for (int i = 0; i < select_basic_widget_list.count(); ++i)
+    {
+        if (sender == select_basic_widget_list[i])
+        {
+            continue;
+        }
+        select_basic_widget_list[i]->sig_mouseMoveEvent(event);
+    }
+}
 My_Process_Carrier::~My_Process_Carrier()
 {
     if (my_process_carrier_list)
