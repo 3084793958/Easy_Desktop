@@ -4,7 +4,7 @@
 #include <QTreeView>
 #include <QFileSystemModel>
 #include "core/tools/multilinetextinputdialog.h"
-#include "core/tools/preview_file_widget.h"
+#include "core/module/preview_file_widget.h"
 class My_TreeView_Delegate : public QStyledItemDelegate
 {
 public:

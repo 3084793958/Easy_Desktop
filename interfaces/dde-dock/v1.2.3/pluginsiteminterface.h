@@ -376,6 +376,10 @@ QT_BEGIN_NAMESPACE
 #define ModuleInterface_iid "com.deepin.dock.PluginsItemInterface"
 
 Q_DECLARE_INTERFACE(PluginsItemInterface, ModuleInterface_iid)
+
+#undef ModuleInterface_iid
+
 QT_END_NAMESPACE
+
 
 #endif // PLUGINSITEMINTERFACE_H

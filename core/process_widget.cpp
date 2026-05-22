@@ -160,28 +160,29 @@ Process_Widget::Process_Widget(QWidget *parent)
 void Process_Widget::setParent(QWidget *parent)
 {
     QWidget::setParent(parent);
-    if (save_sig_ptr != parent->parent())
+    updateSig();
+}
+void Process_Widget::updateSig()
+{
+    if (save_sig_ptr)
     {
-        if (save_sig_ptr)
-        {
-            disconnect(this, &Basic_Widget::sig_select_mouseMoveEvent, save_sig_ptr, &Desktop_Main_MouseSig_Event::select_mouseMoveEvent);
-            disconnect(this, &Basic_Widget::sig_select_mousePressEvent, save_sig_ptr, &Desktop_Main_MouseSig_Event::select_mousePressEvent);
-            disconnect(this, &Basic_Widget::sig_select_mouseReleaseEvent, save_sig_ptr, &Desktop_Main_MouseSig_Event::select_mouseReleaseEvent);
-        }
-        if (in_carrier)
-        {
-            save_sig_ptr = reinterpret_cast<Desktop_Main_MouseSig_Event *>(this->parent()->parent());
-        }
-        else
-        {
-            save_sig_ptr = reinterpret_cast<Desktop_Main_MouseSig_Event *>(this->parent()->parent());
-        }
-        if (save_sig_ptr)
-        {
-            connect(this, &Basic_Widget::sig_select_mouseMoveEvent, save_sig_ptr, &Desktop_Main_MouseSig_Event::select_mouseMoveEvent);
-            connect(this, &Basic_Widget::sig_select_mousePressEvent, save_sig_ptr, &Desktop_Main_MouseSig_Event::select_mousePressEvent);
-            connect(this, &Basic_Widget::sig_select_mouseReleaseEvent, save_sig_ptr, &Desktop_Main_MouseSig_Event::select_mouseReleaseEvent);
-        }
+        disconnect(this, &Basic_Widget::sig_select_mouseMoveEvent, save_sig_ptr, &Desktop_Main_MouseSig_Event::select_mouseMoveEvent);
+        disconnect(this, &Basic_Widget::sig_select_mousePressEvent, save_sig_ptr, &Desktop_Main_MouseSig_Event::select_mousePressEvent);
+        disconnect(this, &Basic_Widget::sig_select_mouseReleaseEvent, save_sig_ptr, &Desktop_Main_MouseSig_Event::select_mouseReleaseEvent);
+    }
+    if (in_carrier)
+    {
+        save_sig_ptr = reinterpret_cast<Desktop_Main_MouseSig_Event *>(this->parent()->parent()->parent());
+    }
+    else
+    {
+        save_sig_ptr = reinterpret_cast<Desktop_Main_MouseSig_Event *>(this->parent()->parent());
+    }
+    if (save_sig_ptr)
+    {
+        connect(this, &Basic_Widget::sig_select_mouseMoveEvent, save_sig_ptr, &Desktop_Main_MouseSig_Event::select_mouseMoveEvent);
+        connect(this, &Basic_Widget::sig_select_mousePressEvent, save_sig_ptr, &Desktop_Main_MouseSig_Event::select_mousePressEvent);
+        connect(this, &Basic_Widget::sig_select_mouseReleaseEvent, save_sig_ptr, &Desktop_Main_MouseSig_Event::select_mouseReleaseEvent);
     }
 }
 void Process_Widget::mousePressEvent(QMouseEvent *event)

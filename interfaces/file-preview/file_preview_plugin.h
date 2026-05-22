@@ -2,7 +2,7 @@
 #define FILE_PREVIEW_PLUGIN_H
 
 #include "interfaces/easy_desktop_class.h"
-#include "interfaces/file-preview/preview_file_interface.h"
+#include "preview_file_interface.h"
 
 #include <QColor>
 
@@ -38,7 +38,7 @@ public:
 
     //0.0.1
     ///
-    /// \brief ~FilePreviewInterface()
+    /// \brief ~Ext_Preview_PluginInterface()
     /// 就是正常的析构函数
     ///
     virtual ~Ext_Preview_PluginInterface() {}

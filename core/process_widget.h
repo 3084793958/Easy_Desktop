@@ -21,6 +21,7 @@ public:
     bool in_carrier = false;
     int carrier_index = 0;
     void setParent(QWidget *parent);
+    void updateSig();
 protected:
     QSize movie_size;
     QWidget *Carrier = new QWidget(this->get_self());

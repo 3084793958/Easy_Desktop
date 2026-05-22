@@ -19,8 +19,9 @@
 # You should have received a copy of the GNU General Public License     #
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.#
 
-#DEFINES += USE_DTK
-DEFINES += USE_CHART
+#DEFINES += USE_DTK #使用DTK #dde-dock插件V2.0.0需要DTK支持,该项需要开启
+DEFINES += USE_CHART #使用QChart
+
 QT += core gui widgets multimedia multimediawidgets x11extras dbus pdf pdfwidgets svg
 contains(DEFINES, USE_DTK) {
     QT += dtkcore dtkgui dtkwidget
@@ -58,9 +59,11 @@ SOURCES += \
     core/tools/my_x11_libs.cpp \
     core/tools/file_control.cpp \
     core/tools/multilinetextinputdialog.cpp \
-    core/tools/preview_file_widget.cpp \
+    core/module/preview_file_widget.cpp \
     core/tools/my_rsvg_support.cpp \
-    interfaces/easy_desktop_class.cpp
+    interfaces/easy_desktop_class.cpp \
+    core/module/plugincontroller.cpp
+
 contains(DEFINES, USE_CHART) {
     SOURCES += \
         core/chart/basic_chart.cpp \
@@ -69,6 +72,10 @@ contains(DEFINES, USE_CHART) {
         core/chart/net_chart.cpp \
         core/chart/disk_chart.cpp \
         core/chart/pulseaudio_chart.cpp
+}
+contains(DEFINES, USE_DTK) {
+    SOURCES += \
+        core/module/plugincontroller_v_2_0_0.cpp
 }
 
 HEADERS += \
@@ -90,17 +97,18 @@ HEADERS += \
     experimental_settings.h \
     core/file_tree.h \
     core/plugin_widget.h \
-    interfaces/dde-dock/constants.h \
-    interfaces/dde-dock/pluginproxyinterface.h \
-    interfaces/dde-dock/pluginsiteminterface.h \
+    interfaces/dde-dock/v1.2.3/constants.h \
+    interfaces/dde-dock/v1.2.3/pluginproxyinterface.h \
+    interfaces/dde-dock/v1.2.3/pluginsiteminterface.h \
     core/tools/my_x11_libs.h \
     core/tools/file_control.h \
     core/tools/multilinetextinputdialog.h \
-    core/tools/preview_file_widget.h \
+    core/module/preview_file_widget.h \
     core/tools/my_rsvg_support.h \
     interfaces/file-preview/file_preview_plugin.h \
     interfaces/easy_desktop_class.h \
-    interfaces/file-preview/preview_file_interface.h
+    interfaces/file-preview/preview_file_interface.h \
+    core/module/plugincontroller.h
 
 contains(DEFINES, USE_CHART) {
     HEADERS += \
@@ -111,6 +119,14 @@ contains(DEFINES, USE_CHART) {
         core/chart/disk_chart.h \
         core/chart/pulseaudio_chart.h
 }
+
+contains(DEFINES, USE_DTK) {
+    HEADERS += \
+        interfaces/dde-dock/v2.0.0/pluginproxyinterface_v2.0.0.h \
+        interfaces/dde-dock/v2.0.0/pluginsiteminterface_v2.0.0.h
+        core/module/plugincontroller_v_2_0_0.h
+}
+
 
 RESOURCES += \
     base.qrc

@@ -43,6 +43,7 @@ void Out_line_Label::paintEvent(QPaintEvent *event)
 Basic_Widget::Basic_Widget(QWidget *parent)
     :Desktop_Main_MouseSig_Event(parent)
 {
+    setParent(parent);
     basic_control->addAction(move_to_page_action);
     basic_control->addAction(set_background_radius);
     basic_control->addAction(set_background_color);

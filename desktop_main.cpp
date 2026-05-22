@@ -582,6 +582,7 @@ void Desktop_Main::contextMenuEvent(QContextMenuEvent *event)
     else if (know_what == my_process_action)
     {
         Process_Widget *my_process = new Process_Widget(desktop_core_dock_list[now_page]);
+        my_process->updateSig();
         connect(my_process, &Process_Widget::set_to_Carrier_Sig, this, [=]
         {
             process_widget_p = my_process;
@@ -606,6 +607,7 @@ void Desktop_Main::contextMenuEvent(QContextMenuEvent *event)
     else if (know_what == my_file_action)
     {
         File_Widget *my_file = new File_Widget(desktop_core_dock_list[now_page]);
+        my_file->updateSig();
         connect(my_file, &Process_Widget::set_to_Carrier_Sig, this, [=]
         {
             process_widget_p = my_file;
@@ -1162,6 +1164,7 @@ void Desktop_Main::createNextBatch()
     {
         const File_Widget_CreateData &data = m_pendingItems[i];
         File_Widget *my_file = new File_Widget(desktop_core_dock_list[now_page]);
+        my_file->updateSig();
         connect(my_file, &Process_Widget::set_to_Carrier_Sig, this, [=]
         {
             process_widget_p = my_file;
@@ -1566,6 +1569,7 @@ void Desktop_Main::load()
         //
         settings.beginGroup(QString("process_widget%1").arg(i));
         my_process->in_carrier = settings.value("in_carrier", false).toBool();
+        my_process->updateSig();
         if (my_process->in_carrier)
         {
             my_process->carrier_index = settings.value("carrier_index", -1).toInt();
@@ -1611,6 +1615,7 @@ void Desktop_Main::load()
         });
         settings.beginGroup(QString("file_widget%1").arg(i));
         my_file->in_carrier = settings.value("in_carrier", false).toBool();
+        my_file->updateSig();
         if (my_file->in_carrier)
         {
             my_file->carrier_index = settings.value("carrier_index", -1).toInt();

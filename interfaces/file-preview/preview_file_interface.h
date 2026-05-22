@@ -12,7 +12,6 @@ class QPdfDocument;
 class PdfViewer;
 class GraphicsViewer;
 class QMediaPlayer;
-class GraphicsViewer;
 class Info_Widget;
 
 class Media_WidgetAction;

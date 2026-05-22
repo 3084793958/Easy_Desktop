@@ -1,138 +1,36 @@
 #include "plugin_widget.h"
-PluginController::PluginController(QObject *parent, Plugin_Root *plugin_root)
-    :QObject(parent)
-    ,root(plugin_root)
+
+#include "core/module/plugincontroller.h"
+#ifdef USE_DTK
+#include "core/module/plugincontroller_v_2_0_0.h"
+#endif
+
+namespace CarrierType
 {
-    m_settings = new QSettings("Easy_Desktop", "plugins", this);
+    const int Unknown = 0;
+    const int Plugin_Item = 1;
+    const int Plugin_Popup = 2;
+    const int Plugin_Tips = 3;
 }
-PluginController::~PluginController()
+static Dock::Position intToPosition(int pos)
 {
-    m_settings->sync();
-}
-QString PluginController::buildKey(PluginsItemInterface *itemInter, const QString &key) const
-{
-    if (itemInter)
+    switch (pos)
     {
-        return QString("%1/%2").arg(itemInter->pluginName()).arg(key);
-    }
-    else
-    {
-        return QString("unknown_plugin/%1").arg(key);
-    }
-}
-void PluginController::itemAdded(PluginsItemInterface * const itemInter, const QString &itemKey)
-{
-    if (!itemInter) return;
-    if (root->has_been_closed) return;
-    root->plugin_itemKey = itemKey;
-    root->update_plugin(itemInter, itemKey);
-    root->item_carrier->plugin_set_size(itemInter);
-    root->popup_carrier->plugin_set_size(itemInter);
-    root->tips_carrier->plugin_set_size(itemInter);
-    QString extra_Data = itemInter->itemContextMenu(itemKey);
-    if (extra_Data.isNull() || extra_Data.isEmpty())
-    {
-        root->item_carrier->set_extra_menu(QString());
-    }
-    else
-    {
-        root->item_carrier->set_extra_menu(extra_Data);
-    }
-    if (root->plugin_disabled)
-    {
-        root->disable_plugin_update();
+        case 0: return Dock::Position::Top;
+        case 1: return Dock::Position::Right;
+        case 2: return Dock::Position::Bottom;
+        case 3: return Dock::Position::Left;
+        default: return Dock::Position::Top;
     }
 }
-void PluginController::itemUpdate(PluginsItemInterface * const itemInter, const QString &itemKey)
-{
-    if (!itemInter) return;
-    if (root->has_been_closed) return;
-    root->plugin_itemKey = itemKey;
-    root->update_plugin(itemInter, itemKey);
-    //itemInter->itemContextMenu(itemKey);不能在update中加载
-    root->disable_plugin_update();
-}
-void PluginController::itemRemoved(PluginsItemInterface * const itemInter, const QString &itemKey)
-{
-    PluginController::itemUpdate(itemInter, itemKey);
-}
-void PluginController::requestWindowAutoHide(PluginsItemInterface * const itemInter, const QString &itemKey, const bool autoHide)
-{
-    PluginController::itemUpdate(itemInter, itemKey);
-    if (autoHide)
-    {
-        root->item_carrier->call_to_show();
-        if (!root->tips_always_show)
-        {
-            root->tips_carrier->hide();
-        }
-        if (!root->popup_always_show)
-        {
-            root->popup_carrier->hide();
-        }
-    }
-}
-void PluginController::requestRefreshWindowVisible(PluginsItemInterface * const itemInter, const QString &itemKey)
-{
-    PluginController::itemUpdate(itemInter, itemKey);
-    root->item_carrier->call_to_show();
-    if (!root->tips_always_show)
-    {
-        root->tips_carrier->hide();
-    }
-    if (!root->popup_always_show)
-    {
-        root->popup_carrier->hide();
-    }
-}
-void PluginController::requestSetAppletVisible(PluginsItemInterface * const itemInter, const QString &itemKey, const bool visible)
-{
-    PluginController::itemUpdate(itemInter, itemKey);
-    if (visible)
-    {
-        root->popup_carrier->call_to_show();
-    }
-    else
-    {
-        root->popup_carrier->hide();
-    }
-}
-void PluginController::saveValue(PluginsItemInterface * const itemInter, const QString &key, const QVariant &value)
-{
-    QString fullKey = buildKey(itemInter, key);
-    m_settings->setValue(fullKey, value);
-}
-const QVariant PluginController::getValue(PluginsItemInterface * const itemInter, const QString &key, const QVariant &fallback)
-{
-    QString fullKey = buildKey(itemInter, key);
-    QVariant value = m_settings->value(fullKey, fallback);
-    return value;
-}
-void PluginController::removeValue(PluginsItemInterface * const itemInter, const QStringList &keyList)
-{
-    for (const QString &key : keyList)
-    {
-        QString fullKey = buildKey(itemInter, key);
-        m_settings->remove(fullKey);
-    }
-}
-/*void PluginController::updateDockInfo(PluginsItemInterface * const itemInter, const DockPart &)
-{
-    PluginController::itemUpdate(itemInter, root->plugin_itemKey);//DockPart对于Easy_Desktop没有意义
-}
-void PluginController::requestContextMenu(PluginsItemInterface * const itemInter, const QString &itemKey)
-{
-    PluginController::itemUpdate(itemInter, itemKey);
-    //由于不知道需要使用谁的ContextMenu,故默认使用item_carrier的
-    QAction *know_what = root->item_carrier->menu->exec(root->item_carrier->rect().center());
-    root->item_carrier->context_menu_event(know_what);
-}*/
-//由于PluginProxyInterface不能随便新增函数,这两个函数不能实现,但留在这里,等待科技进步
+
 Plugin_Root::Plugin_Root(QWidget *parent)
     :QObject(parent)
 {
     desktop_parent = parent;
-    item_carrier->plugin_carrier_type = PluginsItemInterface::Carrier_Type::Plugin_Item;
+    item_carrier = new Plugin_Item_Widget(nullptr, this);
+    tips_carrier = new Plugin_Widget(nullptr, this, CarrierType::Plugin_Tips);
+    popup_carrier = new Plugin_Widget(nullptr, this, CarrierType::Plugin_Popup);
     connect(item_carrier, &Plugin_Item_Widget::real_close_event, this, [=]
     {
         close_plugin(true);
@@ -143,10 +41,23 @@ Plugin_Root::Plugin_Root(QWidget *parent)
         if (popup_always_show || popup_carrier->isHidden())
         {
             if (plugin_disabled) return;
-            PluginsItemInterface *plugin_interface = this->get_interface();
-            if (plugin_interface)
+            if (isV_2_0_0_Plugin())
             {
-                plugin_controller->itemUpdate(plugin_interface, plugin_itemKey);
+#ifdef USE_DTK
+                PluginsItemInterface_V_2_0_0 *plugin_interface = this->get_interface_V_2_0_0();
+                if (plugin_interface)
+                {
+                    plugin_controller_V_2_0_0->itemUpdate(plugin_interface, plugin_itemKey);
+                }
+#endif
+            }
+            else
+            {
+                PluginsItemInterface *plugin_interface = this->get_interface();
+                if (plugin_interface)
+                {
+                    plugin_controller->itemUpdate(plugin_interface, plugin_itemKey);
+                }
             }
             popup_carrier->call_to_show();
         }
@@ -159,10 +70,23 @@ Plugin_Root::Plugin_Root(QWidget *parent)
     {
         if (will_fully_remove) return;
         if (plugin_disabled) return;
-        PluginsItemInterface *plugin_interface = this->get_interface();
-        if (plugin_interface)
+        if (isV_2_0_0_Plugin())
         {
-            plugin_controller->itemUpdate(plugin_interface, plugin_itemKey);
+#ifdef USE_DTK
+            PluginsItemInterface_V_2_0_0 *plugin_interface = this->get_interface_V_2_0_0();
+            if (plugin_interface)
+            {
+                plugin_controller_V_2_0_0->itemUpdate(plugin_interface, plugin_itemKey);
+            }
+#endif
+        }
+        else
+        {
+            PluginsItemInterface *plugin_interface = this->get_interface();
+            if (plugin_interface)
+            {
+                plugin_controller->itemUpdate(plugin_interface, plugin_itemKey);
+            }
         }
         tips_carrier->call_to_show();
     });
@@ -180,10 +104,23 @@ Plugin_Root::Plugin_Root(QWidget *parent)
     {
         if (will_fully_remove) return;
         if (plugin_disabled) return;
-        PluginsItemInterface *plugin_interface = this->get_interface();
-        if (plugin_interface)
+        if (isV_2_0_0_Plugin())
         {
-            plugin_interface->invokedMenuItem(plugin_itemKey, menuId, checked);
+#ifdef USE_DTK
+            PluginsItemInterface_V_2_0_0 *plugin_interface = this->get_interface_V_2_0_0();
+            if (plugin_interface)
+            {
+                plugin_interface->invokedMenuItem(plugin_itemKey, menuId, checked);
+            }
+#endif
+        }
+        else
+        {
+            PluginsItemInterface *plugin_interface = this->get_interface();
+            if (plugin_interface)
+            {
+                plugin_interface->invokedMenuItem(plugin_itemKey, menuId, checked);
+            }
         }
     });
     connect(item_carrier, &Basic_Widget::close_signals, this, [=]
@@ -192,54 +129,125 @@ Plugin_Root::Plugin_Root(QWidget *parent)
     });
     connect(update_sender, &P_Sender::sig_Send, this, [=]
     {
-        PluginsItemInterface *plugin_interface = this->get_interface();
-        if (plugin_interface)
+        if (isV_2_0_0_Plugin())
         {
-            this->item_carrier->plugin_carrier_update(plugin_interface);
-            this->popup_carrier->plugin_carrier_update(plugin_interface);
-            this->tips_carrier->plugin_carrier_update(plugin_interface);
+#ifdef USE_DTK
+            PluginsItemInterface_V_2_0_0 *plugin_interface = this->get_interface_V_2_0_0();
+            if (plugin_interface)
+            {
+                this->item_carrier->plugin_carrier_update(plugin_interface);
+                this->popup_carrier->plugin_carrier_update(plugin_interface);
+                this->tips_carrier->plugin_carrier_update(plugin_interface);
+            }
+#endif
+        }
+        else
+        {
+            PluginsItemInterface *plugin_interface = this->get_interface();
+            if (plugin_interface)
+            {
+                this->item_carrier->plugin_carrier_update(plugin_interface);
+                this->popup_carrier->plugin_carrier_update(plugin_interface);
+                this->tips_carrier->plugin_carrier_update(plugin_interface);
+            }
         }
     });
     connect(send_data_sender, &P_Sender::sig_Send, this, [=]
     {
-        PluginsItemInterface *plugin_interface = this->get_interface();
-        if (plugin_interface)
+        if (isV_2_0_0_Plugin())
         {
-            this->item_carrier->plugin_carrier_sending_data(plugin_interface);
-            this->popup_carrier->plugin_carrier_sending_data(plugin_interface);
-            this->tips_carrier->plugin_carrier_sending_data(plugin_interface);
+#ifdef USE_DTK
+            PluginsItemInterface_V_2_0_0 *plugin_interface = this->get_interface_V_2_0_0();
+            if (plugin_interface)
+            {
+                this->item_carrier->plugin_carrier_sending_data(plugin_interface);
+                this->popup_carrier->plugin_carrier_sending_data(plugin_interface);
+                this->tips_carrier->plugin_carrier_sending_data(plugin_interface);
+            }
+#endif
+        }
+        else
+        {
+            PluginsItemInterface *plugin_interface = this->get_interface();
+            if (plugin_interface)
+            {
+                this->item_carrier->plugin_carrier_sending_data(plugin_interface);
+                this->popup_carrier->plugin_carrier_sending_data(plugin_interface);
+                this->tips_carrier->plugin_carrier_sending_data(plugin_interface);
+            }
         }
     });
+    plugin_controller = new PluginController(this, this);
+#ifdef USE_DTK
+    plugin_controller_V_2_0_0 = new PluginController_V_2_0_0(this, this);
+#endif
 }
 void Plugin_Root::click_call()
 {
     if (will_fully_remove) return;
     if (plugin_disabled) return;
-    PluginsItemInterface *plugin_interface = this->get_interface();
-    if (plugin_interface)
+    if (isV_2_0_0_Plugin())
     {
-        QString command = plugin_interface->itemCommand(plugin_itemKey);
-        if (command.isNull() || command.isEmpty()) return;
-        QProcess process;
-        process.setProgram("/bin/bash");
-        process.setArguments(QStringList() << "-c" << command);
-        process.setStandardOutputFile("/dev/null");
-        process.setStandardErrorFile("/dev/null");
-        process.startDetached();
+#ifdef USE_DTK
+        PluginsItemInterface_V_2_0_0 *plugin_interface = this->get_interface_V_2_0_0();
+        if (plugin_interface)
+        {
+            QString command = plugin_interface->itemCommand(plugin_itemKey);
+            if (command.isNull() || command.isEmpty()) return;
+            QProcess process;
+            process.setProgram("/bin/bash");
+            process.setArguments(QStringList() << "-c" << command);
+            process.setStandardOutputFile("/dev/null");
+            process.setStandardErrorFile("/dev/null");
+            process.startDetached();
+        }
+#endif
+    }
+    else
+    {
+        PluginsItemInterface *plugin_interface = this->get_interface();
+        if (plugin_interface)
+        {
+            QString command = plugin_interface->itemCommand(plugin_itemKey);
+            if (command.isNull() || command.isEmpty()) return;
+            QProcess process;
+            process.setProgram("/bin/bash");
+            process.setArguments(QStringList() << "-c" << command);
+            process.setStandardOutputFile("/dev/null");
+            process.setStandardErrorFile("/dev/null");
+            process.startDetached();
+        }
     }
 }
 void Plugin_Root::update_plugin()
 {
     if (will_fully_remove) return;
     if (plugin_disabled) return;
-    PluginsItemInterface *plugin_interface = this->get_interface();
-    if (plugin_interface)
+    if (isV_2_0_0_Plugin())
     {
-        plugin_controller->itemUpdate(plugin_interface, plugin_itemKey);
-        plugin_interface->positionChanged(plugin_position);
-        this->item_carrier->plugin_carrier_sending_data(plugin_interface);
-        this->popup_carrier->plugin_carrier_sending_data(plugin_interface);
-        this->tips_carrier->plugin_carrier_sending_data(plugin_interface);
+#ifdef USE_DTK
+        PluginsItemInterface_V_2_0_0 *plugin_interface = this->get_interface_V_2_0_0();
+        if (plugin_interface)
+        {
+            plugin_controller_V_2_0_0->itemUpdate(plugin_interface, plugin_itemKey);
+            plugin_interface->positionChanged(intToPosition(plugin_position));
+            this->item_carrier->plugin_carrier_sending_data(plugin_interface);
+            this->popup_carrier->plugin_carrier_sending_data(plugin_interface);
+            this->tips_carrier->plugin_carrier_sending_data(plugin_interface);
+        }
+#endif
+    }
+    else
+    {
+        PluginsItemInterface *plugin_interface = this->get_interface();
+        if (plugin_interface)
+        {
+            plugin_controller->itemUpdate(plugin_interface, plugin_itemKey);
+            plugin_interface->positionChanged(intToPosition(plugin_position));
+            this->item_carrier->plugin_carrier_sending_data(plugin_interface);
+            this->popup_carrier->plugin_carrier_sending_data(plugin_interface);
+            this->tips_carrier->plugin_carrier_sending_data(plugin_interface);
+        }
     }
 }
 void Plugin_Root::update_plugin(PluginsItemInterface * const itemInter, const QString &itemKey)
@@ -292,7 +300,70 @@ void Plugin_Root::update_plugin(PluginsItemInterface * const itemInter, const QS
     item_carrier->plugin_carrier_update(itemInter);
     popup_carrier->plugin_carrier_update(itemInter);
     tips_carrier->plugin_carrier_update(itemInter);
+
+    if (itemInter)
+    {
+        itemInter->positionChanged(intToPosition(plugin_position));
+    }
 }
+#ifdef USE_DTK
+void Plugin_Root::update_plugin(PluginsItemInterface_V_2_0_0 * const itemInter, const QString &itemKey)
+{
+    auto m_item_widget = itemInter->itemWidget(itemKey);
+    if (m_item_widget != item_widget)
+    {
+        item_widget = m_item_widget;
+        item_carrier->remove_widget();
+        item_carrier->set_widget(item_widget);
+    }
+    if (item_widget)
+    {
+        item_widget->setStyleSheet(style_sheet);
+        item_widget->update();
+        item_widget->show();
+    }
+    item_carrier->call_to_show();
+
+    auto m_tips_widget = itemInter->itemTipsWidget(itemKey);
+    if (m_tips_widget != tips_widget)
+    {
+        tips_widget = m_tips_widget;
+        tips_carrier->remove_widget();
+        tips_carrier->set_widget(tips_widget);
+    }
+    if (tips_widget)
+    {
+        tips_widget->setStyleSheet(style_sheet);
+        tips_widget->update();
+        tips_widget->show();
+    }
+    if (tips_always_show) tips_carrier->call_to_show();
+
+    auto m_popup_widget = itemInter->itemPopupApplet(itemKey);
+    if (m_popup_widget != popup_widget)
+    {
+        popup_widget = m_popup_widget;
+        popup_carrier->remove_widget();
+        popup_carrier->set_widget(popup_widget);
+    }
+    if (popup_widget)
+    {
+        popup_widget->setStyleSheet(style_sheet);
+        popup_widget->update();
+        popup_widget->show();
+    }
+    if (popup_always_show) popup_carrier->call_to_show();
+
+    item_carrier->plugin_carrier_update(itemInter);
+    popup_carrier->plugin_carrier_update(itemInter);
+    tips_carrier->plugin_carrier_update(itemInter);
+
+    if (itemInter)
+    {
+        itemInter->positionChanged(intToPosition(plugin_position));
+    }
+}
+#endif
 PluginsItemInterface *Plugin_Root::get_interface()
 {
     if (will_fully_remove) return nullptr;
@@ -304,6 +375,46 @@ PluginsItemInterface *Plugin_Root::get_interface()
     }
     return nullptr;
 }
+bool Plugin_Root::isV_2_0_0_Plugin()
+{
+    QJsonObject root_obj = plugin_loader->metaData();
+    bool jump = false;
+#ifdef USE_DTK
+    if (root_obj.contains("MetaData"))
+    {
+        QJsonValue meta_value = root_obj.value("MetaData");
+        if (meta_value.isObject())
+        {
+            QJsonObject meta_obj = meta_value.toObject();
+            if (meta_obj.contains("api"))
+            {
+                QJsonValue api_value = meta_obj.value("api");
+                if (api_value.isObject())
+                {
+                    if (P_Version{api_value.toString()} >= P_Version{2, 0, 0})
+                    {
+                        jump = true;
+                    }
+                }
+            }
+        }
+    }
+#endif
+    return jump;
+}
+#ifdef USE_DTK
+PluginsItemInterface_V_2_0_0 *Plugin_Root::get_interface_V_2_0_0()
+{
+    if (will_fully_remove) return nullptr;
+    QObject *pluginInstance = plugin_loader->instance();
+    if (pluginInstance)
+    {
+        PluginsItemInterface_V_2_0_0 *plugin_interface = qobject_cast<PluginsItemInterface_V_2_0_0 *>(pluginInstance);
+        if (plugin_interface) return plugin_interface;
+    }
+    return nullptr;
+}
+#endif
 bool Plugin_Root::is_Ext_plugin()
 {
     QJsonObject root_obj = plugin_loader->metaData();
@@ -335,19 +446,40 @@ void Plugin_Root::close_plugin(bool force_remove)
     }
     else
     {
-        PluginsItemInterface *plugin_interface = this->get_interface();
-        if (plugin_interface)
+        if (isV_2_0_0_Plugin())
         {
-            if (plugin_interface->pluginIsAllowDisable())
+#ifdef USE_DTK
+            PluginsItemInterface_V_2_0_0 *plugin_interface = this->get_interface_V_2_0_0();
+            if (plugin_interface)
             {
-                if (!plugin_interface->pluginIsDisable())
+                if (plugin_interface->pluginIsAllowDisable())
                 {
-                    plugin_interface->pluginStateSwitched();
+                    if (!plugin_interface->pluginIsDisable())
+                    {
+                        plugin_interface->pluginStateSwitched();
+                    }
+                }
+            }
+#endif
+        }
+        else
+        {
+            PluginsItemInterface *plugin_interface = this->get_interface();
+            if (plugin_interface)
+            {
+                if (plugin_interface->pluginIsAllowDisable())
+                {
+                    if (!plugin_interface->pluginIsDisable())
+                    {
+                        plugin_interface->pluginStateSwitched();
+                    }
                 }
             }
         }
+
+
     }
-    item_carrier->plugin_carrier_type = PluginsItemInterface::Carrier_Type::Unknown;
+    item_carrier->plugin_carrier_type = CarrierType::Unknown;
     plugin_path.clear();
     item_carrier->remove_widget();
     if (item_widget) item_widget->hide();
@@ -360,23 +492,53 @@ void Plugin_Root::close_plugin(bool force_remove)
     popup_carrier->hide();
     if (plugin_loader->isLoaded())
     {
-        PluginsItemInterface *plugin_interface = this->get_interface();
-        if (plugin_interface)
+        if (isV_2_0_0_Plugin())
         {
-            if (is_Ext_plugin())
+#ifdef USE_DTK
+            PluginsItemInterface_V_2_0_0 *plugin_interface = this->get_interface_V_2_0_0();
+            if (plugin_interface)
             {
-                if (Plugin_Root::Contains_Ext_Plugin(plugin_interface->Ext_Name, "Easy_Desktop"))
+                if (is_Ext_plugin())
                 {
-                    if (plugin_interface->Plugin_Version >= P_Version{0, 0, 1})
+                    if (Plugin_Root::Contains_Ext_Plugin(plugin_interface->Ext_Name, "Easy_Desktop"))
                     {
-                        if (plugin_interface->pluginIsAllowUnload())
+                        if (plugin_interface->Plugin_Version >= P_Version{0, 0, 1})
                         {
-                            plugin_interface->pluginUnload();
-                            will_fully_remove = true;
-                            //hide_item
-                            plugin_loader->unload();
-                            has_unload = true;
-                            plugin_path.clear();
+                            if (plugin_interface->pluginIsAllowUnload())
+                            {
+                                plugin_interface->pluginUnload();
+                                will_fully_remove = true;
+                                //hide_item
+                                plugin_loader->unload();
+                                has_unload = true;
+                                plugin_path.clear();
+                            }
+                        }
+                    }
+                }
+            }
+#endif
+        }
+        else
+        {
+            PluginsItemInterface *plugin_interface = this->get_interface();
+            if (plugin_interface)
+            {
+                if (is_Ext_plugin())
+                {
+                    if (Plugin_Root::Contains_Ext_Plugin(plugin_interface->Ext_Name, "Easy_Desktop"))
+                    {
+                        if (plugin_interface->Plugin_Version >= P_Version{0, 0, 1})
+                        {
+                            if (plugin_interface->pluginIsAllowUnload())
+                            {
+                                plugin_interface->pluginUnload();
+                                will_fully_remove = true;
+                                //hide_item
+                                plugin_loader->unload();
+                                has_unload = true;
+                                plugin_path.clear();
+                            }
                         }
                     }
                 }
@@ -446,62 +608,158 @@ void Plugin_Root::load_plugin(QString filepath)
         plugin_loader->unload();
         return;
     }
-    PluginsItemInterface *plugin_interface = qobject_cast<PluginsItemInterface *>(pluginInstance);
-    if (plugin_interface)
+    QJsonObject root_obj = plugin_loader->metaData();
+    bool jump = false;
+#ifdef USE_DTK
+    PluginsItemInterface_V_2_0_0 *plugin_interface_V_2_0_0 = nullptr;
+    if (root_obj.contains("MetaData"))
     {
-        plugin_interface->init(plugin_controller);
-        plugin_controller->itemUpdate(plugin_interface, "");
-        plugin_interface->positionChanged(plugin_position);
-        if (is_Ext_plugin())
+        QJsonValue meta_value = root_obj.value("MetaData");
+        if (meta_value.isObject())
         {
-            if (Plugin_Root::Contains_Ext_Plugin(plugin_interface->Ext_Name, "Easy_Desktop"))
+            QJsonObject meta_obj = meta_value.toObject();
+            if (meta_obj.contains("api"))
             {
-                if (plugin_interface->Plugin_Version >= P_Version{0, 0, 1})
+                QJsonValue api_value = meta_obj.value("api");
+                if (api_value.isObject())
                 {
-                    this->item_carrier->plugin_carrier_sending_data(plugin_interface);
-                    this->popup_carrier->plugin_carrier_sending_data(plugin_interface);
-                    this->tips_carrier->plugin_carrier_sending_data(plugin_interface);
-                    plugin_interface->pluginGetSender(update_sender, send_data_sender);
+                    if (P_Version{api_value.toString()} >= P_Version{2, 0, 0})
+                    {
+                        plugin_interface_V_2_0_0 = qobject_cast<PluginsItemInterface_V_2_0_0 *>(pluginInstance);
+                        jump = true;
+                    }
                 }
             }
         }
+    }
+#endif
+    if (!jump)
+    {
+        PluginsItemInterface *plugin_interface = qobject_cast<PluginsItemInterface *>(pluginInstance);
+        if (plugin_interface)
+        {
+            plugin_interface->init(plugin_controller);
+            plugin_controller->itemUpdate(plugin_interface, "");
+            plugin_interface->positionChanged(intToPosition(plugin_position));
+            if (is_Ext_plugin())
+            {
+                if (Plugin_Root::Contains_Ext_Plugin(plugin_interface->Ext_Name, "Easy_Desktop"))
+                {
+                    if (plugin_interface->Plugin_Version >= P_Version{0, 0, 1})
+                    {
+                        this->item_carrier->plugin_carrier_sending_data(plugin_interface);
+                        this->popup_carrier->plugin_carrier_sending_data(plugin_interface);
+                        this->tips_carrier->plugin_carrier_sending_data(plugin_interface);
+                        plugin_interface->pluginGetSender(update_sender, send_data_sender);
+                    }
+                }
+            }
+        }
+    }
+    else
+    {
+#ifdef USE_DTK
+        if (plugin_interface_V_2_0_0)
+        {
+            plugin_interface_V_2_0_0->init(plugin_controller_V_2_0_0);
+            plugin_controller_V_2_0_0->itemUpdate(plugin_interface_V_2_0_0, "");
+            plugin_interface_V_2_0_0->positionChanged(intToPosition(plugin_position));
+            if (is_Ext_plugin())
+            {
+                if (Plugin_Root::Contains_Ext_Plugin(plugin_interface_V_2_0_0->Ext_Name, "Easy_Desktop"))
+                {
+                    if (plugin_interface_V_2_0_0->Plugin_Version >= P_Version{0, 0, 1})
+                    {
+                        this->item_carrier->plugin_carrier_sending_data(plugin_interface_V_2_0_0);
+                        this->popup_carrier->plugin_carrier_sending_data(plugin_interface_V_2_0_0);
+                        this->tips_carrier->plugin_carrier_sending_data(plugin_interface_V_2_0_0);
+                        plugin_interface_V_2_0_0->pluginGetSender(update_sender, send_data_sender);
+                    }
+                }
+            }
+        }
+#endif
     }
 }
 void Plugin_Root::unload_plugin()
 {
     if (has_been_closed) return;
     if (!plugin_loader->isLoaded()) return;
-    PluginsItemInterface *plugin_interface = this->get_interface();
-    if (plugin_interface)
+    if (isV_2_0_0_Plugin())
     {
-        if (plugin_interface->pluginIsAllowDisable() && !plugin_interface->pluginIsDisable())
+#ifdef USE_DTK
+        PluginsItemInterface_V_2_0_0 *plugin_interface = this->get_interface_V_2_0_0();
+        if (plugin_interface)
         {
-            plugin_interface->pluginStateSwitched();
-        }
-    }
-    item_carrier->set_extra_menu(QString());
-    item_carrier->remove_widget();
-    tips_carrier->remove_widget();
-    popup_carrier->remove_widget();
-    if (item_widget) item_widget->hide();
-    if (tips_widget) tips_widget->hide();
-    if (popup_widget) popup_widget->hide();
-    item_widget = nullptr;
-    tips_widget = nullptr;
-    popup_widget = nullptr;
-    tips_carrier->hide();
-    popup_carrier->hide();
-    if (plugin_interface)
-    {
-        if (is_Ext_plugin())
-        {
-            if (Plugin_Root::Contains_Ext_Plugin(plugin_interface->Ext_Name, "Easy_Desktop"))
+            if (plugin_interface->pluginIsAllowDisable() && !plugin_interface->pluginIsDisable())
             {
-                if (plugin_interface->Plugin_Version >= P_Version{0, 0, 1})
+                plugin_interface->pluginStateSwitched();
+            }
+        }
+        item_carrier->set_extra_menu(QString());
+        item_carrier->remove_widget();
+        tips_carrier->remove_widget();
+        popup_carrier->remove_widget();
+        if (item_widget) item_widget->hide();
+        if (tips_widget) tips_widget->hide();
+        if (popup_widget) popup_widget->hide();
+        item_widget = nullptr;
+        tips_widget = nullptr;
+        popup_widget = nullptr;
+        tips_carrier->hide();
+        popup_carrier->hide();
+        if (plugin_interface)
+        {
+            if (is_Ext_plugin())
+            {
+                if (Plugin_Root::Contains_Ext_Plugin(plugin_interface->Ext_Name, "Easy_Desktop"))
                 {
-                    if (plugin_interface->pluginIsAllowUnload())
+                    if (plugin_interface->Plugin_Version >= P_Version{0, 0, 1})
                     {
-                        plugin_interface->pluginUnload();
+                        if (plugin_interface->pluginIsAllowUnload())
+                        {
+                            plugin_interface->pluginUnload();
+                        }
+                    }
+                }
+            }
+        }
+#endif
+    }
+    else
+    {
+        PluginsItemInterface *plugin_interface = this->get_interface();
+        if (plugin_interface)
+        {
+            if (plugin_interface->pluginIsAllowDisable() && !plugin_interface->pluginIsDisable())
+            {
+                plugin_interface->pluginStateSwitched();
+            }
+        }
+        item_carrier->set_extra_menu(QString());
+        item_carrier->remove_widget();
+        tips_carrier->remove_widget();
+        popup_carrier->remove_widget();
+        if (item_widget) item_widget->hide();
+        if (tips_widget) tips_widget->hide();
+        if (popup_widget) popup_widget->hide();
+        item_widget = nullptr;
+        tips_widget = nullptr;
+        popup_widget = nullptr;
+        tips_carrier->hide();
+        popup_carrier->hide();
+        if (plugin_interface)
+        {
+            if (is_Ext_plugin())
+            {
+                if (Plugin_Root::Contains_Ext_Plugin(plugin_interface->Ext_Name, "Easy_Desktop"))
+                {
+                    if (plugin_interface->Plugin_Version >= P_Version{0, 0, 1})
+                    {
+                        if (plugin_interface->pluginIsAllowUnload())
+                        {
+                            plugin_interface->pluginUnload();
+                        }
                     }
                 }
             }
@@ -525,34 +783,7 @@ void Plugin_Root::load(QSettings *settings)
     plugin_path = settings->value("plugin_path", "").toString();
     tips_always_show = settings->value("tips_always_show", false).toBool();
     plugin_disabled = settings->value("plugin_disabled", false).toBool();
-    int position_num = settings->value("plugin_position", 0).toInt();
-    switch (position_num)
-    {
-    case 0:
-    {
-        plugin_position = Dock::Position::Top;
-        break;
-    }
-    case 1:
-    {
-        plugin_position = Dock::Position::Right;
-        break;
-    }
-    case 2:
-    {
-        plugin_position = Dock::Position::Bottom;
-        break;
-    }
-    case 3:
-    {
-        plugin_position = Dock::Position::Left;
-        break;
-    }
-    default:
-    {
-        break;
-    }
-    }
+    plugin_position = settings->value("plugin_position", 0).toInt();
     item_carrier->p_load(settings, "item_");
     tips_carrier->p_load(settings, "tips_");
     popup_carrier->p_load(settings, "popup_");
@@ -572,18 +803,41 @@ void Plugin_Root::set_icon(QString checked_icon_path)
 void Plugin_Root::disable_plugin_update()
 {
     if (will_fully_remove) return;
-    PluginsItemInterface *plugin_interface = this->get_interface();
-    if (plugin_interface)
+    if (isV_2_0_0_Plugin())
     {
-        if (plugin_interface->pluginIsAllowDisable())
+#ifdef USE_DTK
+        PluginsItemInterface_V_2_0_0 *plugin_interface = this->get_interface_V_2_0_0();
+        if (plugin_interface)
         {
-            if (plugin_interface->pluginIsDisable() && !plugin_disabled)
+            if (plugin_interface->pluginIsAllowDisable())
             {
-                plugin_interface->pluginStateSwitched();
+                if (plugin_interface->pluginIsDisable() && !plugin_disabled)
+                {
+                    plugin_interface->pluginStateSwitched();
+                }
+                else if (!plugin_interface->pluginIsDisable() && plugin_disabled)
+                {
+                    plugin_interface->pluginStateSwitched();
+                }
             }
-            else if (!plugin_interface->pluginIsDisable() && plugin_disabled)
+        }
+#endif
+    }
+    else
+    {
+        PluginsItemInterface *plugin_interface = this->get_interface();
+        if (plugin_interface)
+        {
+            if (plugin_interface->pluginIsAllowDisable())
             {
-                plugin_interface->pluginStateSwitched();
+                if (plugin_interface->pluginIsDisable() && !plugin_disabled)
+                {
+                    plugin_interface->pluginStateSwitched();
+                }
+                else if (!plugin_interface->pluginIsDisable() && plugin_disabled)
+                {
+                    plugin_interface->pluginStateSwitched();
+                }
             }
         }
     }
@@ -630,7 +884,7 @@ void Plugin_Root::update_style(QColor theme_color, QColor theme_background_color
     if (tips_widget) tips_widget->setStyleSheet(style_sheet);
     if (popup_widget) popup_widget->setStyleSheet(style_sheet);
 }
-Plugin_Widget::Plugin_Widget(QWidget *parent, Plugin_Root *plugin_root, PluginsItemInterface::Carrier_Type m_carrier_type)
+Plugin_Widget::Plugin_Widget(QWidget *parent, Plugin_Root *plugin_root, int m_carrier_type)
     :Basic_Widget(parent)
     ,plugin_carrier_type(m_carrier_type)
     ,root(plugin_root)
@@ -753,10 +1007,10 @@ void Plugin_Widget::plugin_set_size(PluginsItemInterface *const itemInter)
             if (itemInter->Plugin_Version >= P_Version{0, 0, 1})
             {
                 bool ok = false;
-                res = itemInter->pluginSetWidgetSize(this->plugin_carrier_type, &ok);
+                res = itemInter->pluginSetWidgetSize(static_cast<PluginsItemInterface::Carrier_Type>(plugin_carrier_type), &ok);
                 if (!ok)
                 {
-                    res = itemInter->pluginSetCarrierSize(this->plugin_carrier_type, &ok);
+                    res = itemInter->pluginSetCarrierSize(static_cast<PluginsItemInterface::Carrier_Type>(plugin_carrier_type), &ok);
                     if (!ok) return;
                 }
             }
@@ -773,6 +1027,39 @@ void Plugin_Widget::plugin_set_size(PluginsItemInterface *const itemInter)
     }
     this->resize(res + QSize(2 * distance_width, 2 * distance_height));
 }
+#ifdef USE_DTK
+void Plugin_Widget::plugin_set_size(PluginsItemInterface_V_2_0_0 * const itemInter)
+{
+    if (!save_ptr) return;
+    QSize res = QSize();
+    if (root->is_Ext_plugin())
+    {
+        if (Plugin_Root::Contains_Ext_Plugin(itemInter->Ext_Name, "Easy_Desktop"))
+        {
+            if (itemInter->Plugin_Version >= P_Version{0, 0, 1})
+            {
+                bool ok = false;
+                res = itemInter->pluginSetWidgetSize(static_cast<PluginsItemInterface_V_2_0_0::Carrier_Type>(plugin_carrier_type), &ok);
+                if (!ok)
+                {
+                    res = itemInter->pluginSetCarrierSize(static_cast<PluginsItemInterface_V_2_0_0::Carrier_Type>(plugin_carrier_type), &ok);
+                    if (!ok) return;
+                }
+            }
+        }
+    }
+    save_ptr->adjustSize();
+    if (!res.isValid())
+    {
+        res = save_ptr->sizeHint();
+    }
+    if (!res.isValid())
+    {
+        res = save_ptr->size();
+    }
+    this->resize(res + QSize(2 * distance_width, 2 * distance_height));
+}
+#endif
 void Plugin_Widget::plugin_carrier_update(PluginsItemInterface * const itemInter)
 {
     if (!save_ptr) return;
@@ -784,46 +1071,47 @@ void Plugin_Widget::plugin_carrier_update(PluginsItemInterface * const itemInter
             if (itemInter->Plugin_Version >= P_Version{0, 0, 1})
             {
                 bool ok = true;
-                QPair<int, int> Spacing = itemInter->pluginSetCarrierSpacing(this->plugin_carrier_type, &ok);
+                auto ctype = static_cast<PluginsItemInterface::Carrier_Type>(plugin_carrier_type);
+                QPair<int, int> Spacing = itemInter->pluginSetCarrierSpacing(ctype, &ok);
                 if (ok)
                 {
                     distance_width = Spacing.first;
                     distance_height = Spacing.second;
                 }
                 ok = true;
-                QPair<int, int> Offset = itemInter->pluginSetCarrierOffset(this->plugin_carrier_type, &ok);
+                QPair<int, int> Offset = itemInter->pluginSetCarrierOffset(ctype, &ok);
                 if (ok)
                 {
                     delta_x = Offset.first;
                     delta_y = Offset.second;
                 }
                 ok = true;
-                QColor carrier_color = itemInter->pluginSetCarrierColor(this->plugin_carrier_type, &ok);
+                QColor carrier_color = itemInter->pluginSetCarrierColor(ctype, &ok);
                 if (ok)
                 {
                     background_color = carrier_color;
                 }
                 ok = true;
-                int Radius = itemInter->pluginSetCarrierRadius(this->plugin_carrier_type, &ok);
+                int Radius = itemInter->pluginSetCarrierRadius(ctype, &ok);
                 if (ok)
                 {
                     background_radius = Radius;
                 }
                 ok = true;
-                int page_num = itemInter->pluginSetCarrierPage(this->plugin_carrier_type, *desktop_number, &ok);
+                int page_num = itemInter->pluginSetCarrierPage(ctype, *desktop_number, &ok);
                 if (ok)
                 {
                     moveToDesktop(page_num);
                 }
                 ok = true;
-                bool show_close_button_bool = itemInter->pluginSetShowCarrierCloseButton(this->plugin_carrier_type, &ok);
+                bool show_close_button_bool = itemInter->pluginSetShowCarrierCloseButton(ctype, &ok);
                 if (ok)
                 {
                     show_close_button->setIconVisibleInMenu(show_close_button_bool);
                     close_button->setVisible(show_close_button_bool);
                 }
                 ok = true;
-                QPair<QMenu *, P_Sender * const> plugin_menu = itemInter->pluginAddToCarrierQMenu(this->plugin_carrier_type, &ok);
+                QPair<QMenu *, P_Sender * const> plugin_menu = itemInter->pluginAddToCarrierQMenu(ctype, &ok);
                 if (ok)
                 {
                     if (plugin_menu_ptr)
@@ -839,7 +1127,7 @@ void Plugin_Widget::plugin_carrier_update(PluginsItemInterface * const itemInter
                     if (plugin_menu.second) plugin_action_sender = plugin_menu.second;
                 }
                 ok = true;
-                QPoint pos = itemInter->pluginSetCarrierPos(this->plugin_carrier_type, root->item_carrier->pos() + root->item_carrier->get_self()->pos(), root->item_carrier->get_self()->size(), &ok);
+                QPoint pos = itemInter->pluginSetCarrierPos(ctype, root->item_carrier->pos() + root->item_carrier->get_self()->pos(), root->item_carrier->get_self()->size(), &ok);
                 if (ok)
                 {
                     move(pos - root->item_carrier->get_self()->pos());
@@ -850,6 +1138,86 @@ void Plugin_Widget::plugin_carrier_update(PluginsItemInterface * const itemInter
         }
     }
 }
+#ifdef USE_DTK
+void Plugin_Widget::plugin_carrier_update(PluginsItemInterface_V_2_0_0 * const itemInter)
+{
+    if (!save_ptr) return;
+    if (!itemInter) return;
+    if (root->is_Ext_plugin())
+    {
+        if (Plugin_Root::Contains_Ext_Plugin(itemInter->Ext_Name, "Easy_Desktop"))
+        {
+            if (itemInter->Plugin_Version >= P_Version{0, 0, 1})
+            {
+                bool ok = true;
+                auto ctype = static_cast<PluginsItemInterface_V_2_0_0::Carrier_Type>(plugin_carrier_type);
+                QPair<int, int> Spacing = itemInter->pluginSetCarrierSpacing(ctype, &ok);
+                if (ok)
+                {
+                    distance_width = Spacing.first;
+                    distance_height = Spacing.second;
+                }
+                ok = true;
+                QPair<int, int> Offset = itemInter->pluginSetCarrierOffset(ctype, &ok);
+                if (ok)
+                {
+                    delta_x = Offset.first;
+                    delta_y = Offset.second;
+                }
+                ok = true;
+                QColor carrier_color = itemInter->pluginSetCarrierColor(ctype, &ok);
+                if (ok)
+                {
+                    background_color = carrier_color;
+                }
+                ok = true;
+                int Radius = itemInter->pluginSetCarrierRadius(ctype, &ok);
+                if (ok)
+                {
+                    background_radius = Radius;
+                }
+                ok = true;
+                int page_num = itemInter->pluginSetCarrierPage(ctype, *desktop_number, &ok);
+                if (ok)
+                {
+                    moveToDesktop(page_num);
+                }
+                ok = true;
+                bool show_close_button_bool = itemInter->pluginSetShowCarrierCloseButton(ctype, &ok);
+                if (ok)
+                {
+                    show_close_button->setIconVisibleInMenu(show_close_button_bool);
+                    close_button->setVisible(show_close_button_bool);
+                }
+                ok = true;
+                QPair<QMenu *, P_Sender * const> plugin_menu = itemInter->pluginAddToCarrierQMenu(ctype, &ok);
+                if (ok)
+                {
+                    if (plugin_menu_ptr)
+                    {
+                        this->menu->removeAction(plugin_menu_ptr);
+                        plugin_menu_ptr = nullptr;
+                    }
+                    if (plugin_action_sender)
+                    {
+                        plugin_action_sender = nullptr;
+                    }
+                    if (plugin_menu.first) plugin_menu_ptr = this->menu->addMenu(plugin_menu.first);
+                    if (plugin_menu.second) plugin_action_sender = plugin_menu.second;
+                }
+                ok = true;
+                QPoint pos = itemInter->pluginSetCarrierPos(ctype, root->item_carrier->pos() + root->item_carrier->get_self()->pos(), root->item_carrier->get_self()->size(), &ok);
+                if (ok)
+                {
+                    move(pos - root->item_carrier->get_self()->pos());
+                }
+                this->Update_Background();
+                plugin_set_size(itemInter);
+            }
+        }
+    }
+}
+#endif
 void Plugin_Widget::plugin_carrier_sending_data(PluginsItemInterface * const itemInter)
 {
     if (!save_ptr) return;
@@ -860,19 +1228,41 @@ void Plugin_Widget::plugin_carrier_sending_data(PluginsItemInterface * const ite
         {
             if (itemInter->Plugin_Version >= P_Version{0, 0, 1})
             {
-                itemInter->pluginGetCarrierColor(this->plugin_carrier_type, this->background_color);
-                itemInter->pluginGetCarrierOffset(this->plugin_carrier_type, this->delta_x, this->delta_y);
-                itemInter->pluginGetCarrierRadius(this->plugin_carrier_type, this->background_radius);
-                itemInter->pluginGetCarrierSpacing(this->plugin_carrier_type, this->distance_width, this->distance_height);
-                itemInter->pluginGetCarrierQMenu(this->plugin_carrier_type, menu, carrier_action_sender);
-                itemInter->pluginGetShowCarrierCloseButton(this->plugin_carrier_type, show_close_button->isIconVisibleInMenu());
+                itemInter->pluginGetCarrierColor(static_cast<PluginsItemInterface::Carrier_Type>(plugin_carrier_type), this->background_color);
+                itemInter->pluginGetCarrierOffset(static_cast<PluginsItemInterface::Carrier_Type>(plugin_carrier_type), this->delta_x, this->delta_y);
+                itemInter->pluginGetCarrierRadius(static_cast<PluginsItemInterface::Carrier_Type>(plugin_carrier_type), this->background_radius);
+                itemInter->pluginGetCarrierSpacing(static_cast<PluginsItemInterface::Carrier_Type>(plugin_carrier_type), this->distance_width, this->distance_height);
+                itemInter->pluginGetCarrierQMenu(static_cast<PluginsItemInterface::Carrier_Type>(plugin_carrier_type), menu, carrier_action_sender);
+                itemInter->pluginGetShowCarrierCloseButton(static_cast<PluginsItemInterface::Carrier_Type>(plugin_carrier_type), show_close_button->isIconVisibleInMenu());
             }
         }
     }
 }
+#ifdef USE_DTK
+void Plugin_Widget::plugin_carrier_sending_data(PluginsItemInterface_V_2_0_0 * const itemInter)
+{
+    if (!save_ptr) return;
+    if (!itemInter) return;
+    if (root->is_Ext_plugin())
+    {
+        if (Plugin_Root::Contains_Ext_Plugin(itemInter->Ext_Name, "Easy_Desktop"))
+        {
+            if (itemInter->Plugin_Version >= P_Version{0, 0, 1})
+            {
+                itemInter->pluginGetCarrierColor(static_cast<PluginsItemInterface_V_2_0_0::Carrier_Type>(plugin_carrier_type), this->background_color);
+                itemInter->pluginGetCarrierOffset(static_cast<PluginsItemInterface_V_2_0_0::Carrier_Type>(plugin_carrier_type), this->delta_x, this->delta_y);
+                itemInter->pluginGetCarrierRadius(static_cast<PluginsItemInterface_V_2_0_0::Carrier_Type>(plugin_carrier_type), this->background_radius);
+                itemInter->pluginGetCarrierSpacing(static_cast<PluginsItemInterface_V_2_0_0::Carrier_Type>(plugin_carrier_type), this->distance_width, this->distance_height);
+                itemInter->pluginGetCarrierQMenu(static_cast<PluginsItemInterface_V_2_0_0::Carrier_Type>(plugin_carrier_type), menu, carrier_action_sender);
+                itemInter->pluginGetShowCarrierCloseButton(static_cast<PluginsItemInterface_V_2_0_0::Carrier_Type>(plugin_carrier_type), show_close_button->isIconVisibleInMenu());
+            }
+        }
+    }
+}
+#endif
 void Plugin_Widget::call_to_show()
 {
-    if (this->plugin_carrier_type == PluginsItemInterface::Carrier_Type::Plugin_Item)
+    if (this->plugin_carrier_type == CarrierType::Plugin_Item)
     {
         this->show();
         return;
@@ -957,16 +1347,38 @@ void Plugin_Widget::enterEvent(QEvent *event)
 {
     if (!root->will_fully_remove)
     {
-        PluginsItemInterface *plugin_interface = root->get_interface();
-        if (plugin_interface)
+        if (root->isV_2_0_0_Plugin())
         {
-            if (root->is_Ext_plugin())
+#ifdef USE_DTK
+            PluginsItemInterface_V_2_0_0 *plugin_interface = root->get_interface_V_2_0_0();
+            if (plugin_interface)
             {
-                if (Plugin_Root::Contains_Ext_Plugin(plugin_interface->Ext_Name, "Easy_Desktop"))
+                if (root->is_Ext_plugin())
                 {
-                    if (plugin_interface->Plugin_Version >= P_Version{0, 0, 1})
+                    if (Plugin_Root::Contains_Ext_Plugin(plugin_interface->Ext_Name, "Easy_Desktop"))
                     {
-                        plugin_interface->pluginGetIsMouseInPluginCarrier(this->plugin_carrier_type, true);
+                        if (plugin_interface->Plugin_Version >= P_Version{0, 0, 1})
+                        {
+                            plugin_interface->pluginGetIsMouseInPluginCarrier(static_cast<PluginsItemInterface_V_2_0_0::Carrier_Type>(plugin_carrier_type), true);
+                        }
+                    }
+                }
+            }
+#endif
+        }
+        else
+        {
+            PluginsItemInterface *plugin_interface = root->get_interface();
+            if (plugin_interface)
+            {
+                if (root->is_Ext_plugin())
+                {
+                    if (Plugin_Root::Contains_Ext_Plugin(plugin_interface->Ext_Name, "Easy_Desktop"))
+                    {
+                        if (plugin_interface->Plugin_Version >= P_Version{0, 0, 1})
+                        {
+                            plugin_interface->pluginGetIsMouseInPluginCarrier(static_cast<PluginsItemInterface::Carrier_Type>(plugin_carrier_type), true);
+                        }
                     }
                 }
             }
@@ -978,16 +1390,38 @@ void Plugin_Widget::leaveEvent(QEvent *event)
 {
     if (!root->will_fully_remove)
     {
-        PluginsItemInterface *plugin_interface = root->get_interface();
-        if (plugin_interface)
+        if (root->isV_2_0_0_Plugin())
         {
-            if (root->is_Ext_plugin())
+#ifdef USE_DTK
+            PluginsItemInterface_V_2_0_0 *plugin_interface = root->get_interface_V_2_0_0();
+            if (plugin_interface)
             {
-                if (Plugin_Root::Contains_Ext_Plugin(plugin_interface->Ext_Name, "Easy_Desktop"))
+                if (root->is_Ext_plugin())
                 {
-                    if (plugin_interface->Plugin_Version >= P_Version{0, 0, 1})
+                    if (Plugin_Root::Contains_Ext_Plugin(plugin_interface->Ext_Name, "Easy_Desktop"))
                     {
-                        plugin_interface->pluginGetIsMouseInPluginCarrier(this->plugin_carrier_type, false);
+                        if (plugin_interface->Plugin_Version >= P_Version{0, 0, 1})
+                        {
+                            plugin_interface->pluginGetIsMouseInPluginCarrier(static_cast<PluginsItemInterface_V_2_0_0::Carrier_Type>(plugin_carrier_type), false);
+                        }
+                    }
+                }
+            }
+#endif
+        }
+        else
+        {
+            PluginsItemInterface *plugin_interface = root->get_interface();
+            if (plugin_interface)
+            {
+                if (root->is_Ext_plugin())
+                {
+                    if (Plugin_Root::Contains_Ext_Plugin(plugin_interface->Ext_Name, "Easy_Desktop"))
+                    {
+                        if (plugin_interface->Plugin_Version >= P_Version{0, 0, 1})
+                        {
+                            plugin_interface->pluginGetIsMouseInPluginCarrier(static_cast<PluginsItemInterface::Carrier_Type>(plugin_carrier_type), false);
+                        }
                     }
                 }
             }
@@ -996,7 +1430,7 @@ void Plugin_Widget::leaveEvent(QEvent *event)
     Basic_Widget::leaveEvent(event);
 }
 Plugin_Item_Widget::Plugin_Item_Widget(QWidget *parent, Plugin_Root *plugin_root)
-    :Plugin_Widget(parent, plugin_root, PluginsItemInterface::Carrier_Type::Plugin_Item)
+    :Plugin_Widget(parent, plugin_root, CarrierType::Plugin_Item)
 {
     setMouseTracking(true);
     this->activateWindow();
@@ -1227,7 +1661,7 @@ void Plugin_Item_Widget::plugin_position_gui_update()
 {
     switch (root->plugin_position)
     {
-    case Dock::Position::Top:
+    case 0:
     {
         set_top_position->setIconVisibleInMenu(true);
         set_right_position->setIconVisibleInMenu(false);
@@ -1236,7 +1670,7 @@ void Plugin_Item_Widget::plugin_position_gui_update()
         root->update_plugin();
         break;
     }
-    case Dock::Position::Right:
+    case 1:
     {
         set_top_position->setIconVisibleInMenu(false);
         set_right_position->setIconVisibleInMenu(true);
@@ -1245,7 +1679,7 @@ void Plugin_Item_Widget::plugin_position_gui_update()
         root->update_plugin();
         break;
     }
-    case Dock::Position::Bottom:
+    case 2:
     {
         set_top_position->setIconVisibleInMenu(false);
         set_right_position->setIconVisibleInMenu(false);
@@ -1254,7 +1688,7 @@ void Plugin_Item_Widget::plugin_position_gui_update()
         root->update_plugin();
         break;
     }
-    case Dock::Position::Left:
+    case 3:
     {
         set_top_position->setIconVisibleInMenu(false);
         set_right_position->setIconVisibleInMenu(false);
@@ -1324,26 +1758,55 @@ void Plugin_Item_Widget::context_menu_event(QAction *know_what)
     }
     else if (know_what == follow_plugin_show_action)
     {
-        PluginsItemInterface *plugin_interface = root->get_interface();
-        if (plugin_interface)
+        if (root->isV_2_0_0_Plugin())
         {
-            if (root->item_widget)
+#ifdef USE_DTK
+            PluginsItemInterface_V_2_0_0 *plugin_interface = root->get_interface_V_2_0_0();
+            if (plugin_interface)
             {
-                root->item_carrier->plugin_set_size(plugin_interface);
-                root->item_carrier->call_to_show();
+                if (root->item_widget)
+                {
+                    root->item_carrier->plugin_set_size(plugin_interface);
+                    root->item_carrier->call_to_show();
+                }
+                if (root->tips_widget)
+                {
+                    root->tips_carrier->plugin_set_size(plugin_interface);
+                    if (root->tips_always_show) root->tips_carrier->call_to_show();
+                }
+                if (root->popup_widget)
+                {
+                    root->popup_carrier->plugin_set_size(plugin_interface);
+                    if (root->popup_always_show) root->popup_carrier->call_to_show();
+                }
+                return;
             }
-            if (root->tips_widget)
-            {
-                root->tips_carrier->plugin_set_size(plugin_interface);
-                if (root->tips_always_show) root->tips_carrier->call_to_show();
-            }
-            if (root->popup_widget)
-            {
-                root->popup_carrier->plugin_set_size(plugin_interface);
-                if (root->popup_always_show) root->popup_carrier->call_to_show();
-            }
-            return;
+#endif
         }
+        else
+        {
+            PluginsItemInterface *plugin_interface = root->get_interface();
+            if (plugin_interface)
+            {
+                if (root->item_widget)
+                {
+                    root->item_carrier->plugin_set_size(plugin_interface);
+                    root->item_carrier->call_to_show();
+                }
+                if (root->tips_widget)
+                {
+                    root->tips_carrier->plugin_set_size(plugin_interface);
+                    if (root->tips_always_show) root->tips_carrier->call_to_show();
+                }
+                if (root->popup_widget)
+                {
+                    root->popup_carrier->plugin_set_size(plugin_interface);
+                    if (root->popup_always_show) root->popup_carrier->call_to_show();
+                }
+                return;
+            }
+        }
+
         if (root->item_widget)
         {
             root->item_carrier->plugin_set_size();

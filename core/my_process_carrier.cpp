@@ -189,6 +189,7 @@ void My_Process_Carrier::context_solution(QAction *know_what, QPoint pos)
             new_process_widget->show();
         });
         new_process_widget->in_carrier = true;
+        new_process_widget->updateSig();
         new_process_widget->set_now_page(&carrier_now_page);
         new_process_widget->set_desktop_number(&carrier_page_number);
         new_process_widget->set_basic_list(&carrier_widget_list);
@@ -214,6 +215,7 @@ void My_Process_Carrier::context_solution(QAction *know_what, QPoint pos)
             new_process_widget->show();
         });
         new_process_widget->in_carrier = true;
+        new_process_widget->updateSig();
         new_process_widget->set_now_page(&carrier_now_page);
         new_process_widget->set_desktop_number(&carrier_page_number);
         new_process_widget->set_basic_list(&carrier_widget_list);
@@ -544,6 +546,7 @@ void My_Process_Carrier::createNextBatch()
             new_process_widget->show();
         });
         new_process_widget->in_carrier = true;
+        new_process_widget->updateSig();
         new_process_widget->set_now_page(&carrier_now_page);
         new_process_widget->set_desktop_number(&carrier_page_number);
         new_process_widget->set_basic_list(&carrier_widget_list);

@@ -28,6 +28,8 @@ namespace Dock {
 
 // dock最大尺寸
 #define DOCK_MAX_SIZE 100
+
+
 ///
 /// \brief The DisplayMode enum
 /// spec dock display mode
@@ -40,6 +42,7 @@ enum DisplayMode {
 };
 
 #define PROP_HIDE_MODE      "HideMode"
+
 ///
 /// \brief The HideMode enum
 /// spec dock hide behavior
@@ -47,10 +50,11 @@ enum DisplayMode {
 enum HideMode {
     KeepShowing     = 0,
     KeepHidden      = 1,
-    SmartHide       = 3,
+    SmartHide       = 3, //v1.2.3与v2.0.0的确存在差异,但是,Easy_Desktop不在乎,反正用不到
 };
 
 #define PROP_POSITION       "Position"
+
 ///
 /// \brief The Position enum
 /// spec dock position, dock always placed at primary screen,
@@ -64,6 +68,7 @@ enum Position {
 };
 
 #define PROP_HIDE_STATE     "HideState"
+
 ///
 /// \brief The HideState enum
 /// spec current dock should hide or shown.
