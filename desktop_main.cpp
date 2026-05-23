@@ -299,6 +299,7 @@ Desktop_Main::Desktop_Main(QWidget *parent)
     background_Add_Action->addAction(my_process_action);
     background_Add_Action->addAction(my_file_action);
     background_Add_Action->addAction(file_tree_action);
+    background_Add_Action->addAction(file_table_action);
     background_Add_Action->addAction(my_process_Carrier_action);
     background_Add_Action->addAction(my_program_INNER_action);
     background_Add_Action->addAction(plugin_widget_action);
@@ -458,6 +459,11 @@ void Desktop_Main::contextMenuEvent(QContextMenuEvent *event)
         for (int i = 0; i < count; i++)
         {
             plugin_root_list[0]->~Plugin_Root();
+        }
+        count = file_table_list.count();
+        for (int i = 0; i < count; i++)
+        {
+            file_table_list[0]->~File_Table();
         }
         QApplication::quit();
     }
@@ -733,6 +739,26 @@ void Desktop_Main::contextMenuEvent(QContextMenuEvent *event)
         file_tree->m_allow_drop = allow_drop;
         file_tree->update_style(*theme_color, *theme_background_color, *theme_text_color, *select_text_color, *disabled_text_color, *checked_icon_path);
     }
+    else if (know_what == file_table_action)
+    {
+        File_Table *file_table = new File_Table(desktop_core_dock_list[now_page]);
+        file_table->set_now_page(&now_page);
+        file_table->set_desktop_number(&Desktop_NUmber);
+        file_table->set_basic_list(reinterpret_cast<QList<QWidget *> *>(&desktop_core_dock_list));
+        file_table->move(event->globalPos() - basic_pos);
+        file_table->first_set_preview_pos();
+        file_table_list.append(file_table);
+        file_table->file_table_list = &file_table_list;
+        file_table->file_open_way_process = file_open_way_process;
+        file_table->file_open_info_process = file_open_info_process;
+        file_table->file_open_path_process = file_open_path_process;
+        file_table->terminal_process = terminal_process;
+        file_table->compressor_process = compressor_process;
+        file_table->compressor_zip_process = compressor_zip_process;
+        file_table->compressor_7z_process = compressor_7z_process;
+        file_table->m_allow_drop = allow_drop;
+        file_table->update_style(*theme_color, *theme_background_color, *theme_text_color, *select_text_color, *disabled_text_color, *checked_icon_path);
+    }
     else if (know_what == plugin_widget_action)
     {
         Plugin_Root *plugin_widget = new Plugin_Root(desktop_core_dock_list[now_page]);
@@ -994,6 +1020,11 @@ void Desktop_Main::update_for_lineedit(QColor m_theme_color, QColor m_theme_back
         item->set_icon(m_checked_icon_path);
         item->update_style(m_theme_color, m_theme_background_color, m_theme_text_color, m_select_text_color, m_disabled_text_color, m_checked_icon_path);
     }
+    for (auto *item : file_table_list)
+    {
+        item->set_icon(m_checked_icon_path);
+        item->update_style(m_theme_color, m_theme_background_color, m_theme_text_color, m_select_text_color, m_disabled_text_color, m_checked_icon_path);
+    }
 #ifdef USE_CHART
     for (auto *item : cpu_chart_list)
     {
@@ -1231,6 +1262,7 @@ void Desktop_Main::save(QString path)
     settings.setValue("pulseaudio_chart_list_count", pulseaudio_chart_list.count());
 #endif
     settings.setValue("file_tree_list_count", file_tree_list.count());
+    settings.setValue("file_table_list_count", file_table_list.count());
     settings.setValue("plugin_root_list_count", plugin_root_list.count());
     settings.setValue("stay_on_top", *stay_on_top);
     settings.setValue("on_top_time", *on_top_time);
@@ -1346,6 +1378,13 @@ void Desktop_Main::save(QString path)
         file_tree_list[i]->save(&settings);
         settings.endGroup();
     }
+    count = file_table_list.count();
+    for (int i = 0; i < count; i++)
+    {
+        settings.beginGroup(QString("file_table%1").arg(i));
+        file_table_list[i]->save(&settings);
+        settings.endGroup();
+    }
     count = plugin_root_list.count();
     for (int i = 0; i < count; i++)
     {
@@ -1452,6 +1491,7 @@ void Desktop_Main::load()
 #endif
     int process_widget_list_count = settings.value("process_widget_list_count", 0).toInt();
     int file_tree_list_count = settings.value("file_tree_list_count", 0).toInt();
+    int file_table_list_count = settings.value("file_table_list_count", 0).toInt();
     int plugin_root_list_count = settings.value("plugin_root_list_count", 0).toInt();
     settings.endGroup();
     slider_action->load(&settings);
@@ -1463,6 +1503,7 @@ void Desktop_Main::load()
     my_program_container_list.clear();
     process_widget_list.clear();
     file_tree_list.clear();
+    file_table_list.clear();
 #ifdef USE_CHART
     cpu_chart_list.clear();
     ram_chart_list.clear();
@@ -1739,6 +1780,28 @@ void Desktop_Main::load()
         file_tree->load(&settings);
         settings.endGroup();
         file_tree->show();
+    }
+    for (int i = 0; i < file_table_list_count; i++)
+    {
+        File_Table *file_table = new File_Table(desktop_core_dock_list[now_page]);
+        file_table->set_now_page(&now_page);
+        file_table->set_desktop_number(&Desktop_NUmber);
+        file_table->set_basic_list(reinterpret_cast<QList<QWidget *> *>(&desktop_core_dock_list));
+        file_table->move(0, 0);
+        file_table_list.append(file_table);
+        file_table->file_table_list = &file_table_list;
+        file_table->file_open_way_process = file_open_way_process;
+        file_table->file_open_info_process = file_open_info_process;
+        file_table->file_open_path_process = file_open_path_process;
+        file_table->terminal_process = terminal_process;
+        file_table->compressor_process = compressor_process;
+        file_table->compressor_zip_process = compressor_zip_process;
+        file_table->compressor_7z_process = compressor_7z_process;
+        file_table->m_allow_drop = allow_drop;
+        settings.beginGroup(QString("file_table%1").arg(i));
+        file_table->load(&settings);
+        settings.endGroup();
+        file_table->show();
     }
     for (int i = 0; i < plugin_root_list_count; i++)
     {

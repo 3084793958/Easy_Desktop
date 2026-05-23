@@ -66,7 +66,7 @@ public:
         (void) carrier;
     }
     ///
-    /// \brief update_style(QColor theme_color, QColor theme_background_color, QColor theme_text_color, QColor select_text_color, QColor disabled_text_color, QString checked_icon_path)
+    /// \brief update_style(QColor theme_color, QColor theme_background_color, QColor theme_text_color, QColor select_text_color, QColor disabled_text_color, const QString & checked_icon_path)
     /// 设置style
     /// \param theme_color
     /// \param theme_background_color
@@ -75,7 +75,7 @@ public:
     /// \param disabled_text_color
     /// \param checked_icon_path
     ///
-    virtual void update_style(QColor theme_color, QColor theme_background_color, QColor theme_text_color, QColor select_text_color, QColor disabled_text_color, QString checked_icon_path)
+    virtual void update_style(QColor theme_color, QColor theme_background_color, QColor theme_text_color, QColor select_text_color, QColor disabled_text_color, const QString & checked_icon_path)
     {
         (void) theme_color;
         (void) theme_background_color;
@@ -87,6 +87,7 @@ public:
     ///
     /// \brief clear()
     /// 当切换预览文件时,该函数会被调用[必须实现]
+    /// clear()中不能调用clearCurrentPreview(),这是个死循环
     ///
     virtual void clear() = 0;
     ///

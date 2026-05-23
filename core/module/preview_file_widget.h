@@ -255,6 +255,7 @@ private:
      QColor *m_select_text_color = nullptr;
      QColor *m_disabled_text_color = nullptr;
      QString *m_checked_icon_path = nullptr;
+     QFileInfo previewing_file_info;
 };
 
 #endif // PREVIEW_FILE_WIDGET_H

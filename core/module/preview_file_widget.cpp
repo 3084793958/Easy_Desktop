@@ -324,6 +324,15 @@ void Preview_File_Widget::updatePreview(QStringList selectionFileList, QString p
 }
 void Preview_File_Widget::updateCurrentPreview()
 {
+    if (!currentFileInfos.isEmpty())
+    {
+        if (currentIndex < 0 || currentIndex >= currentFileInfos.size()) return;
+        if (previewing_file_info == currentFileInfos[currentIndex])
+        {
+            return;
+        }
+        previewing_file_info = currentFileInfos[currentIndex];
+    }
     clearCurrentPreview();
     if (currentFileInfos.isEmpty())
     {
@@ -1978,7 +1987,10 @@ void Preview_File_Widget::load_plugin(QString filepath)
                     plugin_interface->your_plugin_loader = plugin_loader;
                     plugin_interface->plugin_path = filepath;
                     plugin_interface->inited = true;
-                    plugin_interface->update_style(*m_theme_color, *m_theme_background_color, *m_theme_text_color, *m_select_text_color, *m_disabled_text_color, *m_checked_icon_path);
+                    if (m_theme_color)
+                    {
+                        plugin_interface->update_style(*m_theme_color, *m_theme_background_color, *m_theme_text_color, *m_select_text_color, *m_disabled_text_color, *m_checked_icon_path);
+                    }
                 }
                 preview_file_plugin_list << plugin_interface;
             }

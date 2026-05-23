@@ -62,7 +62,8 @@ SOURCES += \
     core/module/preview_file_widget.cpp \
     core/tools/my_rsvg_support.cpp \
     interfaces/easy_desktop_class.cpp \
-    core/module/plugincontroller.cpp
+    core/module/plugincontroller.cpp \
+    core/table_tree.cpp
 
 contains(DEFINES, USE_CHART) {
     SOURCES += \
@@ -109,7 +110,8 @@ HEADERS += \
     interfaces/easy_desktop_class.h \
     interfaces/file-preview/preview_file_interface.h \
     core/module/plugincontroller.h \
-    interfaces/media-widget-action/media_widgetaction_interface.h
+    interfaces/media-widget-action/media_widgetaction_interface.h \
+    core/table_tree.h
 
 contains(DEFINES, USE_CHART) {
     HEADERS += \

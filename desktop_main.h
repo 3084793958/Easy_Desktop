@@ -130,6 +130,7 @@ private:
     QList<My_Program_Container *> my_program_container_list;
     QList<Process_Widget *> process_widget_list;
     QList<File_Tree *> file_tree_list;
+    QList<File_Table *> file_table_list;
 #ifdef USE_CHART
     QList<CPU_Chart *> cpu_chart_list;
     QList<RAM_Chart *> ram_chart_list;
@@ -149,7 +150,8 @@ private:
     QAction *my_label_action = new QAction(tr("标签"), this);
     QAction *my_process_action = new QAction(tr("进程按钮"), this);
     QAction *my_file_action = new QAction(tr("文件按钮"), this);
-    QAction *file_tree_action = new QAction(tr("树状文件夹"), this);
+    QAction *file_tree_action = new QAction(tr("树状视图文件夹"), this);
+    QAction *file_table_action = new QAction(tr("图标视图文件夹"), this);
     QAction *my_process_Carrier_action = new QAction(tr("进程/文件按钮载体"), this);
     QAction *my_program_INNER_action = new QAction(tr("内嵌窗口"), this);
     QAction *plugin_widget_action = new QAction(tr("插件窗口"), this);

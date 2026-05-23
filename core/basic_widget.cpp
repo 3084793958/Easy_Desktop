@@ -151,6 +151,17 @@ void Basic_Widget::resize(QSize size)
 void Basic_Widget::setParent(QWidget *parent)
 {
     QWidget::setParent(parent);
+    if (!parent)
+    {
+        if (save_sig_ptr)
+        {
+            disconnect(this, &Basic_Widget::sig_select_mouseMoveEvent, save_sig_ptr, &Desktop_Main_MouseSig_Event::select_mouseMoveEvent);
+            disconnect(this, &Basic_Widget::sig_select_mousePressEvent, save_sig_ptr, &Desktop_Main_MouseSig_Event::select_mousePressEvent);
+            disconnect(this, &Basic_Widget::sig_select_mouseReleaseEvent, save_sig_ptr, &Desktop_Main_MouseSig_Event::select_mouseReleaseEvent);
+        }
+        save_sig_ptr = nullptr;
+        return;
+    }
     if (save_sig_ptr != parent->parent())
     {
         if (save_sig_ptr)

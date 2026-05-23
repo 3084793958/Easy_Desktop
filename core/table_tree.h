@@ -1,51 +1,52 @@
-#ifndef FILE_TREE_H
-#define FILE_TREE_H
+#ifndef TABLE_TREE_H
+#define TABLE_TREE_H
 #include "basic_widget.h"
-#include <QTreeView>
+#include <QListView>
 #include <QFileSystemModel>
 #include "core/tools/multilinetextinputdialog.h"
 #include "core/module/preview_file_widget.h"
-class My_TreeView_Delegate : public QStyledItemDelegate
+class My_TableView_Delegate : public QStyledItemDelegate
 {
 public:
     using QStyledItemDelegate::QStyledItemDelegate;
-    explicit My_TreeView_Delegate(QObject *parent, QColor *m_hover_color = nullptr, QColor *m_select_color = nullptr, int *m_radius = nullptr, QModelIndex *m_proposed_action_index = nullptr);
+    explicit My_TableView_Delegate(QObject *parent, QColor *m_hover_color = nullptr, QColor *m_select_color = nullptr, int *m_radius = nullptr);
     void paint(QPainter *painter, const QStyleOptionViewItem &option, const QModelIndex &index) const override;
+private:
     QColor *hover_color = nullptr;
     QColor *select_color = nullptr;
     int *radius = nullptr;
-    QModelIndex *proposed_action_index = nullptr;
 };
-class My_Tree_View;
-class My_ProxyModel : public QSortFilterProxyModel
+class My_Table_View;
+class My_Table_ProxyModel : public QSortFilterProxyModel
 {
     Q_OBJECT
 public:
-    explicit My_ProxyModel(QObject *parent = nullptr, My_Tree_View *m_root = nullptr);
+    explicit My_Table_ProxyModel(QObject *parent = nullptr, My_Table_View *m_root = nullptr, int *m_sort_type = nullptr);
     void setSearchPattern(const QString &pattern, bool deeply_search = false);
     void setShowHidden(bool show);
 protected:
     virtual bool filterAcceptsRow(int sourceRow, const QModelIndex &sourceParent) const override;
-    virtual void sort(int column, Qt::SortOrder order = Qt::AscendingOrder) override;
+    virtual bool lessThan(const QModelIndex &left, const QModelIndex &right) const override;
 private:
     QString m_pattern;
     char my_padding[6];
     bool m_showHidden = false;
     bool m_deeply_search = false;
-    My_Tree_View *root = nullptr;
+    My_Table_View *root = nullptr;
+    int *sort_type_ptr = nullptr;
     bool hasMatchInSubtree(const QModelIndex &sourceIndex) const;
 };
-class My_Tree_View : public QTreeView
+class My_Table_View : public QListView
 {
     Q_OBJECT
 public:
-    explicit My_Tree_View(QWidget *parent);
-    ~My_Tree_View() override;
+    explicit My_Table_View(QWidget *parent);
+    ~My_Table_View() override;
     void p_save(QSettings *settings);
     void p_load(QSettings *settings);
     QFileSystemModel *F_model = nullptr;
-    My_ProxyModel *proxyModel = nullptr;
-    static My_Tree_View * catch_ptr;
+    My_Table_ProxyModel *proxyModel = nullptr;
+    static My_Table_View * catch_ptr;
 protected:
     void dropEvent(QDropEvent *event) override;
     void dragMoveEvent(QDragMoveEvent *event) override;
@@ -84,21 +85,21 @@ private slots:
     void updateFolderSize();
     void onSizeCalculated();
 };
-class My_Icon_Provider : public QFileIconProvider
+class My_Table_Icon_Provider : public QFileIconProvider
 {
 public:
-    My_Icon_Provider() = default;
+    My_Table_Icon_Provider() = default;
     QIcon icon(IconType type) const override;
     QIcon icon(const QFileInfo &info) const override;
     QSize get_Image_Size(QString path) const;
 };
-class File_Tree : public Basic_Widget
+class File_Table : public Basic_Widget
 {
     Q_OBJECT
 public:
-    explicit File_Tree(QWidget *parent);
-    ~File_Tree();
-    QList<File_Tree *> *file_tree_list;
+    explicit File_Table(QWidget *parent);
+    ~File_Table();
+    QList<File_Table *> *file_table_list;
     virtual void save(QSettings *settings);
     virtual void load(QSettings *settings);
     virtual void set_icon(QString checked_icon_path);
@@ -114,17 +115,17 @@ public:
     QString root_path = QDir::rootPath();
     void update_style(QColor theme_color, QColor theme_background_color, QColor theme_text_color, QColor select_text_color, QColor disabled_text_color, QString checked_icon_path);
 protected:
-    QModelIndex proposed_action_index;
     QColor hover_color = QColor(227, 242, 253, 255);
     QColor select_color = QColor(0, 170, 255, 255);
     int radius = 10;
+    int sort_type = 0;
     void set_tree_view_style();
     QWidget *carrier_widget = new QWidget(this->get_self());
     QFileSystemModel *model = new QFileSystemModel(this);
-    My_Tree_View *treeView = new My_Tree_View(carrier_widget);
-    My_ProxyModel *proxyModel = new My_ProxyModel(this, treeView);
-    My_TreeView_Delegate *my_delegate = new My_TreeView_Delegate(this, &hover_color, &select_color, &radius, &proposed_action_index);
-    My_Icon_Provider *icon_provider = new My_Icon_Provider;
+    My_Table_View *treeView = new My_Table_View(carrier_widget);
+    My_Table_ProxyModel *proxyModel = new My_Table_ProxyModel(this, treeView, &sort_type);
+    My_TableView_Delegate *my_delegate = new My_TableView_Delegate(this, &hover_color, &select_color, &radius);
+    My_Table_Icon_Provider *icon_provider = new My_Table_Icon_Provider;
     QLineEdit *search_edit = new QLineEdit(carrier_widget);
     QPushButton *deeply_search_button = new QPushButton(tr("深层搜索"), carrier_widget);
     QAction *search_img_action = new QAction(this);
@@ -163,12 +164,18 @@ protected:
     QAction *delete_action = new QAction(tr("删除"), this);
     QAction *show_info = new QAction(tr("属性"), this);
 
-    QMenu *tree_setting = new QMenu(tr("树状视图控制"), this);
+    QMenu *tree_setting = new QMenu(tr("图标视图控制"), this);
     QAction *single_press_mode_action = new QAction(tr("单击模式"), this);
     QAction *set_dir_path = new QAction(tr("设置文件夹路径"), this);
     QMenu *set_style_menu = new QMenu(tr("设置外观"), this);
     QAction *set_show_status_bar = new QAction(tr("显示状态栏"), this);
     QAction *set_show_status_bar_text_color = new QAction(tr("设置状态栏字体颜色"), this);
+
+    QMenu *sort_type_menu = new QMenu(tr("排序方式"), this);
+    QAction *sort_type_name = new QAction(tr("名称"), this);
+    QAction *sort_type_size = new QAction(tr("大小"), this);
+    QAction *sort_type_date = new QAction(tr("日期"), this);
+
     QAction *set_icon_size_action = new QAction(tr("图标大小"), this);
     QAction *set_font_action = new QAction(tr("字体"), this);
     QAction *set_hover_color = new QAction(tr("悬停颜色"), this);
@@ -202,4 +209,4 @@ private:
     Preview_File_Widget *preview_file_widget;
 };
 
-#endif // FILE_TREE_H
+#endif // TABLE_TREE_H

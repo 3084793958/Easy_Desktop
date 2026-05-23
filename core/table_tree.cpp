@@ -1,15 +1,18 @@
-#include "file_tree.h"
+#include "table_tree.h"
 #include "core/tools/file_control.h"
-My_Tree_View * My_Tree_View::catch_ptr;
-void File_Tree::set_icon(QString checked_icon_path)
+My_Table_View * My_Table_View::catch_ptr;
+void File_Table::set_icon(QString checked_icon_path)
 {
     single_press_mode_action->setIcon(QIcon(checked_icon_path));
     show_hidden_action->setIcon(QIcon(checked_icon_path));
     m_dialog->set_icon(checked_icon_path);
     preview_file_widget->set_icon(checked_icon_path);
+    sort_type_name->setIcon(QIcon(checked_icon_path));
+    sort_type_size->setIcon(QIcon(checked_icon_path));
+    sort_type_date->setIcon(QIcon(checked_icon_path));
     Basic_Widget::set_icon(checked_icon_path);
 }
-File_Tree::File_Tree(QWidget *parent)
+File_Table::File_Table(QWidget *parent)
     :Basic_Widget(parent)
 {
     preview_file_widget = new Preview_File_Widget(parent, preview_file_action);
@@ -56,6 +59,17 @@ File_Tree::File_Tree(QWidget *parent)
     set_style_menu->addAction(set_show_status_bar);
     set_style_menu->addAction(set_show_status_bar_text_color);
     set_style_menu->addSeparator();
+    sort_type_name->setIcon(QIcon(":/base/this.svg"));
+    sort_type_size->setIcon(QIcon(":/base/this.svg"));
+    sort_type_date->setIcon(QIcon(":/base/this.svg"));
+    sort_type_name->setIconVisibleInMenu(true);
+    sort_type_size->setIconVisibleInMenu(false);
+    sort_type_date->setIconVisibleInMenu(false);
+    sort_type_menu->addAction(sort_type_name);
+    sort_type_menu->addAction(sort_type_size);
+    sort_type_menu->addAction(sort_type_date);
+    set_style_menu->addMenu(sort_type_menu);
+    set_style_menu->addSeparator();
     set_style_menu->addAction(set_icon_size_action);
     set_style_menu->addAction(set_font_action);
     set_style_menu->addAction(set_select_radius);
@@ -87,7 +101,7 @@ File_Tree::File_Tree(QWidget *parent)
     shortcut_copy_action->setShortcutContext(Qt::WidgetWithChildrenShortcut);
     connect(shortcut_copy_action, &QAction::triggered, this, [=]
     {
-        if (treeView->selectionModel() && treeView == My_Tree_View::catch_ptr)
+        if (treeView->selectionModel() && treeView == My_Table_View::catch_ptr)
         {
             QModelIndexList selectedList = treeView->selectionModel()->selectedIndexes();
             if (!selectedList.isEmpty())
@@ -95,7 +109,7 @@ File_Tree::File_Tree(QWidget *parent)
                 QList<QUrl> urls;
                 QByteArray gnomeData;
                 gnomeData.append("copy\n");
-                for (int i = 0; i < selectedList.count(); i += 4)
+                for (int i = 0; i < selectedList.count(); i += 1)
                 {
                     QString this_file_path = model->filePath(proxyModel->mapToSource(selectedList[i]));
                     urls.append(QUrl::fromLocalFile(this_file_path));
@@ -112,7 +126,7 @@ File_Tree::File_Tree(QWidget *parent)
     shortcut_show_info->setShortcutContext(Qt::WidgetWithChildrenShortcut);
     connect(shortcut_show_info, &QAction::triggered, this, [=]
     {
-        if (treeView->selectionModel() && treeView == My_Tree_View::catch_ptr)
+        if (treeView->selectionModel() && treeView == My_Table_View::catch_ptr)
         {
             QModelIndexList selectedList = treeView->selectionModel()->selectedIndexes();
             if (!selectedList.isEmpty())
@@ -126,7 +140,7 @@ File_Tree::File_Tree(QWidget *parent)
                 {
                     m_process_str = *file_open_info_process;
                 }
-                for (int i = 0; i < selectedList.count(); i += 4)
+                for (int i = 0; i < selectedList.count(); i += 1)
                 {
                     QString this_file_path = model->filePath(proxyModel->mapToSource(selectedList[i]));
                     m_process_str += " ";
@@ -143,7 +157,7 @@ File_Tree::File_Tree(QWidget *parent)
     shortcut_enter->setShortcutContext(Qt::WidgetWithChildrenShortcut);
     connect(shortcut_enter, &QAction::triggered, this, [=]
     {
-        if (treeView->selectionModel() && treeView == My_Tree_View::catch_ptr)
+        if (treeView->selectionModel() && treeView == My_Table_View::catch_ptr)
         {
             Pressed(true);
         }
@@ -152,7 +166,7 @@ File_Tree::File_Tree(QWidget *parent)
     shortcut_cut_action->setShortcutContext(Qt::WidgetWithChildrenShortcut);
     connect(shortcut_cut_action, &QAction::triggered, this, [=]
     {
-        if (treeView->selectionModel() && treeView == My_Tree_View::catch_ptr)
+        if (treeView->selectionModel() && treeView == My_Table_View::catch_ptr)
         {
             QModelIndexList selectedList = treeView->selectionModel()->selectedIndexes();
             if (!selectedList.isEmpty())
@@ -160,7 +174,7 @@ File_Tree::File_Tree(QWidget *parent)
                 QList<QUrl> urls;
                 QByteArray gnomeData;
                 gnomeData.append("cut\n");
-                for (int i = 0; i < selectedList.count(); i += 4)
+                for (int i = 0; i < selectedList.count(); i += 1)
                 {
                     QString this_file_path = model->filePath(proxyModel->mapToSource(selectedList[i]));
                     urls.append(QUrl::fromLocalFile(this_file_path));
@@ -177,7 +191,7 @@ File_Tree::File_Tree(QWidget *parent)
     shortcut_paste_action->setShortcutContext(Qt::WidgetWithChildrenShortcut);
     connect(shortcut_paste_action, &QAction::triggered, this, [=]
     {
-        if (treeView->selectionModel() && treeView == My_Tree_View::catch_ptr)
+        if (treeView->selectionModel() && treeView == My_Table_View::catch_ptr)
         {
             const QMimeData *mimeData = QApplication::clipboard()->mimeData();
             QList<QUrl> urls = mimeData->urls();
@@ -205,7 +219,7 @@ File_Tree::File_Tree(QWidget *parent)
             QFileInfo to_file_info(root_path);
             if (!selectedList.isEmpty())
             {
-                for (int i = 0; i < selectedList.count(); i += 4)
+                for (int i = 0; i < selectedList.count(); i += 1)
                 {
                     QFileInfo file_info(model->filePath(proxyModel->mapToSource(selectedList[i])));
                     if (file_info.isDir())
@@ -243,7 +257,7 @@ File_Tree::File_Tree(QWidget *parent)
     shortcut_find_action->setShortcutContext(Qt::WidgetWithChildrenShortcut);
     connect(shortcut_find_action, &QAction::triggered, this, [=]
     {
-        if (treeView->selectionModel() && treeView == My_Tree_View::catch_ptr)
+        if (treeView->selectionModel() && treeView == My_Table_View::catch_ptr)
         {
             search_edit->setFocus();
         }
@@ -252,13 +266,13 @@ File_Tree::File_Tree(QWidget *parent)
     shortcut_delete_action->setShortcutContext(Qt::WidgetWithChildrenShortcut);
     connect(shortcut_delete_action, &QAction::triggered, this, [=]
     {
-        if (treeView->selectionModel() && treeView == My_Tree_View::catch_ptr)
+        if (treeView->selectionModel() && treeView == My_Table_View::catch_ptr)
         {
             QModelIndexList selectedList = treeView->selectionModel()->selectedIndexes();
             if (!selectedList.isEmpty())
             {
                 QList<QUrl> urls;
-                for (int i = 0; i < selectedList.count(); i += 4)
+                for (int i = 0; i < selectedList.count(); i += 1)
                 {
                     QString this_file_path = model->filePath(proxyModel->mapToSource(selectedList[i]));
                     urls.append(QUrl::fromLocalFile(this_file_path));
@@ -279,13 +293,13 @@ File_Tree::File_Tree(QWidget *parent)
     shortcut_force_delete_action->setShortcutContext(Qt::WidgetWithChildrenShortcut);
     connect(shortcut_force_delete_action, &QAction::triggered, this, [=]
     {
-        if (treeView->selectionModel() && treeView == My_Tree_View::catch_ptr)
+        if (treeView->selectionModel() && treeView == My_Table_View::catch_ptr)
         {
             QModelIndexList selectedList = treeView->selectionModel()->selectedIndexes();
             if (!selectedList.isEmpty())
             {
                 QList<QUrl> urls;
-                for (int i = 0; i < selectedList.count(); i += 4)
+                for (int i = 0; i < selectedList.count(); i += 1)
                 {
                     QString this_file_path = model->filePath(proxyModel->mapToSource(selectedList[i]));
                     urls.append(QUrl::fromLocalFile(this_file_path));
@@ -314,7 +328,7 @@ File_Tree::File_Tree(QWidget *parent)
     shortcut_show_hidden_action->setShortcutContext(Qt::WidgetWithChildrenShortcut);
     connect(shortcut_show_hidden_action, &QAction::triggered, this, [=]
     {
-        if (treeView->selectionModel() && treeView == My_Tree_View::catch_ptr)
+        if (treeView->selectionModel() && treeView == My_Table_View::catch_ptr)
         {
             show_hidden_action->setIconVisibleInMenu(!show_hidden_action->isIconVisibleInMenu());
             proxyModel->setShowHidden(show_hidden_action->isIconVisibleInMenu());
@@ -324,13 +338,13 @@ File_Tree::File_Tree(QWidget *parent)
     shortcut_rename_action->setShortcutContext(Qt::WidgetWithChildrenShortcut);
     connect(shortcut_rename_action, &QAction::triggered, this, [=]
     {
-        if (treeView->selectionModel() && treeView == My_Tree_View::catch_ptr)
+        if (treeView->selectionModel() && treeView == My_Table_View::catch_ptr)
         {
             QModelIndexList selectedList = treeView->selectionModel()->selectedIndexes();
             if (!selectedList.isEmpty())
             {
                 QString name_list_str = "";
-                for (int i = 0; i < selectedList.count(); i += 4)
+                for (int i = 0; i < selectedList.count(); i += 1)
                 {
                     if (!name_list_str.isEmpty())
                     {
@@ -343,16 +357,16 @@ File_Tree::File_Tree(QWidget *parent)
                     return;
                 }
                 QStringList name_list = m_dialog->getLines();
-                if (name_list.count() != selectedList.count() / 4)
+                if (name_list.count() != selectedList.count())
                 {
                     return;
                 }
                 model->setReadOnly(false);
-                for (int i = 0; i < selectedList.count(); i += 4)
+                for (int i = 0; i < selectedList.count(); i += 1)
                 {
                     QModelIndex proxyIndex = selectedList[i];
                     QModelIndex sourceIndex = proxyModel->mapToSource(proxyIndex);
-                    model->setData(sourceIndex, name_list[i / 4], Qt::EditRole);
+                    model->setData(sourceIndex, name_list[i], Qt::EditRole);
                 }
                 model->setReadOnly(true);
             }
@@ -403,16 +417,9 @@ File_Tree::File_Tree(QWidget *parent)
     proxyModel->setSourceModel(model);
     proxyModel->setShowHidden(false);
     treeView->setModel(proxyModel);
-    treeView->setIconSize(QSize(24, 24));
-    treeView->setIndentation(24);
     treeView->setRootIndex(proxyModel->mapFromSource(model->index(QDir::rootPath())));
-    treeView->setAnimated(true);
-    treeView->setSortingEnabled(true);
-    treeView->header()->setSortIndicator(0, Qt::SortOrder::AscendingOrder);
-    treeView->setColumnWidth(0, 150);
     carrier_widget->setMouseTracking(true);
     search_edit->setMouseTracking(true);
-    treeView->setUniformRowHeights(true);
     installEventFilter(treeView);
     connect(search_del_action, &QAction::triggered, this, [=]
     {
@@ -466,7 +473,7 @@ File_Tree::File_Tree(QWidget *parent)
     {
         if (!single_press_mode_action->isIconVisibleInMenu())
         {
-            Pressed();
+            Pressed(true);
         }
     });
     connect(this->treeView->selectionModel(), &QItemSelectionModel::selectionChanged, this, [=]
@@ -476,7 +483,7 @@ File_Tree::File_Tree(QWidget *parent)
         {
             QModelIndexList selectedList = treeView->selectionModel()->selectedIndexes();
             QStringList filelist = {};
-            for (int i = 0; i < selectedList.count(); i += 4)
+            for (int i = 0; i < selectedList.count(); i += 1)
             {
                 filelist << model->filePath(proxyModel->mapToSource(selectedList[i]));
             }
@@ -490,7 +497,7 @@ File_Tree::File_Tree(QWidget *parent)
         {
             QModelIndexList selectedList = treeView->selectionModel()->selectedIndexes();
             QStringList filelist = {};
-            for (int i = 0; i < selectedList.count(); i += 4)
+            for (int i = 0; i < selectedList.count(); i += 1)
             {
                 filelist << model->filePath(proxyModel->mapToSource(selectedList[i]));
             }
@@ -500,27 +507,26 @@ File_Tree::File_Tree(QWidget *parent)
     resize(600, 300);
     show();
 }
-void File_Tree::Pressed(bool from_key)
+void File_Table::Pressed(bool from_key)
 {
     if (treeView->selectionModel())
     {
         QModelIndexList selectedList = treeView->selectionModel()->selectedIndexes();
         if (!selectedList.isEmpty())
         {
-            for (int i = 0; i < selectedList.count(); i += 4)
+            for (int i = 0; i < selectedList.count(); i += 1)
             {
                 if (model->hasChildren(proxyModel->mapToSource(selectedList[i])))
                 {
                     if (single_press_mode_action->isIconVisibleInMenu() || from_key)
                     {
-                        if (treeView->isExpanded(selectedList[i]))
+                        root_path = model->filePath(proxyModel->mapToSource(selectedList[i]));
+                        treeView->setRootIndex(proxyModel->mapFromSource(model->index(root_path)));
+                        if (treeView->selectionModel())
                         {
-                            treeView->setExpanded(selectedList[i], false);
+                            treeView->selectionModel()->clear();
                         }
-                        else
-                        {
-                            treeView->expand(selectedList[i]);
-                        }
+                        treeView->updateStatusBar();
                     }
                     return;
                 }
@@ -605,7 +611,7 @@ void File_Tree::Pressed(bool from_key)
         }
     }
 }
-void File_Tree::first_set_preview_pos()
+void File_Table::first_set_preview_pos()
 {
     preview_file_widget->move(this->pos());
     preview_file_widget->setParent(this->parentWidget());
@@ -613,13 +619,12 @@ void File_Tree::first_set_preview_pos()
     preview_file_widget->set_desktop_number(desktop_number);
     preview_file_widget->set_basic_list(basic_list);
 }
-void File_Tree::set_tree_view_style()
+void File_Table::set_tree_view_style()
 {
-    treeView->setStyleSheet(QString("QTreeView{background:rgba(255,255,255,0);color:rgb(60,60,60);selection-background-color:rgba(0,0,0,0);}"
-                                    "QTreeView::item:first{color:rgb(0,0,0)}"
-                                    "QTreeView::item:selected{color:rgb(255,255,255);border: 0px solid rgba(255,255,255,0)}"));
+    treeView->setStyleSheet(QString("QListView{background:rgba(255,255,255,0);color:rgb(60,60,60);selection-background-color:rgba(0,0,0,0);}"
+                                    "QListView::item:selected{color:rgb(255,255,255);border: 0px solid rgba(255,255,255,0)}"));
 }
-File_Tree::~File_Tree()
+File_Table::~File_Table()
 {
     m_dialog->deleteLater();
     if (preview_file_widget)
@@ -627,12 +632,12 @@ File_Tree::~File_Tree()
         preview_file_widget->deleteLater();
         preview_file_widget = nullptr;
     }
-    if (file_tree_list)
+    if (file_table_list)
     {
-        file_tree_list->removeOne(this);
+        file_table_list->removeOne(this);
     }
 }
-void File_Tree::contextMenuEvent(QContextMenuEvent *event)
+void File_Table::contextMenuEvent(QContextMenuEvent *event)
 {
     paste_action->setEnabled(!QApplication::clipboard()->mimeData()->urls().isEmpty());
     if (treeView->selectionModel())
@@ -655,7 +660,7 @@ void File_Tree::contextMenuEvent(QContextMenuEvent *event)
             QStringList file_list = {};
             if (!selectedList.isEmpty())
             {
-                for (int i = 0; i < selectedList.count(); i += 4)
+                for (int i = 0; i < selectedList.count(); i += 1)
                 {
                     QString this_file_path = model->filePath(proxyModel->mapToSource(selectedList[i]));
                     file_list << this_file_path;
@@ -737,7 +742,7 @@ void File_Tree::contextMenuEvent(QContextMenuEvent *event)
             QModelIndexList selectedList = treeView->selectionModel()->selectedIndexes();
             if (!selectedList.isEmpty())
             {
-                for (int i = 0; i < selectedList.count(); i += 4)
+                for (int i = 0; i < selectedList.count(); i += 1)
                 {
                     QString this_file_path = model->filePath(proxyModel->mapToSource(selectedList[i]));
                     QProcess process;
@@ -783,7 +788,7 @@ void File_Tree::contextMenuEvent(QContextMenuEvent *event)
             QModelIndexList selectedList = treeView->selectionModel()->selectedIndexes();
             if (!selectedList.isEmpty())
             {
-                for (int i = 0; i < selectedList.count(); i += 4)
+                for (int i = 0; i < selectedList.count(); i += 1)
                 {
                     QString this_file_path = model->filePath(proxyModel->mapToSource(selectedList[i]));
                     QProcess process;
@@ -835,7 +840,7 @@ void File_Tree::contextMenuEvent(QContextMenuEvent *event)
             QString tmp_file_top_path = "";
             if (!selectedList.isEmpty())
             {
-                for (int i = 0; i < selectedList.count(); i += 4)
+                for (int i = 0; i < selectedList.count(); i += 1)
                 {
                     QString this_file_path = model->filePath(proxyModel->mapToSource(selectedList[i]));
                     if (QFileInfo(this_file_path).isDir())
@@ -889,7 +894,7 @@ void File_Tree::contextMenuEvent(QContextMenuEvent *event)
             QString tmp_file_top_path = "";
             if (!selectedList.isEmpty())
             {
-                for (int i = 0; i < selectedList.count(); i += 4)
+                for (int i = 0; i < selectedList.count(); i += 1)
                 {
                     QString this_file_path = model->filePath(proxyModel->mapToSource(selectedList[i]));
                     if (QFileInfo(this_file_path).isDir())
@@ -1040,7 +1045,7 @@ void File_Tree::contextMenuEvent(QContextMenuEvent *event)
                     m_process_str = *compressor_process;
                 }
                 QString files_str = "";
-                for (int i = 0; i < selectedList.count(); i += 4)
+                for (int i = 0; i < selectedList.count(); i += 1)
                 {
                     files_str += " ";
                     files_str += File_Control::FilenameForBash(model->filePath(proxyModel->mapToSource(selectedList[i])));
@@ -1092,7 +1097,7 @@ void File_Tree::contextMenuEvent(QContextMenuEvent *event)
                     m_process_str = *compressor_zip_process;
                 }
                 QString files_str = "";
-                for (int i = 0; i < selectedList.count(); i += 4)
+                for (int i = 0; i < selectedList.count(); i += 1)
                 {
                     files_str += " ";
                     files_str += File_Control::FilenameForBash(model->filePath(proxyModel->mapToSource(selectedList[i])));
@@ -1144,7 +1149,7 @@ void File_Tree::contextMenuEvent(QContextMenuEvent *event)
                     m_process_str = *compressor_7z_process;
                 }
                 QString files_str = "";
-                for (int i = 0; i < selectedList.count(); i += 4)
+                for (int i = 0; i < selectedList.count(); i += 1)
                 {
                     files_str += " ";
                     files_str += File_Control::FilenameForBash(model->filePath(proxyModel->mapToSource(selectedList[i])));
@@ -1194,7 +1199,7 @@ void File_Tree::contextMenuEvent(QContextMenuEvent *event)
                 if (!selectedList.isEmpty())
                 {
                     QStringList filelist = {};
-                    for (int i = 0; i < selectedList.count(); i += 4)
+                    for (int i = 0; i < selectedList.count(); i += 1)
                     {
                         filelist << model->filePath(proxyModel->mapToSource(selectedList[i]));
                     }
@@ -1252,7 +1257,7 @@ void File_Tree::contextMenuEvent(QContextMenuEvent *event)
             gnomeData.append("cut\n");
             if (!selectedList.isEmpty())
             {
-                for (int i = 0; i < selectedList.count(); i += 4)
+                for (int i = 0; i < selectedList.count(); i += 1)
                 {
                     QString this_file_path = model->filePath(proxyModel->mapToSource(selectedList[i]));
                     urls.append(QUrl::fromLocalFile(this_file_path));
@@ -1275,7 +1280,7 @@ void File_Tree::contextMenuEvent(QContextMenuEvent *event)
             gnomeData.append("copy\n");
             if (!selectedList.isEmpty())
             {
-                for (int i = 0; i < selectedList.count(); i += 4)
+                for (int i = 0; i < selectedList.count(); i += 1)
                 {
                     QString this_file_path = model->filePath(proxyModel->mapToSource(selectedList[i]));
                     urls.append(QUrl::fromLocalFile(this_file_path));
@@ -1321,7 +1326,7 @@ void File_Tree::contextMenuEvent(QContextMenuEvent *event)
         QFileInfo to_file_info(root_path);
         if (!selectedList.isEmpty())
         {
-            for (int i = 0; i < selectedList.count(); i += 4)
+            for (int i = 0; i < selectedList.count(); i += 1)
             {
                 QFileInfo file_info(model->filePath(proxyModel->mapToSource(selectedList[i])));
                 if (file_info.isDir())
@@ -1362,7 +1367,7 @@ void File_Tree::contextMenuEvent(QContextMenuEvent *event)
             if (!selectedList.isEmpty())
             {
                 QString name_list_str = "";
-                for (int i = 0; i < selectedList.count(); i += 4)
+                for (int i = 0; i < selectedList.count(); i += 1)
                 {
                     if (!name_list_str.isEmpty())
                     {
@@ -1375,16 +1380,16 @@ void File_Tree::contextMenuEvent(QContextMenuEvent *event)
                     return;
                 }
                 QStringList name_list = m_dialog->getLines();
-                if (name_list.count() != selectedList.count() / 4)
+                if (name_list.count() != selectedList.count())
                 {
                     return;
                 }
                 model->setReadOnly(false);
-                for (int i = 0; i < selectedList.count(); i += 4)
+                for (int i = 0; i < selectedList.count(); i += 1)
                 {
                     QModelIndex proxyIndex = selectedList[i];
                     QModelIndex sourceIndex = proxyModel->mapToSource(proxyIndex);
-                    model->setData(sourceIndex, name_list[i / 4], Qt::EditRole);
+                    model->setData(sourceIndex, name_list[i], Qt::EditRole);
                 }
                 model->setReadOnly(true);
             }
@@ -1398,7 +1403,7 @@ void File_Tree::contextMenuEvent(QContextMenuEvent *event)
             if (!selectedList.isEmpty())
             {
                 QList<QUrl> urls;
-                for (int i = 0; i < selectedList.count(); i += 4)
+                for (int i = 0; i < selectedList.count(); i += 1)
                 {
                     QString this_file_path = model->filePath(proxyModel->mapToSource(selectedList[i]));
                     urls.append(QUrl::fromLocalFile(this_file_path));
@@ -1431,7 +1436,7 @@ void File_Tree::contextMenuEvent(QContextMenuEvent *event)
             QModelIndexList selectedList = treeView->selectionModel()->selectedIndexes();
             if (!selectedList.isEmpty())
             {
-                for (int i = 0; i < selectedList.count(); i += 4)
+                for (int i = 0; i < selectedList.count(); i += 1)
                 {
                     QString this_file_path = model->filePath(proxyModel->mapToSource(selectedList[i]));
                     m_process_str += " ";
@@ -1472,11 +1477,11 @@ void File_Tree::contextMenuEvent(QContextMenuEvent *event)
     else if (know_what == set_icon_size_action)
     {
         bool ok = false;
-        int num = QInputDialog::getInt(nullptr, tr("获取数值"), tr("大小:"), treeView->indentation(), 10, 2147483647, 1, &ok);
+        int num = QInputDialog::getInt(nullptr, tr("获取数值"), tr("大小:"), treeView->iconSize().width(), 4, 2147483647, 1, &ok);
         if (ok)
         {
             treeView->setIconSize(QSize(num, num));
-            treeView->setIndentation(num);
+            treeView->setGridSize(QSize(num + 32, num + 32));
         }
     }
     else if (know_what == set_font_action)
@@ -1547,14 +1552,37 @@ void File_Tree::contextMenuEvent(QContextMenuEvent *event)
         treeView->statusBar_text_color = colorDialog.currentColor();
         treeView->updateStatusBar_style();
     }
+    else if (know_what == sort_type_name)
+    {
+        sort_type_name->setIconVisibleInMenu(true);
+        sort_type_size->setIconVisibleInMenu(false);
+        sort_type_date->setIconVisibleInMenu(false);
+        sort_type = 0;
+        proxyModel->invalidate();
+    }
+    else if (know_what == sort_type_size)
+    {
+        sort_type_name->setIconVisibleInMenu(false);
+        sort_type_size->setIconVisibleInMenu(true);
+        sort_type_date->setIconVisibleInMenu(false);
+        sort_type = 1;
+        proxyModel->invalidate();
+    }
+    else if (know_what == sort_type_date)
+    {
+        sort_type_name->setIconVisibleInMenu(false);
+        sort_type_size->setIconVisibleInMenu(false);
+        sort_type_date->setIconVisibleInMenu(true);
+        sort_type = 2;
+        proxyModel->invalidate();
+    }
     else
     {
         basic_action_func(know_what);
     }
 }
-void File_Tree::dropEvent(QDropEvent *event)
+void File_Table::dropEvent(QDropEvent *event)
 {
-    proposed_action_index = QModelIndex();
     QPoint pos = event->pos() - treeView->pos() - carrier_widget->pos() - this->get_self()->pos() - QPoint(0, 25);
     if (*m_allow_drop && event->mimeData()->hasUrls())
     {
@@ -1627,17 +1655,14 @@ void File_Tree::dropEvent(QDropEvent *event)
         }
     }
 }
-void File_Tree::dragMoveEvent(QDragMoveEvent *event)
+void File_Table::dragMoveEvent(QDragMoveEvent *event)
 {
-    proposed_action_index = QModelIndex();
     if (*m_allow_drop && event->mimeData()->hasUrls())
     {
-        QPoint pos = event->pos() - treeView->pos() - carrier_widget->pos() - this->get_self()->pos() - QPoint(0, 25);
-        proposed_action_index = treeView->indexAt(pos);
         event->accept();
     }
 }
-void File_Tree::dragEnterEvent(QDragEnterEvent *event)
+void File_Table::dragEnterEvent(QDragEnterEvent *event)
 {
     if (event->source() == this->treeView)
     {
@@ -1647,37 +1672,29 @@ void File_Tree::dragEnterEvent(QDragEnterEvent *event)
     {
         event->setDropAction(Qt::CopyAction);
     }
-    proposed_action_index = QModelIndex();
     if (*m_allow_drop && event->mimeData()->hasUrls())
     {
-        QPoint pos = event->pos() - treeView->pos() - carrier_widget->pos() - this->get_self()->pos() - QPoint(0, 25);
-        proposed_action_index = treeView->indexAt(pos);
         event->accept();
     }
 }
-void File_Tree::dragLeaveEvent(QDragLeaveEvent *event)
+void File_Table::dragLeaveEvent(QDragLeaveEvent *event)
 {
-    proposed_action_index = QModelIndex();
     (void) event;
 }
-void File_Tree::wheelEvent(QWheelEvent *event)
+void File_Table::wheelEvent(QWheelEvent *event)
 {
-    if (treeView == My_Tree_View::catch_ptr)
+    if (treeView == My_Table_View::catch_ptr)
     {
         event->accept();
     }
 }
-void File_Tree::save(QSettings *settings)
+void File_Table::save(QSettings *settings)
 {
     Basic_Widget::save(settings);
     settings->setValue("root_path", root_path);
-    settings->setValue("column_width0", treeView->columnWidth(0));
-    settings->setValue("column_width1", treeView->columnWidth(1));
-    settings->setValue("column_width2", treeView->columnWidth(2));
-    settings->setValue("column_width3", treeView->columnWidth(3));
-    settings->setValue("sort_section", treeView->header()->sortIndicatorSection());
-    settings->setValue("sort_order", treeView->header()->sortIndicatorOrder() == Qt::SortOrder::AscendingOrder);
-    settings->setValue("indentation", treeView->indentation());
+    settings->setValue("icon_size", treeView->iconSize().width());
+    settings->setValue("grid_width", treeView->gridSize().width());
+    settings->setValue("grid_height", treeView->gridSize().height());
     settings->setValue("text_font", treeView->font());
     settings->setValue("hover_color", hover_color.rgba());
     settings->setValue("select_color", select_color.rgba());
@@ -1686,48 +1703,65 @@ void File_Tree::save(QSettings *settings)
     settings->setValue("treeview_radius", radius);
     settings->setValue("set_show_status_bar", set_show_status_bar->isIconVisibleInMenu());
     settings->setValue("preview_file_action", preview_file_action->isIconVisibleInMenu());
+    settings->setValue("sort_type", sort_type);
     treeView->p_save(settings);
-    m_dialog->p_save(settings, "file_tree_dialog_");
-    preview_file_widget->save(settings, "file_tree_preview_");
+    m_dialog->p_save(settings, "file_table_dialog_");
+    preview_file_widget->save(settings, "file_table_preview_");
 }
-void File_Tree::load(QSettings *settings)
+void File_Table::load(QSettings *settings)
 {
     Basic_Widget::load(settings);
     root_path = settings->value("root_path", QDir::rootPath()).toString();
     treeView->setRootIndex(proxyModel->mapFromSource(model->index(root_path)));
-    treeView->setColumnWidth(0, settings->value("column_width0", 150).toInt());
-    treeView->setColumnWidth(1, settings->value("column_width1", 150).toInt());
-    treeView->setColumnWidth(2, settings->value("column_width2", 150).toInt());
-    treeView->setColumnWidth(3, settings->value("column_width3", 150).toInt());
-    treeView->header()->setSortIndicator(settings->value("sort_section", 0).toInt(), settings->value("sort_order", true).toBool() ? Qt::SortOrder::AscendingOrder : Qt::SortOrder::DescendingOrder);
-    int indentation_num = settings->value("indentation", 24).toInt();
-    treeView->setIconSize(QSize(indentation_num, indentation_num));
-    treeView->setIndentation(indentation_num);
+    int iconSize = settings->value("icon_size", 64).toInt();
+    int gw = settings->value("grid_width", iconSize + 32).toInt();
+    int gh = settings->value("grid_height", iconSize + 32).toInt();
+    treeView->setIconSize(QSize(iconSize, iconSize));
+    treeView->setGridSize(QSize(gw, gh));
     treeView->setFont(settings->value("text_font", QFontDatabase::systemFont(QFontDatabase::FixedFont)).value<QFont>());
-    hover_color = QColor::fromRgba(settings->value("hover_color", QColor(227, 242, 253, 255).rgb()).toUInt());
-    select_color = QColor::fromRgba(settings->value("select_color", QColor(0, 170, 255, 255).rgb()).toUInt());
-    bool single_press_mode = settings->value("single_press_mode", false).toBool();
-    single_press_mode_action->setIconVisibleInMenu(single_press_mode);
+    hover_color = QColor::fromRgba(settings->value("hover_color", QColor(227, 242, 253, 255).rgba()).toUInt());
+    select_color = QColor::fromRgba(settings->value("select_color", QColor(0, 170, 255, 255).rgba()).toUInt());
+    single_press_mode_action->setIconVisibleInMenu(settings->value("single_press_mode", false).toBool());
     show_hidden_action->setIconVisibleInMenu(settings->value("show_hidden_action", false).toBool());
     proxyModel->setShowHidden(show_hidden_action->isIconVisibleInMenu());
     radius = settings->value("treeview_radius", 10).toInt();
     set_tree_view_style();
+    sort_type = settings->value("sort_type", 0).toInt();
+    if (0 == sort_type)
+    {
+        sort_type_name->setIconVisibleInMenu(true);
+        sort_type_size->setIconVisibleInMenu(false);
+        sort_type_date->setIconVisibleInMenu(false);
+    }
+    else if (1 == sort_type)
+    {
+        sort_type_name->setIconVisibleInMenu(false);
+        sort_type_size->setIconVisibleInMenu(true);
+        sort_type_date->setIconVisibleInMenu(false);
+    }
+    else if (2 == sort_type)
+    {
+        sort_type_name->setIconVisibleInMenu(false);
+        sort_type_size->setIconVisibleInMenu(false);
+        sort_type_date->setIconVisibleInMenu(true);
+    }
     set_show_status_bar->setIconVisibleInMenu(settings->value("set_show_status_bar", false).toBool());
     treeView->m_statusBar->setVisible(set_show_status_bar->isIconVisibleInMenu());
     treeView->p_load(settings);
-    m_dialog->p_load(settings, "file_tree_dialog_");
+    m_dialog->p_load(settings, "file_table_dialog_");
     first_set_preview_pos();
     preview_file_action->setIconVisibleInMenu(settings->value("preview_file_action", false).toBool());
-    preview_file_widget->load(settings, "file_tree_preview_");
+    preview_file_widget->load(settings, "file_table_preview_");
     preview_file_widget->setVisible(preview_file_action->isIconVisibleInMenu());
     preview_file_widget->updatePreview({}, root_path, true);
     treeView->updateStatusBar();
+    proxyModel->invalidate();
 }
-QIcon My_Icon_Provider::icon(QFileIconProvider::IconType type) const
+QIcon My_Table_Icon_Provider::icon(QFileIconProvider::IconType type) const
 {
     return QFileIconProvider::icon(type);
 }
-QSize My_Icon_Provider::get_Image_Size(QString path) const
+QSize My_Table_Icon_Provider::get_Image_Size(QString path) const
 {
     QImageReader reader(path);
     if (!reader.canRead())
@@ -1745,7 +1779,7 @@ QSize My_Icon_Provider::get_Image_Size(QString path) const
     }
     return size;
 }
-QIcon My_Icon_Provider::icon(const QFileInfo &info) const
+QIcon My_Table_Icon_Provider::icon(const QFileInfo &info) const
 {
     if (info.isFile())
     {
@@ -1756,7 +1790,7 @@ QIcon My_Icon_Provider::icon(const QFileInfo &info) const
         if (mimeName.startsWith("image/"))
         {
             QIcon icon = QIcon::fromTheme(info.filePath());
-            if (!icon.isNull() && My_Icon_Provider::get_Image_Size(info.filePath()) != QSize(0, 0))
+            if (!icon.isNull() && My_Table_Icon_Provider::get_Image_Size(info.filePath()) != QSize(0, 0))
             {
                 return icon;//应使用filePath而不是filename;
             }
@@ -1807,20 +1841,32 @@ QIcon My_Icon_Provider::icon(const QFileInfo &info) const
         return QIcon::fromTheme(theme_name);
     }
 }
-My_Tree_View::My_Tree_View(QWidget *parent)
-    :QTreeView(parent)
+My_Table_View::My_Table_View(QWidget *parent)
+    :QListView(parent)
 {
-    setDragDropMode(QAbstractItemView::NoDragDrop);
+    setViewMode(QListView::IconMode);
+    setResizeMode(QListView::Adjust);
+    setMovement(QListView::Snap);
+    setGridSize(QSize(96, 96));//64 + 32
+    setIconSize(QSize(64, 64));
+    setWordWrap(true);
+    setSelectionMode(QAbstractItemView::ExtendedSelection);
+    setDragEnabled(true);
+    setAcceptDrops(true);
+    setDropIndicatorShown(true);
+    setDefaultDropAction(Qt::CopyAction);
     setMouseTracking(true);
     setTabletTracking(true);
+    setSelectionRectVisible(false);//轮子造太多了
+
     m_sizeUpdateTimer->setInterval(1000);
     connect(m_sizeUpdateTimer, &QTimer::timeout, this, [=]()
     {
-        My_Tree_View::onSizeCalculated();
+        My_Table_View::onSizeCalculated();
     });
-    connect(m_futureWatcher, &QFutureWatcher<qint64>::finished, this, &My_Tree_View::onSizeCalculated);
+    connect(m_futureWatcher, &QFutureWatcher<qint64>::finished, this, &My_Table_View::onSizeCalculated);
 }
-My_Tree_View::~My_Tree_View()
+My_Table_View::~My_Table_View()
 {
     m_sizeUpdateTimer->stop();
     if (m_futureWatcher->isRunning())
@@ -1829,46 +1875,46 @@ My_Tree_View::~My_Tree_View()
         m_futureWatcher->cancel();
     }
 }
-void My_Tree_View::p_save(QSettings *settings)
+void My_Table_View::p_save(QSettings *settings)
 {
     settings->setValue("statusBar_text_color", statusBar_text_color.rgba());
 }
-void My_Tree_View::p_load(QSettings *settings)
+void My_Table_View::p_load(QSettings *settings)
 {
     statusBar_text_color = QColor::fromRgba(settings->value("statusBar_text_color", QColor(50, 50, 50, 255).rgba()).toUInt());
     updateStatusBar_style();
     updateStatusBar();
 }
-void My_Tree_View::dropEvent(QDropEvent *event)
+void My_Table_View::dropEvent(QDropEvent *event)
 {
     QWidget::dropEvent(event);
 }
-void My_Tree_View::dragMoveEvent(QDragMoveEvent *event)
+void My_Table_View::dragMoveEvent(QDragMoveEvent *event)
 {
     QWidget::dragMoveEvent(event);
 }
-void My_Tree_View::dragEnterEvent(QDragEnterEvent *event)
+void My_Table_View::dragEnterEvent(QDragEnterEvent *event)
 {
     QWidget::dragEnterEvent(event);
 }
-void My_Tree_View::dragLeaveEvent(QDragLeaveEvent *event)
+void My_Table_View::dragLeaveEvent(QDragLeaveEvent *event)
 {
     QWidget::dragLeaveEvent(event);
 }
-void My_Tree_View::mousePressEvent(QMouseEvent *event)
+void My_Table_View::mousePressEvent(QMouseEvent *event)
 {
     if (!indexAt(event->pos()).isValid() && !(QApplication::keyboardModifiers() & Qt::ControlModifier || QApplication::keyboardModifiers() & Qt::ShiftModifier))
     {
         this->selectionModel()->clear();
     }
-    QTreeView::mousePressEvent(event);
-    if (event->button() == Qt::LeftButton)
+    QListView::mousePressEvent(event);
+    if (event->button() == Qt::LeftButton)//不管了,先保留吧
     {
         if (indexAt(event->pos()) != indexAt(event->pos() + QPoint(0, 3)) || indexAt(event->pos()) != indexAt(event->pos() - QPoint(0, 3))|| selectionModel()->selectedIndexes().isEmpty() || (QApplication::keyboardModifiers() & Qt::ControlModifier || QApplication::keyboardModifiers() & Qt::ShiftModifier))
         {
             setup_rubber = true;
             origin_pos = event->pos();
-            m_rubberBand->setGeometry(QRect(origin_pos + QPoint(0, 25), QSize()));
+            m_rubberBand->setGeometry(QRect(origin_pos, QSize()));
             m_rubberBand->show();
         }
         else
@@ -1878,22 +1924,22 @@ void My_Tree_View::mousePressEvent(QMouseEvent *event)
         }
     }
 }
-void My_Tree_View::mouseReleaseEvent(QMouseEvent *event)
+void My_Table_View::mouseReleaseEvent(QMouseEvent *event)
 {
-    QTreeView::mouseReleaseEvent(event);
+    QListView::mouseReleaseEvent(event);
     if (event->button() == Qt::LeftButton && setup_rubber)
     {
         setup_rubber = false;
         m_rubberBand->hide();
     }
 }
-void My_Tree_View::mouseMoveEvent(QMouseEvent *event)
+void My_Table_View::mouseMoveEvent(QMouseEvent *event)
 {
     if (event->buttons() & Qt::LeftButton && F_model && proxyModel && selectionModel())
     {
         if (setup_rubber && m_rubberBand->isVisible())
         {
-            QRect rect = QRect(origin_pos + QPoint(0, 25), event->pos() + QPoint(0, 25)).normalized();
+            QRect rect = QRect(origin_pos, event->pos()).normalized();
             m_rubberBand->setGeometry(rect);
             QItemSelection selection;
             QModelIndex topLeft = indexAt(rect.topLeft());
@@ -1916,7 +1962,7 @@ void My_Tree_View::mouseMoveEvent(QMouseEvent *event)
                 flags = QItemSelectionModel::ClearAndSelect;
             }
             this->selectionModel()->select(selection, flags);
-            QTreeView::mouseMoveEvent(event);
+            QListView::mouseMoveEvent(event);
         }
         else
         {
@@ -1924,7 +1970,7 @@ void My_Tree_View::mouseMoveEvent(QMouseEvent *event)
             if (!selectedList.isEmpty())
             {
                 QList<QUrl> urls;
-                for (int i = 0; i < selectedList.count(); i += 4)
+                for (int i = 0; i < selectedList.count(); i += 1)
                 {
                     urls.append(QUrl::fromLocalFile(F_model->filePath(proxyModel->mapToSource(selectedList[i]))));
                 }
@@ -1940,47 +1986,34 @@ void My_Tree_View::mouseMoveEvent(QMouseEvent *event)
     }
     QWidget::mouseMoveEvent(event);//不喜欢QTreeView自实现的移动
 }
-void My_Tree_View::enterEvent(QEvent *event)
+void My_Table_View::enterEvent(QEvent *event)
 {
-    My_Tree_View::catch_ptr = this;
+    My_Table_View::catch_ptr = this;
     QWidget::enterEvent(event);
 }
-void My_Tree_View::wheelEvent(QWheelEvent *event)
+void My_Table_View::wheelEvent(QWheelEvent *event)
 {
     if (QGuiApplication::queryKeyboardModifiers() & Qt::ControlModifier)
     {
-        if (event->angleDelta().y() != 0)
+        int delta = event->angleDelta().y();
+        if (delta != 0)
         {
-            int angle = event->angleDelta().ry();
-            if (angle < 0)
-            {
-                if (this->indentation() > 4 && this->font().pointSize() > 4)
-                {
-                    this->setIndentation(this->indentation() - 4);
-                    this->setIconSize(this->iconSize() - QSize(4, 4));
-                    QFont new_font = this->font();
-                    new_font.setPointSize(new_font.pointSize() - 4);
-                    this->setFont(new_font);
-                }
-            }
-            else
-            {
-                this->setIndentation(this->indentation() + 4);
-                this->setIconSize(this->iconSize() + QSize(4, 4));
-                QFont new_font = this->font();
-                new_font.setPointSize(new_font.pointSize() + 4);
-                this->setFont(new_font);
-            }
+            int newSize = iconSize().width() + (delta > 0 ? 4 : -4);
+            newSize = qBound(4, newSize, 1024);
+            setIconSize(QSize(newSize, newSize));
+            setGridSize(QSize(newSize + 32, newSize + 32));
+            event->accept();
+            return;
         }
     }
-    QTreeView::wheelEvent(event);
+    QListView::wheelEvent(event);
 }
-void My_Tree_View::updateStatusBar_style()
+void My_Table_View::updateStatusBar_style()
 {
     m_statusBar->setStyleSheet(QString("QStatusBar{background:rgba(240,240,240,150); color:rgba(%1,%2,%3,%4); border-radius: 7px 7px;}").arg(statusBar_text_color.red()).arg(statusBar_text_color.green()).arg(statusBar_text_color.blue()).arg(statusBar_text_color.alpha()));
     statusLabel->setStyleSheet(QString("QLabel{background:rgba(0,0,0,0); color:rgba(%1,%2,%3,%4);}").arg(statusBar_text_color.red()).arg(statusBar_text_color.green()).arg(statusBar_text_color.blue()).arg(statusBar_text_color.alpha()));
 }
-void My_Tree_View::updateStatusBar()
+void My_Table_View::updateStatusBar()
 {
     QMargins margin = viewportMargins();
     margin.setBottom(m_statusBar->height() * m_statusBar->isVisible());
@@ -2034,7 +2067,7 @@ void My_Tree_View::updateStatusBar()
     recurseStat(rootProxy, totalFileCount, totalFileSize, totalFolderCount);
 
     QStringList path_list;
-    for (int i = 0; i < selected.count(); i += 4)
+    for (int i = 0; i < selected.count(); i += 1)
     {
         path_list << F_model->filePath(proxyModel->mapToSource(selected[i]));
     }
@@ -2078,7 +2111,7 @@ void My_Tree_View::updateStatusBar()
     statusLabel->setText(statusText);
 }
 #include <QtConcurrent/QtConcurrent>
-void My_Tree_View::updateFolderSize()
+void My_Table_View::updateFolderSize()
 {
     if (!this->statusLabel->isVisible())
     {
@@ -2129,7 +2162,7 @@ void My_Tree_View::updateFolderSize()
     });
     m_futureWatcher->setFuture(future);
 }
-void My_Tree_View::onSizeCalculated()
+void My_Table_View::onSizeCalculated()
 {
     if (!this->statusLabel->isVisible())
     {
@@ -2158,16 +2191,16 @@ void My_Tree_View::onSizeCalculated()
     QString sizeStr = formatSize(future.result());
     statusLabel->setText(for_bar_text.arg(sizeStr));
 }
-void My_Tree_View::resizeEvent(QResizeEvent *event)
+void My_Table_View::resizeEvent(QResizeEvent *event)
 {
-    QTreeView::resizeEvent(event);
+    QListView::resizeEvent(event);
     updateStatusBar();
     if (m_statusBar->isVisible())
     {
         m_statusBar->setGeometry(0, height() - m_statusBar->height(), width(), m_statusBar->height());
     }
 }
-QString My_Tree_View::formatSize(qint64 bytes)
+QString My_Table_View::formatSize(qint64 bytes)
 {
     const char* units[] = {"B", "KiB", "MiB", "GiB"};
     double value = bytes;
@@ -2179,7 +2212,7 @@ QString My_Tree_View::formatSize(qint64 bytes)
     }
     return QString("%1 %2").arg(std::round(value * 100) / 100).arg(units[unitIdx]);
 }
-void My_Tree_View::recurseStat(const QModelIndex proxyParent, qint64 &outFileCount, qint64 &outFileSize, qint64 &outFolderCount)
+void My_Table_View::recurseStat(const QModelIndex proxyParent, qint64 &outFileCount, qint64 &outFileSize, qint64 &outFolderCount)
 {
     QDir root_dir(F_model->filePath(proxyModel->mapToSource(proxyParent)));
     auto file_list = root_dir.entryList(QDir::Files | QDir::Dirs | QDir::NoDotAndDotDot | QDir::Hidden);
@@ -2197,121 +2230,52 @@ void My_Tree_View::recurseStat(const QModelIndex proxyParent, qint64 &outFileCou
         }
     }
 }
-My_TreeView_Delegate::My_TreeView_Delegate(QObject *parent, QColor *m_hover_color, QColor *m_select_color, int *m_radius, QModelIndex *m_proposed_action_index)
+My_TableView_Delegate::My_TableView_Delegate(QObject *parent, QColor *m_hover_color, QColor *m_select_color, int *m_radius)
     :QStyledItemDelegate(parent)
     ,hover_color(m_hover_color)
     ,select_color(m_select_color)
     ,radius(m_radius)
-    ,proposed_action_index(m_proposed_action_index)
 {}
-void My_TreeView_Delegate::paint(QPainter *painter, const QStyleOptionViewItem &option, const QModelIndex &index) const
+void My_TableView_Delegate::paint(QPainter *painter, const QStyleOptionViewItem &option, const QModelIndex &index) const
 {
     QStyleOptionViewItem opt = option;
-    if (opt.state & QStyle::State_MouseOver || opt.state & QStyle::State_Selected || (proposed_action_index && proposed_action_index->isValid()))
+    bool isHover = opt.state & QStyle::State_MouseOver;
+    bool isSelected = opt.state & QStyle::State_Selected;
+    if (isHover || isSelected)
     {
         painter->save();
-        painter->setRenderHint(QPainter::Antialiasing, true);
-        int index_id = index.column();
-        if (opt.state & QStyle::State_MouseOver || (proposed_action_index->row() == index.row() && proposed_action_index->parent() == index.parent()))
+        painter->setRenderHint(QPainter::Antialiasing);
+        QColor fillColor;
+        if (isSelected)
         {
-            QColor hoverColor(227, 242, 253, 255);
-            if (hover_color) hoverColor = *hover_color;
-            int Radius = 10;
-            if (radius) Radius = *radius;
-            painter->setBrush(hoverColor);
-            painter->setPen(Qt::NoPen);
-            if (index_id == 0)
-            {
-                QPainterPath path;
-                QRectF rect = opt.rect;
-                path.moveTo(rect.x() + Radius, rect.y());
-                path.lineTo(rect.right(), rect.y());
-                path.lineTo(rect.right(), rect.bottom());
-                path.lineTo(rect.x() + Radius, rect.bottom());
-                path.quadTo(rect.bottomLeft(), QPointF(rect.x(), rect.bottom() - Radius));
-                path.lineTo(rect.x(), rect.y() + Radius);
-                path.quadTo(rect.topLeft(), QPointF(rect.x() + Radius, rect.y()));
-                path.closeSubpath();
-                painter->drawPath(path);
-            }
-            else if (index_id == 3)
-            {
-                QPainterPath path;
-                QRectF rect = opt.rect;
-                path.moveTo(rect.topLeft());
-                QPointF topRight = rect.topRight();
-                path.lineTo(topRight.x() - Radius, topRight.y());
-                path.quadTo(topRight, QPointF(topRight.x(), topRight.y() + Radius));
-                QPointF bottomRight = rect.bottomRight();
-                path.lineTo(bottomRight.x(), bottomRight.y() - Radius);
-                path.quadTo(bottomRight, QPointF(bottomRight.x() - Radius, bottomRight.y()));
-                path.lineTo(rect.bottomLeft());
-                path.closeSubpath();
-                painter->drawPath(path);
-            }
-            else
-            {
-                painter->drawRect(opt.rect);
-            }
+            fillColor = select_color ? *select_color : QColor(0, 170, 255, 255);
         }
-        if (opt.state & QStyle::State_Selected)
+        else
         {
-            QColor selectColor(0, 170, 255, 255);
-            if (select_color) selectColor = *select_color;
-            int Radius = 10;
-            if (radius) Radius = *radius;
-            painter->setBrush(selectColor);
-            painter->setPen(Qt::NoPen);
-            if (index_id == 0)
-            {
-                QPainterPath path;
-                QRectF rect = opt.rect;
-                path.moveTo(rect.x() + Radius, rect.y());
-                path.lineTo(rect.right(), rect.y());
-                path.lineTo(rect.right(), rect.bottom());
-                path.lineTo(rect.x() + Radius, rect.bottom());
-                path.quadTo(rect.bottomLeft(), QPointF(rect.x(), rect.bottom() - Radius));
-                path.lineTo(rect.x(), rect.y() + Radius);
-                path.quadTo(rect.topLeft(), QPointF(rect.x() + Radius, rect.y()));
-                path.closeSubpath();
-                painter->drawPath(path);
-            }
-            else if (index_id == 3)
-            {
-                QPainterPath path;
-                QRectF rect = opt.rect;
-                path.moveTo(rect.topLeft());
-                QPointF topRight = rect.topRight();
-                path.lineTo(topRight.x() - Radius, topRight.y());
-                path.quadTo(topRight, QPointF(topRight.x(), topRight.y() + Radius));
-                QPointF bottomRight = rect.bottomRight();
-                path.lineTo(bottomRight.x(), bottomRight.y() - Radius);
-                path.quadTo(bottomRight, QPointF(bottomRight.x() - Radius, bottomRight.y()));
-                path.lineTo(rect.bottomLeft());
-                path.closeSubpath();
-                painter->drawPath(path);
-            }
-            else
-            {
-                painter->drawRect(opt.rect);
-            }
+            fillColor = hover_color ? *hover_color : QColor(227, 242, 253, 255);
         }
+        int r = radius ? *radius : 10;
+        QRectF rect = opt.rect;
+        QPainterPath path;
+        path.addRoundedRect(rect, r, r);
+        painter->fillPath(path, fillColor);
         opt.backgroundBrush = Qt::NoBrush;
         painter->restore();
     }
     QStyledItemDelegate::paint(painter, opt, index);
 }
-My_ProxyModel::My_ProxyModel(QObject *parent, My_Tree_View *m_root)
+My_Table_ProxyModel::My_Table_ProxyModel(QObject *parent, My_Table_View *m_root, int *m_sort_type)
     :QSortFilterProxyModel(parent)
     ,root(m_root)
+    ,sort_type_ptr(m_sort_type)
 {}
-void My_ProxyModel::setSearchPattern(const QString &pattern, bool deeply_search)
+void My_Table_ProxyModel::setSearchPattern(const QString &pattern, bool deeply_search)
 {
     m_pattern = pattern;
     m_deeply_search = deeply_search;
     invalidateFilter();
 }
-void My_ProxyModel::setShowHidden(bool show)
+void My_Table_ProxyModel::setShowHidden(bool show)
 {
     if (m_showHidden != show)
     {
@@ -2319,7 +2283,7 @@ void My_ProxyModel::setShowHidden(bool show)
         invalidateFilter();
     }
 }
-bool My_ProxyModel::hasMatchInSubtree(const QModelIndex &sourceIndex) const
+bool My_Table_ProxyModel::hasMatchInSubtree(const QModelIndex &sourceIndex) const
 {
     if (!sourceIndex.isValid())
     {
@@ -2354,7 +2318,7 @@ bool My_ProxyModel::hasMatchInSubtree(const QModelIndex &sourceIndex) const
     }
     return false;
 }
-bool My_ProxyModel::filterAcceptsRow(int sourceRow, const QModelIndex &sourceParent) const
+bool My_Table_ProxyModel::filterAcceptsRow(int sourceRow, const QModelIndex &sourceParent) const
 {
     QModelIndex sourceIndex = sourceModel()->index(sourceRow, 0, sourceParent);
     if (!sourceIndex.isValid())
@@ -2399,19 +2363,69 @@ bool My_ProxyModel::filterAcceptsRow(int sourceRow, const QModelIndex &sourcePar
     }
     return QSortFilterProxyModel::filterAcceptsRow(sourceRow, sourceParent);
 }
-void My_ProxyModel::sort(int column, Qt::SortOrder order)
+bool My_Table_ProxyModel::lessThan(const QModelIndex &left, const QModelIndex &right) const
 {
-    if (QFileSystemModel *fsModel = qobject_cast<QFileSystemModel*>(sourceModel()))
+    QFileSystemModel *fsModel = qobject_cast<QFileSystemModel *>(sourceModel());
+    if (!fsModel)
     {
-        fsModel->sort(column, order);
+        return QSortFilterProxyModel::lessThan(left, right);
     }
     else
     {
-        QSortFilterProxyModel::sort(column, order);
+        QFileInfo leftInfo = fsModel->fileInfo(mapToSource(left));
+        QFileInfo rightInfo = fsModel->fileInfo(mapToSource(right));
+
+        if (*sort_type_ptr == 0)//名称
+        {
+            if (leftInfo.isDir() && !rightInfo.isDir())
+            {
+                return true;
+            }
+            if (!leftInfo.isDir() && rightInfo.isDir())
+            {
+                return false;
+            }
+            return leftInfo.fileName() < rightInfo.fileName();
+        }
+        else if (*sort_type_ptr == 1)//大小
+        {
+            if (leftInfo.isDir() && !rightInfo.isDir())
+            {
+                return true;
+            }
+            if (!leftInfo.isDir() && rightInfo.isDir())
+            {
+                return false;
+            }
+            return leftInfo.size() < rightInfo.size();
+        }
+        else if (*sort_type_ptr == 2)//日期
+        {
+            if (leftInfo.isDir() && !rightInfo.isDir())
+            {
+                return true;
+            }
+            if (!leftInfo.isDir() && rightInfo.isDir())
+            {
+                return false;
+            }
+            return leftInfo.lastModified() < rightInfo.lastModified();
+        }
+        else
+        {
+            if (leftInfo.isDir() && !rightInfo.isDir())
+            {
+                return true;
+            }
+            if (!leftInfo.isDir() && rightInfo.isDir())
+            {
+                return false;
+            }
+            return leftInfo.fileName() < rightInfo.fileName();
+        }
     }
-    invalidate();
 }
-void File_Tree::update_style(QColor theme_color, QColor theme_background_color, QColor theme_text_color, QColor select_text_color, QColor disabled_text_color, QString checked_icon_path)
+void File_Table::update_style(QColor theme_color, QColor theme_background_color, QColor theme_text_color, QColor select_text_color, QColor disabled_text_color, QString checked_icon_path)
 {
     m_dialog->update_style(theme_color, theme_background_color, theme_text_color, select_text_color, disabled_text_color, checked_icon_path);
     preview_file_widget->update_style(theme_color, theme_background_color, theme_text_color, select_text_color, disabled_text_color, checked_icon_path);

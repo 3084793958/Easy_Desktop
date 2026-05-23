@@ -9,6 +9,7 @@
 #include "core/my_program_container.h"
 #include "core/file_tree.h"
 #include "core/plugin_widget.h"
+#include "core/table_tree.h"
 #ifdef USE_CHART
 #include "core/chart/basic_chart.h"
 #include "core/chart/cpu_chart.h"
