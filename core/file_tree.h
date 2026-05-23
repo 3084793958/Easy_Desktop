@@ -22,16 +22,20 @@ class My_ProxyModel : public QSortFilterProxyModel
     Q_OBJECT
 public:
     explicit My_ProxyModel(QObject *parent = nullptr, My_Tree_View *m_root = nullptr);
-    void setSearchPattern(const QString &pattern);
+    void setSearchPattern(const QString &pattern, bool deeply_search = false);
     void setShowHidden(bool show);
 protected:
     virtual bool filterAcceptsRow(int sourceRow, const QModelIndex &sourceParent) const override;
     virtual void sort(int column, Qt::SortOrder order = Qt::AscendingOrder) override;
 private:
     QString m_pattern;
-    char my_padding[7];
+    char my_padding[6];
     bool m_showHidden = false;
+    bool m_deeply_search = false;
     My_Tree_View *root = nullptr;
+    bool hasMatchInSubtree(const QModelIndex &sourceIndex) const;
+    QString getCurrentRootPath() const;
+    void set_force_search_change(bool value);
 };
 class My_Tree_View : public QTreeView
 {
@@ -124,6 +128,7 @@ protected:
     My_TreeView_Delegate *my_delegate = new My_TreeView_Delegate(this, &hover_color, &select_color, &radius, &proposed_action_index);
     My_Icon_Provider *icon_provider = new My_Icon_Provider;
     QLineEdit *search_edit = new QLineEdit(carrier_widget);
+    QPushButton *deeply_search_button = new QPushButton(tr("深层搜索"), carrier_widget);
     QAction *search_img_action = new QAction(this);
     QAction *search_del_action = new QAction(this);
     QMenu *menu = new QMenu(this);

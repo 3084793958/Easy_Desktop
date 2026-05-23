@@ -20,16 +20,16 @@
 #include "interfaces/file-preview/file_preview_plugin.h"
 
 class Preview_File_Widget;
-class GraphicsViewer : public QGraphicsView
+class GraphicsViewer : public QGraphicsView, public GraphicsViewer_Interface
 {
     Q_OBJECT
 public:
     explicit GraphicsViewer(QWidget *parent = nullptr, Preview_File_Widget *m_preview_ptr = nullptr);
-    void setImage(const QImage &image);
-    void setPixmap(const QPixmap &pixmap);
-    void setGif(const QFileInfo &info);
-    void setGraphicsItem(QGraphicsItem *item);
-    void clear();
+    virtual void setImage(const QImage &image) override;
+    virtual void setPixmap(const QPixmap &pixmap) override;
+    virtual void setGif(const QFileInfo &info) override;
+    virtual void setGraphicsItem(QGraphicsItem *item) override;
+    virtual void clear() override;
     static double get_scaled(QSize image, QSize size);
 protected:
     void wheelEvent(QWheelEvent *event) override;
@@ -46,16 +46,17 @@ private:
     Preview_File_Widget *preview_ptr = nullptr;
 public:
     QMovie *gif_movie = new QMovie(this);
-    void resetZoom();
+    virtual void resetZoom() override;
+    virtual QMovie *get_gif_movie() override;
 private:
     QSize m_originalSize = QSize();
 };
-class PdfViewer : public QPdfView//QPdfView似乎有足够的能力渲染svg,先不改
+class PdfViewer : public QPdfView, public PdfViewer_Interface//QPdfView似乎有足够的能力渲染svg,先不改
 {
     Q_OBJECT
 public:
     explicit PdfViewer(QWidget *parent = nullptr);
-    void resetZoom();
+    virtual void resetZoom() override;
 protected:
     void wheelEvent(QWheelEvent *event) override;
     void mousePressEvent(QMouseEvent *event) override;
@@ -216,7 +217,7 @@ public:
     virtual QAction *get_force_read_action() override;
     virtual QAction *get_play_action() override;
     virtual QAction *get_stop_action() override;
-    virtual Media_WidgetAction *get_media_control_action() override;
+    virtual Media_WidgetAction_Interface *get_media_control_action() override;
 public:
     virtual QPushButton *get_prevButton() override;
     virtual QPushButton *get_nextButton() override;
@@ -226,14 +227,19 @@ public:
     virtual QPushButton *get_stopButton() override;
     virtual QPushButton *get_force_read_Button() override;
 
-    virtual Basic_TextEdit *get_m_textEdit() override;
+    virtual QTextEdit *get_m_textEdit() override;
     virtual QComboBox *get_m_textModeCombo() override;
     virtual QPdfDocument *get_m_pdfDocument() override;
-    virtual PdfViewer *get_m_pdfViewer() override;
-    virtual GraphicsViewer *get_m_imageViewer() override;
+    virtual PdfViewer_Interface *get_m_pdfViewer() override;
+    virtual GraphicsViewer_Interface *get_m_imageViewer() override;
     virtual QMediaPlayer *get_m_mediaPlayer() override;
-    virtual GraphicsViewer *get_m_videoViewer() override;
-    virtual Info_Widget *get_m_infoWidget() override;
+    virtual GraphicsViewer_Interface *get_m_videoViewer() override;
+
+    virtual QPdfView *get_m_pdfViewer_as_QPdfView() override;
+    virtual QGraphicsView *get_m_imageViewer_as_QGraphicsView() override;
+    virtual QGraphicsView *get_m_videoViewer_as_QGraphicsView() override;
+
+    virtual QWidget *get_m_infoWidget() override;
 private:
      QList<Ext_Preview_PluginInterface *> preview_file_plugin_list = {};
      QMenu *Ext_Preview_Plugin_Control_Menu = new QMenu(tr("插件控制"), this);

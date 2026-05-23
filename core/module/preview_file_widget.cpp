@@ -1125,6 +1125,11 @@ Preview_File_Widget::ContentType Preview_File_Widget::getContentType(const QFile
     QMimeDatabase db;
     QMimeType mime = db.mimeTypeForFile(info);
     QString mimeName = mime.name();
+    QString suffix = info.suffix().toLower();
+    if (suffix == "exe")
+    {
+        return ContentType::TypeUnKnown;
+    }
     if (mimeName.startsWith("text/"))
     {
         return ContentType::TypeText;
@@ -1141,7 +1146,6 @@ Preview_File_Widget::ContentType Preview_File_Widget::getContentType(const QFile
     {
         return ContentType::TypeText;
     }
-    QString suffix = info.suffix().toLower();
     if (suffix == "qrc" || suffix == "json" || suffix == "pro" || suffix == "sh" ||
         suffix == "xml" || suffix == "cpp" || suffix == "h" || suffix == "txt" ||
         suffix == "md" || suffix == "py" || suffix == "js" || suffix == "html" ||
@@ -1692,6 +1696,10 @@ void GraphicsViewer::resetZoom()
     horizontalScrollBar()->setValue(0);
     verticalScrollBar()->setValue(0);
 }
+QMovie *GraphicsViewer::get_gif_movie()
+{
+    return gif_movie;
+}
 PdfViewer::PdfViewer(QWidget *parent)
     : QPdfView(parent)
 {
@@ -1892,7 +1900,7 @@ QPushButton *Preview_File_Widget::get_force_read_Button()
 {
     return force_read_Button;
 }
-Basic_TextEdit *Preview_File_Widget::get_m_textEdit()
+QTextEdit *Preview_File_Widget::get_m_textEdit()
 {
     return m_textEdit;
 }
@@ -1904,11 +1912,11 @@ QPdfDocument *Preview_File_Widget::get_m_pdfDocument()
 {
     return m_pdfDocument;
 }
-PdfViewer *Preview_File_Widget::get_m_pdfViewer()
+PdfViewer_Interface *Preview_File_Widget::get_m_pdfViewer()
 {
     return m_pdfViewer;
 }
-GraphicsViewer *Preview_File_Widget::get_m_imageViewer()
+GraphicsViewer_Interface *Preview_File_Widget::get_m_imageViewer()
 {
     return m_imageViewer;
 }
@@ -1916,15 +1924,27 @@ QMediaPlayer *Preview_File_Widget::get_m_mediaPlayer()
 {
     return m_mediaPlayer;
 }
-GraphicsViewer *Preview_File_Widget::get_m_videoViewer()
+GraphicsViewer_Interface *Preview_File_Widget::get_m_videoViewer()
 {
     return m_videoViewer;
 }
-Info_Widget *Preview_File_Widget::get_m_infoWidget()
+QPdfView *Preview_File_Widget::get_m_pdfViewer_as_QPdfView()
+{
+    return m_pdfViewer;
+}
+QGraphicsView *Preview_File_Widget::get_m_imageViewer_as_QGraphicsView()
+{
+    return m_imageViewer;
+}
+QGraphicsView *Preview_File_Widget::get_m_videoViewer_as_QGraphicsView()
+{
+    return m_videoViewer;
+}
+QWidget *Preview_File_Widget::get_m_infoWidget()
 {
     return m_infoWidget;
 }
-Media_WidgetAction *Preview_File_Widget::get_media_control_action()
+Media_WidgetAction_Interface *Preview_File_Widget::get_media_control_action()
 {
     return media_control_action;
 }

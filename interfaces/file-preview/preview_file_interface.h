@@ -6,15 +6,41 @@ class QAction;
 class QMenu;
 class QPushButton;
 
-class Basic_TextEdit;
+class QTextEdit;
 class QComboBox;
 class QPdfDocument;
-class PdfViewer;
-class GraphicsViewer;
 class QMediaPlayer;
-class Info_Widget;
 
-class Media_WidgetAction;
+class QWidget;
+
+#include "interfaces/media-widget-action/media_widgetaction_interface.h"
+
+class QImage;
+class QPixmap;
+class QGraphicsItem;
+class QMovie;
+class GraphicsViewer_Interface
+{
+public:
+    virtual ~GraphicsViewer_Interface() {}
+    virtual void setImage(const QImage &image) = 0;
+    virtual void setPixmap(const QPixmap &pixmap) = 0;
+    virtual void setGif(const QFileInfo &info) = 0;
+    virtual void setGraphicsItem(QGraphicsItem *item) = 0;
+    virtual void clear() = 0;
+    virtual void resetZoom() = 0;
+    virtual QMovie *get_gif_movie() = 0;
+};
+
+class PdfViewer_Interface
+{
+public:
+    virtual ~PdfViewer_Interface() {}
+    virtual void resetZoom() = 0;
+};
+
+class QPdfView;
+class QGraphicsView;
 
 class Preview_File_Interface
 {
@@ -53,7 +79,7 @@ public:
     virtual QAction *get_force_read_action() = 0;
     virtual QAction *get_play_action() = 0;
     virtual QAction *get_stop_action() = 0;
-    virtual Media_WidgetAction *get_media_control_action() = 0;
+    virtual Media_WidgetAction_Interface *get_media_control_action() = 0;
 public:
     virtual QPushButton *get_prevButton() = 0;
     virtual QPushButton *get_nextButton() = 0;
@@ -63,14 +89,19 @@ public:
     virtual QPushButton *get_stopButton() = 0;
     virtual QPushButton *get_force_read_Button() = 0;
 
-    virtual Basic_TextEdit *get_m_textEdit() = 0;
+    virtual QTextEdit *get_m_textEdit() = 0;
     virtual QComboBox *get_m_textModeCombo() = 0;
     virtual QPdfDocument *get_m_pdfDocument() = 0;
-    virtual PdfViewer *get_m_pdfViewer() = 0;
-    virtual GraphicsViewer *get_m_imageViewer() = 0;
+    virtual PdfViewer_Interface *get_m_pdfViewer() = 0;
+    virtual GraphicsViewer_Interface *get_m_imageViewer() = 0;
     virtual QMediaPlayer *get_m_mediaPlayer() = 0;
-    virtual GraphicsViewer *get_m_videoViewer() = 0;
-    virtual Info_Widget *get_m_infoWidget() = 0;
+    virtual GraphicsViewer_Interface *get_m_videoViewer() = 0;
+
+    virtual QPdfView *get_m_pdfViewer_as_QPdfView() = 0;
+    virtual QGraphicsView *get_m_imageViewer_as_QGraphicsView() = 0;
+    virtual QGraphicsView *get_m_videoViewer_as_QGraphicsView() = 0;
+
+    virtual QWidget *get_m_infoWidget() = 0;
 public:
     virtual void Set_Speed(int value) = 0;
     virtual void Set_Volume(int value) = 0;

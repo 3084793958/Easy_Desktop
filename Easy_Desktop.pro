@@ -108,7 +108,8 @@ HEADERS += \
     interfaces/file-preview/file_preview_plugin.h \
     interfaces/easy_desktop_class.h \
     interfaces/file-preview/preview_file_interface.h \
-    core/module/plugincontroller.h
+    core/module/plugincontroller.h \
+    interfaces/media-widget-action/media_widgetaction_interface.h
 
 contains(DEFINES, USE_CHART) {
     HEADERS += \

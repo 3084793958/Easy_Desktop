@@ -374,6 +374,10 @@ File_Tree::File_Tree(QWidget *parent)
     carrier_widget->setStyleSheet("QWidget{background:rgba(0,0,0,0);color:rgb(230,230,230)}");
     search_edit->setStyleSheet("QLineEdit{border: 0px solid rgba(0,170,255,255);border-radius:10px 10px;background:rgba(0,0,0,25);font-size:15px;color:rgb(40,40,40)}"
                                "QLineEdit:hover{border: 1px solid rgba(0,170,255,255)}");
+    deeply_search_button->resize(70, 40);
+    deeply_search_button->setStyleSheet("QPushButton{border-radius:10px 10px;background:rgba(0,0,0,25);color:rgb(0,0,0)}"
+                                        "QPushButton:hover{border-radius:10px 10px;background:rgba(0,0,0,50)}"
+                                        "QPushButton:pressed{border-radius:10px 10px;background:rgba(0,0,0,25)}");
     treeView->setAlternatingRowColors(true);
     treeView->setLayoutDirection(Qt::LeftToRight);
     treeView->setSelectionMode(QAbstractItemView::SelectionMode::ExtendedSelection);
@@ -432,10 +436,23 @@ File_Tree::File_Tree(QWidget *parent)
             proxyModel->setSearchPattern(search_edit->text());
         }
     });
+    connect(deeply_search_button, &QPushButton::pressed, this, [=]
+    {
+        if (treeView->selectionModel())
+        {
+            treeView->selectionModel()->clear();
+        }
+        if (search_edit->text().isEmpty())
+        {
+            return;
+        }
+        proxyModel->setSearchPattern(search_edit->text(), true);
+    });
     connect(this, &Basic_Widget::size_changed, this, [=](QSize size)
     {
         carrier_widget->resize(size - QSize(20, 20));
-        search_edit->resize(size.width() - 20, 40);
+        search_edit->resize(size.width() - 20 - 80, 40);
+        deeply_search_button->move(size.width() - 95, 5);
         treeView->resize(size - QSize(20, 70));
     });
     connect(this->treeView, &QTreeView::clicked, this, [=]
@@ -2284,9 +2301,10 @@ My_ProxyModel::My_ProxyModel(QObject *parent, My_Tree_View *m_root)
     :QSortFilterProxyModel(parent)
     ,root(m_root)
 {}
-void My_ProxyModel::setSearchPattern(const QString &pattern)
+void My_ProxyModel::setSearchPattern(const QString &pattern, bool deeply_search)
 {
     m_pattern = pattern;
+    m_deeply_search = deeply_search;
     invalidateFilter();
 }
 void My_ProxyModel::setShowHidden(bool show)
@@ -2297,6 +2315,41 @@ void My_ProxyModel::setShowHidden(bool show)
         invalidateFilter();
     }
 }
+bool My_ProxyModel::hasMatchInSubtree(const QModelIndex &sourceIndex) const
+{
+    if (!sourceIndex.isValid())
+    {
+        return false;
+    }
+    QFileSystemModel *fsModel = qobject_cast<QFileSystemModel*>(sourceModel());
+    if (!fsModel)
+    {
+        return false;
+    }
+    QString name = fsModel->fileName(sourceIndex);
+    QFileInfo info = fsModel->fileInfo(sourceIndex);
+    if (name.contains(m_pattern, Qt::CaseInsensitive))
+    {
+        return true;
+    }
+    if (!info.isDir())
+    {
+        return false;
+    }
+    QDirIterator::IteratorFlags flags = QDirIterator::Subdirectories | QDirIterator::FollowSymlinks;
+    QDirIterator it(info.filePath(), QDir::Files | QDir::Dirs | QDir::NoDotAndDotDot | (m_showHidden ? QDir::Hidden : QDir::NoDot), flags);
+    while (it.hasNext())
+    {
+        it.next();
+        QString path = it.filePath();
+        QString name = it.fileName();
+        if (name.contains(m_pattern, Qt::CaseInsensitive))
+        {
+            return true;
+        }
+    }
+    return false;
+}
 bool My_ProxyModel::filterAcceptsRow(int sourceRow, const QModelIndex &sourceParent) const
 {
     QModelIndex sourceIndex = sourceModel()->index(sourceRow, 0, sourceParent);
@@ -2304,25 +2357,43 @@ bool My_ProxyModel::filterAcceptsRow(int sourceRow, const QModelIndex &sourcePar
     {
         return false;
     }
-    QFileSystemModel *fileSystemModel = qobject_cast<QFileSystemModel *>(sourceModel());
-    if (fileSystemModel)
+    QFileSystemModel *fsModel = qobject_cast<QFileSystemModel *>(sourceModel());
+    if (!fsModel)
     {
-        QFileInfo fileInfo = fileSystemModel->fileInfo(sourceIndex);
-        if (fileInfo.isHidden() && !m_showHidden && !root->isExpanded(sourceIndex))
-        {
-            return false;
-        }
-        if (fileInfo.isDir())
-        {
-            return true;
-        }
+        return false;
+    }
+    QFileInfo fileInfo = fsModel->fileInfo(sourceIndex);
+    if (fileInfo.isHidden() && !m_showHidden)
+    {
+        return false;
     }
     if (m_pattern.isEmpty())
     {
         return true;
     }
-    QString fileName = sourceIndex.data().toString();
-    return fileName.contains(m_pattern, Qt::CaseInsensitive);
+    if (m_deeply_search)
+    {
+        if (fileInfo.isDir())
+        {
+            return hasMatchInSubtree(sourceIndex);
+        }
+        else
+        {
+            return fileInfo.fileName().contains(m_pattern, Qt::CaseInsensitive);
+        }
+    }
+    else
+    {
+        if (fileInfo.isDir())
+        {
+            return true;
+        }
+        else
+        {
+            return fileInfo.fileName().contains(m_pattern, Qt::CaseInsensitive);
+        }
+    }
+    return QSortFilterProxyModel::filterAcceptsRow(sourceRow, sourceParent);
 }
 void My_ProxyModel::sort(int column, Qt::SortOrder order)
 {

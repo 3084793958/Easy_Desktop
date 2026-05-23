@@ -1,26 +1,26 @@
 #ifndef MEDIA_WIDGETACTION_H
 #define MEDIA_WIDGETACTION_H
 #include <QtWidgets>
-
-class Media_WidgetAction : public QWidgetAction
+#include "interfaces/media-widget-action/media_widgetaction_interface.h"
+class Media_WidgetAction : public QWidgetAction, public Media_WidgetAction_Interface
 {
     Q_OBJECT
 public:
     explicit Media_WidgetAction(QWidget *parent);
-    void set_value(int m_volume, int m_speed);
-    void set_second(int value, QString text);
+    virtual void set_value(int m_volume, int m_speed) override;
+    virtual void set_second(int value, QString text) override;
     void save(QSettings *settings);
     void load(QSettings *settings);
-    void slider_set_volume(int value);
-    void slider_set_position(int value);
-    void slider_set_speed(int value);
-    void set_color(QColor color);
+    virtual void slider_set_volume(int value) override;
+    virtual void slider_set_position(int value) override;
+    virtual void slider_set_speed(int value) override;
+    virtual void set_color(QColor color) override;
 signals:
     void change_signals_V(int m_volume);
     void change_signals_P(int m_Position);
     void change_signals_S(int m_speed);
 protected:
-    virtual QWidget* createWidget(QWidget *parent);
+    virtual QWidget* createWidget(QWidget *parent) override;
 private:
     bool updating = false;
     bool position_changing = false;
