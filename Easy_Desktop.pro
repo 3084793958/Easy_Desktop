@@ -126,7 +126,7 @@ contains(DEFINES, USE_CHART) {
 contains(DEFINES, USE_DTK) {
     HEADERS += \
         interfaces/dde-dock/v2.0.0/pluginproxyinterface_v2.0.0.h \
-        interfaces/dde-dock/v2.0.0/pluginsiteminterface_v2.0.0.h
+        interfaces/dde-dock/v2.0.0/pluginsiteminterface_v2.0.0.h \
         core/module/plugincontroller_v_2_0_0.h
 }
 
