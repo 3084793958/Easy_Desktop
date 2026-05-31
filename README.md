@@ -9,21 +9,39 @@
 
 ![table.png](screenshots/table.png)
 
+![p4.png](screenshots/p4.png)
+
 ## 安装方法
+1.安装本体
 
-1.安装依赖
+[https://github.com/3084793958/Easy_Desktop/releases/latest](https://github.com/3084793958/Easy_Desktop/releases/latest)
 
-tips:Easy_Desktop运行依赖libqt5charts5
+命名标准:Easy_Desktop_ + 支持名称(小写) 如:Easy_Desktop_chart_pdf,有折线图与pdf支持
+
+chart:折线图(用于数据可视化)
+
+pdf:pdf预览
+
+dtk:dtk支持(用于DTK插件)
+
+2.安装依赖
+
+带有"chart"的Easy_Desktop运行依赖libqt5charts5
 
 安装依赖指令:
 
 ```
 sudo apt install libqt5charts5
 ```
+带有"pdf"的Easy_Desktop运行依赖libqt5pdfwidgets5
 
-2.安装本体
+安装依赖指令:
 
-[https://github.com/3084793958/Easy_Desktop/releases/download/26.2.19/Easy_Desktop](https://github.com/3084793958/Easy_Desktop/releases/download/26.2.19/Easy_Desktop)
+```
+sudo apt install libqt5pdfwidgets5
+```
+
+3.tips
 
 记得储存,Easy_Desktop不会帮你储存(/tmp那个是用来备份的)
 
@@ -33,6 +51,7 @@ sudo apt install libqt5charts5
 |-----------|------|
 | **命令行选项** | |
 | `-config, -C <路径>` | 指定配置文件路径 |
+| `-translation, -T <路径>` | 设置自定义翻译文件路径 |
 | `-workspace, -WS <索引号>` | 设置工作空间索引 (0 表示任意空间) |
 | `-dbus_id, -D_I <ID>` | 设置 dbus_id 号 |
 | `-always_refresh, -A_R <布尔值>` | 是否持续刷新空间结构 (true/false) |
@@ -53,7 +72,7 @@ sudo apt install libqt5charts5
 | `speed_slider <数值>` | 设置速度进度条 (取值范围: 10-300 的整数) |
 | `set_wallpaper <wallpaper_id>` | 设置壁纸 |
 | `remove_wallpaper <wallpaper_id>` | 移除壁纸 |
-| `add_wallpaper [参数]` | 添加壁纸，参数如下: ID(UInt32) 名称(String) 显示方式(String) [图像:true/视频:false] 路径(String) 缩放方式(String) [Scale_Type::No/Each/Width/Height/Short/Long/Full] 居中(String) [true/false] 鼠标效果(String) [true/false] 鼠标效果宽度系数(Double) 鼠标效果高度系数(Double) X轴偏移量(Int32) Y轴偏移量(Int32) 抗锯齿(String) [true/false] |
+| `add_wallpaper [参数]` | 添加壁纸，参数如下: ID(UInt32) 名称(String) 显示方式(String) [图像:true/视频:false] 路径(String) 缩放方式(String) [Scale_Type::No/Each/Width/Height/Short/Long/Full] 居中(String) [true/false] 鼠标效果(String) [true/false] 鼠标效果宽度系数(Double) 鼠标效果高度系数(Double) X轴偏移量(Int32) Y轴偏移量(Int32) 抗锯齿(String) [true/false] (鼠标控制类型(String)) [Mouse_Control_Type::Follow_Desktop/Mouse_Control_Type::Follow_Wallpaper] 自定宽(Int32) 自定高(Int32) |
 | | |
 | **使用示例** | |
 | `./Easy_Desktop -G 0 0 1440 900` | 设置空间结构示例 |
@@ -62,3 +81,23 @@ sudo apt install libqt5charts5
 ## 开发版本
 
 QT5.15.8 , C++11
+
+## Easy_Desktop插件支持
+
+### 接口
+interface(新)(包含Ext_Plugin_Interface(dde-dock插件变体)和Ext_Preview_PluginInterface(预览控件(Preview_File_Widget)的插件)):
+
+[https://github.com/3084793958/Easy_Desktop_Plugin_Interface](https://github.com/3084793958/Easy_Desktop_Plugin_Interface)
+
+interface(旧)(仅包含Ext_Plugin_Interface V0.0.1):
+
+[https://github.com/3084793958/Ext_Plugin_Interface.git](https://github.com/3084793958/Ext_Plugin_Interface.git)
+
+### 插件实例
+
+music-island : [https://github.com/3084793958/music-island-B-QT-P](https://github.com/3084793958/music-island-B-QT-P)
+
+Window_Container : [https://github.com/3084793958/PPT_LibreOffice_Previewer.git](https://github.com/3084793958/PPT_LibreOffice_Previewer.git)
+
+PPT_LibreOffice_Previewer : [https://github.com/3084793958/PPT_LibreOffice_Previewer](https://github.com/3084793958/PPT_LibreOffice_Previewer)
+

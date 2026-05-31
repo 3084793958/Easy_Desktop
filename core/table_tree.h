@@ -172,9 +172,12 @@ protected:
     QAction *set_show_status_bar_text_color = new QAction(tr("设置状态栏字体颜色"), this);
 
     QMenu *sort_type_menu = new QMenu(tr("排序方式"), this);
-    QAction *sort_type_name = new QAction(tr("名称"), this);
-    QAction *sort_type_size = new QAction(tr("大小"), this);
-    QAction *sort_type_date = new QAction(tr("日期"), this);
+    QAction *sort_type_name = new QAction(tr("名称(顺)"), this);
+    QAction *sort_type_size = new QAction(tr("大小(顺)"), this);
+    QAction *sort_type_date = new QAction(tr("日期(顺)"), this);
+    QAction *sort_type_name_Z = new QAction(tr("名称(反)"), this);
+    QAction *sort_type_size_Z = new QAction(tr("大小(反)"), this);
+    QAction *sort_type_date_Z = new QAction(tr("日期(反)"), this);
 
     QAction *set_icon_size_action = new QAction(tr("图标大小"), this);
     QAction *set_font_action = new QAction(tr("字体"), this);

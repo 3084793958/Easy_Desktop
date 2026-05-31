@@ -1,6 +1,8 @@
 #include "preview_file_widget.h"
 #include <QSvgRenderer>
+#ifdef USE_PDF
 #include <QPdfPageNavigation>
+#endif
 #include <QtConcurrent/QtConcurrent>
 #include <core/tools/my_rsvg_support.h>
 Preview_File_Widget::Preview_File_Widget(QWidget *parent, QAction *m_preview_action)
@@ -11,7 +13,9 @@ Preview_File_Widget::Preview_File_Widget(QWidget *parent, QAction *m_preview_act
     m_textEdit->hide();
     //m_textEdit->setReadOnly(true); //玩就玩吧,反正改不了
     m_imageViewer->hide();
+#ifdef USE_PDF
     m_pdfViewer->hide();
+#endif
     m_videoViewer->hide();
     this->auto_close = false;
     menu->addAction(prevAction);
@@ -77,7 +81,9 @@ Preview_File_Widget::Preview_File_Widget(QWidget *parent, QAction *m_preview_act
         playButton->move(stopButton->x() - 5 - playButton->width(), 5);
         m_textEdit->resize(size - QSize(10, 150));
         m_imageViewer->resize(size - QSize(10, 150));
+#ifdef USE_PDF
         m_pdfViewer->resize(size - QSize(10, 150));
+#endif
         m_videoViewer->resize(size - QSize(10, 150));
         for (int i = 0; i < preview_file_plugin_list.count(); ++i)
         {
@@ -147,7 +153,9 @@ Preview_File_Widget::Preview_File_Widget(QWidget *parent, QAction *m_preview_act
     m_textModeCombo->hide();
     m_textEdit->move(5, 145);
     m_imageViewer->move(5, 145);
+#ifdef USE_PDF
     m_pdfViewer->move(5, 145);
+#endif
     m_videoViewer->move(5, 145);
     clearCurrentPreview();
 
@@ -236,7 +244,23 @@ void Preview_File_Widget::Set_Position(int value)
     m_imageViewer->gif_movie->jumpToFrame(static_cast<int>(static_cast<double>(m_imageViewer->gif_movie->frameCount() * value) / 100));
 }
 Preview_File_Widget::~Preview_File_Widget()
-{}
+{
+    int count = preview_file_plugin_list.count();
+    for (int i = 0; i < count; ++i)
+    {
+        if (preview_file_plugin_list[0]->Plugin_Version >= P_Version{0, 0, 1})
+        {
+            QPluginLoader *loader = preview_file_plugin_list[0]->your_plugin_loader;
+            preview_file_plugin_list[0]->RemovePlugin();
+            if (loader)
+            {
+                loader->unload();
+                loader->deleteLater();
+            }
+        }
+        preview_file_plugin_list.removeAt(0);
+    }
+}
 void Preview_File_Widget::onPrevClicked()
 {
     if (currentIndex > 0)
@@ -302,6 +326,7 @@ void Preview_File_Widget::set_icon(QString checked_icon_path)
     textEdit_Mode_SVG->setIcon(QIcon(checked_icon_path));
     textEdit_Mode_HEX->setIcon(QIcon(checked_icon_path));
     auto_play_action->setIcon(QIcon(checked_icon_path));
+    m_textEdit->set_icon(checked_icon_path);
 }
 void Preview_File_Widget::updatePreview(QStringList selectionFileList, QString parent_dir, bool force_update)
 {
@@ -398,7 +423,9 @@ void Preview_File_Widget::updateCurrentPreview()
     }
     case ContentType::TypePdf:
     {
+#ifdef USE_PDF
         setupPdfPreview(info);
+#endif
         break;
     }
     case ContentType::TypeFolder:
@@ -425,9 +452,11 @@ void Preview_File_Widget::clearCurrentPreview()
     //此处本应将m_textModeCombo的currentIndex设为0,但考虑到连续性,故先在此放置标记
     m_imageViewer->hide();
     m_imageViewer->clear();
+#ifdef USE_PDF
     m_pdfViewer->hide();
     m_pdfDocument->close();
     m_pdfViewer->setDocument(nullptr);
+#endif
     prevPageButton->hide();
     nextPageButton->hide();
     prevPage->setEnabled(false);
@@ -563,6 +592,7 @@ void Preview_File_Widget::setupTextPreview(const QFileInfo &info)
 }
 void Preview_File_Widget::setupPdfPreview(const QFileInfo &info)
 {
+#ifdef USE_PDF
     prevPageButton->show();
     nextPageButton->show();
     m_pdfDocument->load(info.filePath());
@@ -594,6 +624,9 @@ void Preview_File_Widget::setupPdfPreview(const QFileInfo &info)
         nextPageButton->setEnabled(pdf_currentIndex < m_pdfDocument->pageCount() - 1);
     });
     m_pdfViewer->show();
+#else
+    (void) info;
+#endif
 }
 void Preview_File_Widget::setupImagePreview(const QFileInfo &info)
 {
@@ -934,10 +967,12 @@ void Preview_File_Widget::contextMenuEvent(QContextMenuEvent *event)
         {
             m_imageViewer->resetZoom();
         }
+#ifdef USE_PDF
         else if (m_pdfViewer->isVisible())
         {
             m_pdfViewer->resetZoom();
         }
+#endif
         else if (m_videoViewer->isVisible())
         {
             m_videoViewer->resetZoom();
@@ -1062,21 +1097,25 @@ void Preview_File_Widget::contextMenuEvent(QContextMenuEvent *event)
 }
 void Preview_File_Widget::prevPdfPage()
 {
+#ifdef USE_PDF
     m_pdfViewer->pageNavigation()->goToPreviousPage();
     pdf_currentIndex = m_pdfViewer->pageNavigation()->currentPage();
     prevPage->setEnabled(pdf_currentIndex > 0);
     nextPage->setEnabled(pdf_currentIndex < m_pdfDocument->pageCount() - 1);
     prevPageButton->setEnabled(pdf_currentIndex > 0);
     nextPageButton->setEnabled(pdf_currentIndex < m_pdfDocument->pageCount() - 1);
+#endif
 }
 void Preview_File_Widget::nextPdfPage()
 {
+#ifdef USE_PDF
     m_pdfViewer->pageNavigation()->goToNextPage();
     pdf_currentIndex = m_pdfViewer->pageNavigation()->currentPage();
     prevPage->setEnabled(pdf_currentIndex > 0);
     nextPage->setEnabled(pdf_currentIndex < m_pdfDocument->pageCount() - 1);
     prevPageButton->setEnabled(pdf_currentIndex > 0);
     nextPageButton->setEnabled(pdf_currentIndex < m_pdfDocument->pageCount() - 1);
+#endif
 }
 void Preview_File_Widget::force_read_file()
 {
@@ -1299,6 +1338,7 @@ void Preview_File_Widget::update_style(QColor theme_color, QColor theme_backgrou
                                                    "QScrollBar::handle:horizontal:hover{background:rgba(0,0,0,125);}"
                                                    "QScrollBar::add-line:horizontal,QScrollBar::sub-line:horizontal{width:0px;}"
                                                    "QScrollBar::add-page:horizontal,QScrollBar::sub-page:horizontal{background:none;}");
+#ifdef USE_PDF
     m_pdfViewer->verticalScrollBar()->setStyleSheet("QScrollBar:vertical{border:none;background:rgba(0,0,0,0);width:8px;margin:0px0px0px0px;}"
                                                  "QScrollBar::handle:vertical{background:rgba(0,0,0,75);border-radius:4px;min-height:20px;}"
                                                  "QScrollBar::handle:vertical:hover{background:rgba(0,0,0,125);}"
@@ -1309,6 +1349,7 @@ void Preview_File_Widget::update_style(QColor theme_color, QColor theme_backgrou
                                                    "QScrollBar::handle:horizontal:hover{background:rgba(0,0,0,125);}"
                                                    "QScrollBar::add-line:horizontal,QScrollBar::sub-line:horizontal{width:0px;}"
                                                    "QScrollBar::add-page:horizontal,QScrollBar::sub-page:horizontal{background:none;}");
+#endif
     m_videoViewer->verticalScrollBar()->setStyleSheet("QScrollBar:vertical{border:none;background:rgba(0,0,0,0);width:8px;margin:0px0px0px0px;}"
                                                  "QScrollBar::handle:vertical{background:rgba(0,0,0,75);border-radius:4px;min-height:20px;}"
                                                  "QScrollBar::handle:vertical:hover{background:rgba(0,0,0,125);}"
@@ -1709,6 +1750,7 @@ QMovie *GraphicsViewer::get_gif_movie()
 {
     return gif_movie;
 }
+#ifdef USE_PDF
 PdfViewer::PdfViewer(QWidget *parent)
     : QPdfView(parent)
 {
@@ -1821,6 +1863,7 @@ void PdfViewer::mouseReleaseEvent(QMouseEvent *event)
         event->accept();
     }
 }
+#endif
 QAction *Preview_File_Widget::get_prevAction()
 {
     return prevAction;
@@ -1919,11 +1962,19 @@ QComboBox *Preview_File_Widget::get_m_textModeCombo()
 }
 QPdfDocument *Preview_File_Widget::get_m_pdfDocument()
 {
+#ifdef USE_PDF
     return m_pdfDocument;
+#else
+    return nullptr;
+#endif
 }
 PdfViewer_Interface *Preview_File_Widget::get_m_pdfViewer()
 {
+#ifdef USE_PDF
     return m_pdfViewer;
+#else
+    return nullptr;
+#endif
 }
 GraphicsViewer_Interface *Preview_File_Widget::get_m_imageViewer()
 {
@@ -1939,7 +1990,11 @@ GraphicsViewer_Interface *Preview_File_Widget::get_m_videoViewer()
 }
 QPdfView *Preview_File_Widget::get_m_pdfViewer_as_QPdfView()
 {
+#ifdef USE_PDF
     return m_pdfViewer;
+#else
+    return nullptr;
+#endif
 }
 QGraphicsView *Preview_File_Widget::get_m_imageViewer_as_QGraphicsView()
 {

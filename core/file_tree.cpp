@@ -7,6 +7,8 @@ void File_Tree::set_icon(QString checked_icon_path)
     show_hidden_action->setIcon(QIcon(checked_icon_path));
     m_dialog->set_icon(checked_icon_path);
     preview_file_widget->set_icon(checked_icon_path);
+    set_show_status_bar->setIcon(QIcon(checked_icon_path));
+    preview_file_action->setIcon(QIcon(checked_icon_path));
     Basic_Widget::set_icon(checked_icon_path);
 }
 File_Tree::File_Tree(QWidget *parent)

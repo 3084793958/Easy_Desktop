@@ -9,5 +9,6 @@
         <file>base/this_white.svg</file>
         <file>base/empty.svg</file>
         <file>base/select.svg</file>
+        <file>base/select_blue.svg</file>
     </qresource>
 </RCC>

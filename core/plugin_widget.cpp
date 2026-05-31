@@ -1480,6 +1480,10 @@ void Plugin_Item_Widget::set_icon(QString checked_icon_path)
     tips_always_show_action->setIcon(QIcon(checked_icon_path));
     popup_always_show_action->setIcon(QIcon(checked_icon_path));
     disable_plugin_action->setIcon(QIcon(checked_icon_path));
+    set_top_position->setIcon(QIcon(checked_icon_path));
+    set_right_position->setIcon(QIcon(checked_icon_path));
+    set_bottom_position->setIcon(QIcon(checked_icon_path));
+    set_left_position->setIcon(QIcon(checked_icon_path));
     Plugin_Widget::set_icon(checked_icon_path);
 }
 void Plugin_Item_Widget::set_extra_menu(QString data)

@@ -9,11 +9,13 @@
 #include <QGraphicsSvgItem>
 #include <QGraphicsVideoItem>
 #include "media_widgetaction.h"
+#ifdef USE_PDF
 #pragma push_macro("Status")
 #undef Status
 #include <QPdfDocument>
 #include <QPdfView>
 #pragma pop_macro("Status")
+#endif
 #include <atomic>
 
 #include "interfaces/file-preview/preview_file_interface.h"
@@ -51,6 +53,7 @@ public:
 private:
     QSize m_originalSize = QSize();
 };
+#ifdef USE_PDF
 class PdfViewer : public QPdfView, public PdfViewer_Interface//QPdfView似乎有足够的能力渲染svg,先不改
 {
     Q_OBJECT
@@ -67,6 +70,7 @@ private:
     char m_padding[7];
     QPoint m_lastPanPoint;
 };
+#endif
 class Info_Widget : public QWidget
 {
     Q_OBJECT
@@ -181,8 +185,11 @@ private:
     Basic_TextEdit *m_textEdit = new Basic_TextEdit(this->get_self());
     QComboBox *m_textModeCombo = new QComboBox(this->get_self());
 
+#ifdef USE_PDF
     QPdfDocument *m_pdfDocument = new QPdfDocument(this);
+
     PdfViewer *m_pdfViewer = new PdfViewer(this->get_self());
+#endif
 
     GraphicsViewer *m_imageViewer = new GraphicsViewer(this->get_self(), this);
 

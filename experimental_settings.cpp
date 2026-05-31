@@ -210,7 +210,7 @@ Theme_Set_Dialog::Theme_Set_Dialog(QWidget *parent, QColor *m_theme_color, QColo
 {
     hide();
     checked_icon_path_box->setEditable(true);
-    checked_icon_path_box->addItems(QStringList() << ":/base/this.svg" << ":/base/this_white.svg" << ":/base/empty.svg" << ":/base/select.svg");
+    checked_icon_path_box->addItems(QStringList() << ":/base/this.svg" << ":/base/this_white.svg" << ":/base/empty.svg" << ":/base/select.svg" << ":/base/select_blue.svg");
     connect(checked_icon_path_box, &QComboBox::currentTextChanged, this, [=]{*checked_icon_path = checked_icon_path_box->currentText();});
     connect(theme_color_button, &QPushButton::clicked, this, [=]{set_color(theme_color);});
     connect(theme_background_color_button, &QPushButton::clicked, this, [=]{set_color(theme_background_color);});

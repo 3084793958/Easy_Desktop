@@ -10,6 +10,11 @@ void File_Table::set_icon(QString checked_icon_path)
     sort_type_name->setIcon(QIcon(checked_icon_path));
     sort_type_size->setIcon(QIcon(checked_icon_path));
     sort_type_date->setIcon(QIcon(checked_icon_path));
+    sort_type_name_Z->setIcon(QIcon(checked_icon_path));
+    sort_type_size_Z->setIcon(QIcon(checked_icon_path));
+    sort_type_date_Z->setIcon(QIcon(checked_icon_path));
+    set_show_status_bar->setIcon(QIcon(checked_icon_path));
+    preview_file_action->setIcon(QIcon(checked_icon_path));
     Basic_Widget::set_icon(checked_icon_path);
 }
 File_Table::File_Table(QWidget *parent)
@@ -68,6 +73,15 @@ File_Table::File_Table(QWidget *parent)
     sort_type_menu->addAction(sort_type_name);
     sort_type_menu->addAction(sort_type_size);
     sort_type_menu->addAction(sort_type_date);
+    sort_type_name_Z->setIcon(QIcon(":/base/this.svg"));
+    sort_type_size_Z->setIcon(QIcon(":/base/this.svg"));
+    sort_type_date_Z->setIcon(QIcon(":/base/this.svg"));
+    sort_type_name_Z->setIconVisibleInMenu(false);
+    sort_type_size_Z->setIconVisibleInMenu(false);
+    sort_type_date_Z->setIconVisibleInMenu(false);
+    sort_type_menu->addAction(sort_type_name_Z);
+    sort_type_menu->addAction(sort_type_size_Z);
+    sort_type_menu->addAction(sort_type_date_Z);
     set_style_menu->addMenu(sort_type_menu);
     set_style_menu->addSeparator();
     set_style_menu->addAction(set_icon_size_action);
@@ -1557,24 +1571,71 @@ void File_Table::contextMenuEvent(QContextMenuEvent *event)
         sort_type_name->setIconVisibleInMenu(true);
         sort_type_size->setIconVisibleInMenu(false);
         sort_type_date->setIconVisibleInMenu(false);
+        sort_type_name_Z->setIconVisibleInMenu(false);
+        sort_type_size_Z->setIconVisibleInMenu(false);
+        sort_type_date_Z->setIconVisibleInMenu(false);
         sort_type = 0;
         proxyModel->invalidate();
+        proxyModel->sort(0);
     }
     else if (know_what == sort_type_size)
     {
         sort_type_name->setIconVisibleInMenu(false);
         sort_type_size->setIconVisibleInMenu(true);
         sort_type_date->setIconVisibleInMenu(false);
+        sort_type_name_Z->setIconVisibleInMenu(false);
+        sort_type_size_Z->setIconVisibleInMenu(false);
+        sort_type_date_Z->setIconVisibleInMenu(false);
         sort_type = 1;
         proxyModel->invalidate();
+        proxyModel->sort(0);
     }
     else if (know_what == sort_type_date)
     {
         sort_type_name->setIconVisibleInMenu(false);
         sort_type_size->setIconVisibleInMenu(false);
         sort_type_date->setIconVisibleInMenu(true);
+        sort_type_name_Z->setIconVisibleInMenu(false);
+        sort_type_size_Z->setIconVisibleInMenu(false);
+        sort_type_date_Z->setIconVisibleInMenu(false);
         sort_type = 2;
         proxyModel->invalidate();
+    }
+    else if (know_what == sort_type_name_Z)
+    {
+        sort_type_name->setIconVisibleInMenu(false);
+        sort_type_size->setIconVisibleInMenu(false);
+        sort_type_date->setIconVisibleInMenu(false);
+        sort_type_name_Z->setIconVisibleInMenu(true);
+        sort_type_size_Z->setIconVisibleInMenu(false);
+        sort_type_date_Z->setIconVisibleInMenu(false);
+        sort_type = 3;
+        proxyModel->invalidate();
+        proxyModel->sort(0);
+    }
+    else if (know_what == sort_type_size_Z)
+    {
+        sort_type_name->setIconVisibleInMenu(false);
+        sort_type_size->setIconVisibleInMenu(false);
+        sort_type_date->setIconVisibleInMenu(false);
+        sort_type_name_Z->setIconVisibleInMenu(false);
+        sort_type_size_Z->setIconVisibleInMenu(true);
+        sort_type_date_Z->setIconVisibleInMenu(false);
+        sort_type = 4;
+        proxyModel->invalidate();
+        proxyModel->sort(0);
+    }
+    else if (know_what == sort_type_date_Z)
+    {
+        sort_type_name->setIconVisibleInMenu(false);
+        sort_type_size->setIconVisibleInMenu(false);
+        sort_type_date->setIconVisibleInMenu(false);
+        sort_type_name_Z->setIconVisibleInMenu(false);
+        sort_type_size_Z->setIconVisibleInMenu(false);
+        sort_type_date_Z->setIconVisibleInMenu(true);
+        sort_type = 5;
+        proxyModel->invalidate();
+        proxyModel->sort(0);
     }
     else
     {
@@ -1732,18 +1793,54 @@ void File_Table::load(QSettings *settings)
         sort_type_name->setIconVisibleInMenu(true);
         sort_type_size->setIconVisibleInMenu(false);
         sort_type_date->setIconVisibleInMenu(false);
+        sort_type_name_Z->setIconVisibleInMenu(false);
+        sort_type_size_Z->setIconVisibleInMenu(false);
+        sort_type_date_Z->setIconVisibleInMenu(false);
     }
     else if (1 == sort_type)
     {
         sort_type_name->setIconVisibleInMenu(false);
         sort_type_size->setIconVisibleInMenu(true);
         sort_type_date->setIconVisibleInMenu(false);
+        sort_type_name_Z->setIconVisibleInMenu(false);
+        sort_type_size_Z->setIconVisibleInMenu(false);
+        sort_type_date_Z->setIconVisibleInMenu(false);
     }
     else if (2 == sort_type)
     {
         sort_type_name->setIconVisibleInMenu(false);
         sort_type_size->setIconVisibleInMenu(false);
         sort_type_date->setIconVisibleInMenu(true);
+        sort_type_name_Z->setIconVisibleInMenu(false);
+        sort_type_size_Z->setIconVisibleInMenu(false);
+        sort_type_date_Z->setIconVisibleInMenu(false);
+    }
+    else if (3 == sort_type)
+    {
+        sort_type_name->setIconVisibleInMenu(false);
+        sort_type_size->setIconVisibleInMenu(false);
+        sort_type_date->setIconVisibleInMenu(false);
+        sort_type_name_Z->setIconVisibleInMenu(true);
+        sort_type_size_Z->setIconVisibleInMenu(false);
+        sort_type_date_Z->setIconVisibleInMenu(false);
+    }
+    else if (4 == sort_type)
+    {
+        sort_type_name->setIconVisibleInMenu(false);
+        sort_type_size->setIconVisibleInMenu(false);
+        sort_type_date->setIconVisibleInMenu(false);
+        sort_type_name_Z->setIconVisibleInMenu(false);
+        sort_type_size_Z->setIconVisibleInMenu(true);
+        sort_type_date_Z->setIconVisibleInMenu(false);
+    }
+    else if (5 == sort_type)
+    {
+        sort_type_name->setIconVisibleInMenu(false);
+        sort_type_size->setIconVisibleInMenu(false);
+        sort_type_date->setIconVisibleInMenu(false);
+        sort_type_name_Z->setIconVisibleInMenu(false);
+        sort_type_size_Z->setIconVisibleInMenu(false);
+        sort_type_date_Z->setIconVisibleInMenu(true);
     }
     set_show_status_bar->setIconVisibleInMenu(settings->value("set_show_status_bar", false).toBool());
     treeView->m_statusBar->setVisible(set_show_status_bar->isIconVisibleInMenu());
@@ -1756,6 +1853,7 @@ void File_Table::load(QSettings *settings)
     preview_file_widget->updatePreview({}, root_path, true);
     treeView->updateStatusBar();
     proxyModel->invalidate();
+    proxyModel->sort(0);
 }
 QIcon My_Table_Icon_Provider::icon(QFileIconProvider::IconType type) const
 {
@@ -2372,8 +2470,8 @@ bool My_Table_ProxyModel::lessThan(const QModelIndex &left, const QModelIndex &r
     }
     else
     {
-        QFileInfo leftInfo = fsModel->fileInfo(mapToSource(left));
-        QFileInfo rightInfo = fsModel->fileInfo(mapToSource(right));
+        QFileInfo leftInfo = fsModel->fileInfo(left);
+        QFileInfo rightInfo = fsModel->fileInfo(right);
 
         if (*sort_type_ptr == 0)//名称
         {
@@ -2410,6 +2508,42 @@ bool My_Table_ProxyModel::lessThan(const QModelIndex &left, const QModelIndex &r
                 return false;
             }
             return leftInfo.lastModified() < rightInfo.lastModified();
+        }
+        else if (*sort_type_ptr == 3)//名称Z
+        {
+            if (leftInfo.isDir() && !rightInfo.isDir())
+            {
+                return true;
+            }
+            if (!leftInfo.isDir() && rightInfo.isDir())
+            {
+                return false;
+            }
+            return leftInfo.fileName() > rightInfo.fileName();
+        }
+        else if (*sort_type_ptr == 4)//大小Z
+        {
+            if (leftInfo.isDir() && !rightInfo.isDir())
+            {
+                return true;
+            }
+            if (!leftInfo.isDir() && rightInfo.isDir())
+            {
+                return false;
+            }
+            return leftInfo.size() > rightInfo.size();
+        }
+        else if (*sort_type_ptr == 5)//日期Z
+        {
+            if (leftInfo.isDir() && !rightInfo.isDir())
+            {
+                return true;
+            }
+            if (!leftInfo.isDir() && rightInfo.isDir())
+            {
+                return false;
+            }
+            return leftInfo.lastModified() > rightInfo.lastModified();
         }
         else
         {

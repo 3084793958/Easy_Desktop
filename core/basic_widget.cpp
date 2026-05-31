@@ -91,7 +91,7 @@ Basic_Widget::Basic_Widget(QWidget *parent)
                                 "QPushButton:pressed{border-radius:12px 12px;background:rgba(255,255,255,150)}");
     select_button->resize(24, 24);
     select_button->setFocusPolicy(Qt::NoFocus);
-    select_button->setIcon(QIcon(":/base/select.svg"));
+    select_button->setIcon(QIcon(":/base/select_blue.svg"));
     select_button->setIconSize(QSize(24, 24));
     select_button->setStyleSheet("QPushButton{border-radius:12px 12px;background:rgba(255,255,255,0)}"
                                  "QPushButton:hover{border-radius:12px 12px;background:rgba(255,255,255,0)}"
@@ -774,6 +774,7 @@ void Basic_Widget::set_icon(QString checked_icon_path)
     select_button_pos_top_right->setIcon(QIcon(checked_icon_path));
     select_button_pos_bottom_left->setIcon(QIcon(checked_icon_path));
     select_button_pos_bottom_right->setIcon(QIcon(checked_icon_path));
+    show_select_button->setIcon(QIcon(checked_icon_path));
 }
 void Basic_Widget::update_close_button_pos()
 {

@@ -21,13 +21,17 @@
 
 #DEFINES += USE_DTK #使用DTK #dde-dock插件V2.0.0需要DTK支持,该项需要开启
 DEFINES += USE_CHART #使用QChart
-
-QT += core gui widgets multimedia multimediawidgets x11extras dbus pdf pdfwidgets svg
+DEFINES += USE_PDF #使用Pdf
+QT += core gui widgets multimedia multimediawidgets x11extras dbus svg
 contains(DEFINES, USE_DTK) {
     QT += dtkcore dtkgui dtkwidget
 }
 contains(DEFINES, USE_CHART) {
     QT += charts
+}
+
+contains(DEFINES, USE_PDF){
+    QT += pdf pdfwidgets
 }
 
 CONFIG += link_pkgconfig
@@ -135,3 +139,4 @@ RESOURCES += \
     base.qrc
 
 TRANSLATIONS += translations/Original.ts
+TRANSLATIONS += translations/Literary_Chinese.ts
