@@ -5,47 +5,51 @@
 #include <QFileSystemModel>
 #include "core/tools/multilinetextinputdialog.h"
 #include "core/module/preview_file_widget.h"
-class My_TreeView_Delegate : public QStyledItemDelegate
-{
-public:
-    using QStyledItemDelegate::QStyledItemDelegate;
-    explicit My_TreeView_Delegate(QObject *parent, QColor *m_hover_color = nullptr, QColor *m_select_color = nullptr, int *m_radius = nullptr, QModelIndex *m_proposed_action_index = nullptr);
-    void paint(QPainter *painter, const QStyleOptionViewItem &option, const QModelIndex &index) const override;
-    QColor *hover_color = nullptr;
-    QColor *select_color = nullptr;
-    int *radius = nullptr;
-    QModelIndex *proposed_action_index = nullptr;
-};
+#include "core/module/my_icon_provider.h"
+#include "core/module/my_treeview_delegate.h"
 class My_Tree_View;
 class My_ProxyModel : public QSortFilterProxyModel
 {
     Q_OBJECT
 public:
-    explicit My_ProxyModel(QObject *parent = nullptr, My_Tree_View *m_root = nullptr);
+    explicit My_ProxyModel(QObject *parent = nullptr, My_Tree_View *m_root = nullptr, QFileSystemModel *m_fsModel = nullptr);
     void setSearchPattern(const QString &pattern, bool deeply_search = false);
     void setShowHidden(bool show);
 protected:
     virtual bool filterAcceptsRow(int sourceRow, const QModelIndex &sourceParent) const override;
     virtual void sort(int column, Qt::SortOrder order = Qt::AscendingOrder) override;
 private:
+    My_Tree_View *root = nullptr;
+    QFileSystemModel *fsModel = nullptr;
     QString m_pattern;
-    char my_padding[6];
     bool m_showHidden = false;
     bool m_deeply_search = false;
-    My_Tree_View *root = nullptr;
+    char my_padding[6];
+
+private:
+    QFuture<bool> hasMatchInSubtreeAsync(const QModelIndex &sourceIndex) const;
+
+    mutable QSet<QString> m_matchedDirsCache;//给const函数用
+    mutable QMutex m_cacheMutex;
+    mutable QSet<QString> m_pendingDirs;
+    mutable QMutex m_pendingMutex;
     bool hasMatchInSubtree(const QModelIndex &sourceIndex) const;
+private slots:
+    void onMatchCheckFinished(const QString &dirPath, bool hasMatch) const;
 };
 class My_Tree_View : public QTreeView
 {
     Q_OBJECT
 public:
-    explicit My_Tree_View(QWidget *parent);
+    explicit My_Tree_View(QWidget *parent, QString *m_root_path_ptr);
     ~My_Tree_View() override;
     void p_save(QSettings *settings);
     void p_load(QSettings *settings);
     QFileSystemModel *F_model = nullptr;
     My_ProxyModel *proxyModel = nullptr;
+    QString *root_path_ptr = nullptr;
     static My_Tree_View * catch_ptr;
+    void backToPath();
 protected:
     void dropEvent(QDropEvent *event) override;
     void dragMoveEvent(QDragMoveEvent *event) override;
@@ -84,14 +88,6 @@ private slots:
     void updateFolderSize();
     void onSizeCalculated();
 };
-class My_Icon_Provider : public QFileIconProvider
-{
-public:
-    My_Icon_Provider() = default;
-    QIcon icon(IconType type) const override;
-    QIcon icon(const QFileInfo &info) const override;
-    QSize get_Image_Size(QString path) const;
-};
 class File_Tree : public Basic_Widget
 {
     Q_OBJECT
@@ -121,8 +117,8 @@ protected:
     void set_tree_view_style();
     QWidget *carrier_widget = new QWidget(this->get_self());
     QFileSystemModel *model = new QFileSystemModel(this);
-    My_Tree_View *treeView = new My_Tree_View(carrier_widget);
-    My_ProxyModel *proxyModel = new My_ProxyModel(this, treeView);
+    My_Tree_View *treeView = new My_Tree_View(carrier_widget, &root_path);
+    My_ProxyModel *proxyModel = new My_ProxyModel(this, treeView, model);
     My_TreeView_Delegate *my_delegate = new My_TreeView_Delegate(this, &hover_color, &select_color, &radius, &proposed_action_index);
     My_Icon_Provider *icon_provider = new My_Icon_Provider;
     QLineEdit *search_edit = new QLineEdit(carrier_widget);
@@ -199,7 +195,7 @@ public:
     void first_set_preview_pos();
 private:
     MultiLineTextInputDialog *m_dialog = new MultiLineTextInputDialog(nullptr);
-    Preview_File_Widget *preview_file_widget;
+    Preview_File_Widget *preview_file_widget = nullptr;
 };
 
 #endif // FILE_TREE_H

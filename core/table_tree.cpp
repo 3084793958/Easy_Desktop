@@ -102,7 +102,7 @@ File_Table::File_Table(QWidget *parent)
     menu->addSeparator();
     basic_context(menu);
 
-    treeView->m_statusBar->setFixedHeight(24);
+    treeView->m_statusBar->setFixedHeight(24 * 2);
     treeView->m_statusBar->hide();
     treeView->updateStatusBar_style();
     treeView->m_statusBar->setSizeGripEnabled(false);
@@ -523,7 +523,7 @@ File_Table::File_Table(QWidget *parent)
 }
 void File_Table::Pressed(bool from_key)
 {
-    if (treeView->selectionModel())
+    if (treeView->selectionModel() && !(QApplication::keyboardModifiers() & Qt::ControlModifier || QApplication::keyboardModifiers() & Qt::ShiftModifier))
     {
         QModelIndexList selectedList = treeView->selectionModel()->selectedIndexes();
         if (!selectedList.isEmpty())
@@ -641,6 +641,7 @@ void File_Table::set_tree_view_style()
 File_Table::~File_Table()
 {
     m_dialog->deleteLater();
+    delete icon_provider;
     if (preview_file_widget)
     {
         preview_file_widget->deleteLater();
@@ -1855,92 +1856,17 @@ void File_Table::load(QSettings *settings)
     proxyModel->invalidate();
     proxyModel->sort(0);
 }
-QIcon My_Table_Icon_Provider::icon(QFileIconProvider::IconType type) const
+void My_Table_View::backToPath()
 {
-    return QFileIconProvider::icon(type);
-}
-QSize My_Table_Icon_Provider::get_Image_Size(QString path) const
-{
-    QImageReader reader(path);
-    if (!reader.canRead())
+    if (this->selectionModel())
     {
-        return QSize(0,0);
-    }
-    QSize size = reader.size();
-    if (!size.isValid())
-    {
-        QImage image =reader.read();
-        if (!image.isNull())
-        {
-            size = image.size();
-        }
-    }
-    return size;
-}
-QIcon My_Table_Icon_Provider::icon(const QFileInfo &info) const
-{
-    if (info.isFile())
-    {
-        QMimeDatabase mimeDb;
-        QMimeType mimeType;
-        mimeType = mimeDb.mimeTypeForFile(info);
-        QString mimeName = mimeType.name();
-        if (mimeName.startsWith("image/"))
-        {
-            QIcon icon = QIcon::fromTheme(info.filePath());
-            if (!icon.isNull() && My_Table_Icon_Provider::get_Image_Size(info.filePath()) != QSize(0, 0))
-            {
-                return icon;//应使用filePath而不是filename;
-            }
-            else
-            {
-                QIcon icon = QIcon::fromTheme(mimeType.iconName());
-                QString theme_name = mimeType.iconName();
-                if (icon.isNull())
-                {
-                    icon = QIcon::fromTheme(mimeType.genericIconName());
-                    theme_name = mimeType.genericIconName();
-                }
-                if (icon.isNull())
-                {
-                    theme_name = "unknown";
-                }
-                return QIcon::fromTheme(theme_name);
-            }
-        }
-        else if (mimeName == "application/x-desktop")
-        {
-            QSettings desktopSettings(info.filePath(), QSettings::IniFormat);
-            desktopSettings.setIniCodec("UTF-8");
-            desktopSettings.beginGroup("Desktop Entry");
-            QString theme_name = desktopSettings.value("Icon", "application").toString();
-            desktopSettings.endGroup();
-            return QIcon::fromTheme(theme_name);
-        }
-        else
-        {
-            QIcon icon = QIcon::fromTheme(mimeType.iconName());
-            QString theme_name = mimeType.iconName();
-            if (icon.isNull())
-            {
-                icon = QIcon::fromTheme(mimeType.genericIconName());
-                theme_name = mimeType.genericIconName();
-            }
-            if (icon.isNull())
-            {
-                theme_name = "unknown";
-            }
-            return QIcon::fromTheme(theme_name);
-        }
-    }
-    else
-    {
-        QString theme_name = "folder";
-        return QIcon::fromTheme(theme_name);
+        this->setRootIndex(proxyModel->mapFromSource(F_model->index(*root_path_ptr)));
+        this->updateStatusBar();
     }
 }
-My_Table_View::My_Table_View(QWidget *parent)
+My_Table_View::My_Table_View(QWidget *parent, QString *m_root_path_ptr)
     :QListView(parent)
+    ,root_path_ptr(m_root_path_ptr)
 {
     setViewMode(QListView::IconMode);
     setResizeMode(QListView::Adjust);
@@ -2186,7 +2112,7 @@ void My_Table_View::updateStatusBar()
             temp_folder_total_size = 0;
             updateFolderSize();
             m_sizeUpdateTimer->start();
-            for_bar_text = tr("选择: %1 个文件 (共 %2)  %3 个文件夹(包含 %4 项) [总选择大小:%8] |根文件夹: 总文件: %5 个 (共 %6)  总文件夹: %7 个")
+            for_bar_text = tr("选择: %1 个文件 (共 %2)  %3 个文件夹(包含 %4 项) [总选择大小:%8] \n根文件夹: 总文件: %5 个 (共 %6)  总文件夹: %7 个")
                     .arg(selectedFileCount)
                     .arg(formatSize(selectedFileSize))
                     .arg(selectedFolderCount)
@@ -2197,7 +2123,7 @@ void My_Table_View::updateStatusBar()
         }
     }
 
-    QString statusText = tr("选择: %1 个文件 (共 %2)  %3 个文件夹(包含 %4 项) [总选择大小:%5] |根文件夹: 总文件: %6 个 (共 %7)  总文件夹: %8 个")
+    QString statusText = tr("选择: %1 个文件 (共 %2)  %3 个文件夹(包含 %4 项) [总选择大小:%5] \n根文件夹: 总文件: %6 个 (共 %7)  总文件夹: %8 个")
             .arg(selectedFileCount)
             .arg(formatSize(selectedFileSize))
             .arg(selectedFolderCount)
@@ -2362,10 +2288,11 @@ void My_TableView_Delegate::paint(QPainter *painter, const QStyleOptionViewItem 
     }
     QStyledItemDelegate::paint(painter, opt, index);
 }
-My_Table_ProxyModel::My_Table_ProxyModel(QObject *parent, My_Table_View *m_root, int *m_sort_type)
+My_Table_ProxyModel::My_Table_ProxyModel(QObject *parent, My_Table_View *m_root, int *m_sort_type, QFileSystemModel *m_fsModel)
     :QSortFilterProxyModel(parent)
     ,root(m_root)
     ,sort_type_ptr(m_sort_type)
+    ,fsModel(m_fsModel)
 {}
 void My_Table_ProxyModel::setSearchPattern(const QString &pattern, bool deeply_search)
 {
@@ -2384,11 +2311,6 @@ void My_Table_ProxyModel::setShowHidden(bool show)
 bool My_Table_ProxyModel::hasMatchInSubtree(const QModelIndex &sourceIndex) const
 {
     if (!sourceIndex.isValid())
-    {
-        return false;
-    }
-    QFileSystemModel *fsModel = qobject_cast<QFileSystemModel*>(sourceModel());
-    if (!fsModel)
     {
         return false;
     }
@@ -2416,15 +2338,26 @@ bool My_Table_ProxyModel::hasMatchInSubtree(const QModelIndex &sourceIndex) cons
     }
     return false;
 }
+void My_Table_ProxyModel::onMatchCheckFinished(const QString &dirPath, bool hasMatch) const
+{
+    if (hasMatch)
+    {
+        QMutexLocker locker(&m_cacheMutex);
+        m_matchedDirsCache.insert(dirPath);
+    }
+
+    //新作用域
+    {
+        QMutexLocker locker(&m_pendingMutex);
+        m_pendingDirs.remove(dirPath);
+    }
+    const_cast<My_Table_ProxyModel *>(this)->invalidateFilter();//刷新
+    root->backToPath();
+}
 bool My_Table_ProxyModel::filterAcceptsRow(int sourceRow, const QModelIndex &sourceParent) const
 {
     QModelIndex sourceIndex = sourceModel()->index(sourceRow, 0, sourceParent);
     if (!sourceIndex.isValid())
-    {
-        return false;
-    }
-    QFileSystemModel *fsModel = qobject_cast<QFileSystemModel *>(sourceModel());
-    if (!fsModel)
     {
         return false;
     }
@@ -2439,13 +2372,48 @@ bool My_Table_ProxyModel::filterAcceptsRow(int sourceRow, const QModelIndex &sou
     }
     if (m_deeply_search)
     {
-        if (fileInfo.isDir())
+        if (!fileInfo.isDir())
         {
-            return hasMatchInSubtree(sourceIndex);
+            return fileInfo.fileName().contains(m_pattern, Qt::CaseInsensitive);
         }
         else
         {
-            return fileInfo.fileName().contains(m_pattern, Qt::CaseInsensitive);
+            QString dirPath = fileInfo.absoluteFilePath();
+            {
+                QMutexLocker locker(&m_cacheMutex);
+                if (m_matchedDirsCache.contains(dirPath))
+                {
+                    return true;
+                }
+            }
+            bool shouldStartTask = false;
+            {
+                QMutexLocker locker(&m_pendingMutex);
+                if (!m_pendingDirs.contains(dirPath))
+                {
+                    m_pendingDirs.insert(dirPath);
+                    shouldStartTask = true;
+                }
+            }
+            if (shouldStartTask)
+            {
+                QFuture<bool> future = hasMatchInSubtreeAsync(sourceIndex);
+                QFutureWatcher<bool> *watcher = new QFutureWatcher<bool>();
+
+                connect(watcher, &QFutureWatcher<bool>::finished, this, [=]()
+                {
+                    bool result = watcher->result();
+                    watcher->deleteLater();
+
+                    //需要在主进程中运行,不然会出现许多奇怪的行为
+                    QMetaObject::invokeMethod(const_cast<My_Table_ProxyModel *>(this),[this, dirPath, result]()
+                    {
+                        this->onMatchCheckFinished(dirPath, result);
+                    });
+                });
+                watcher->setFuture(future);
+            }
+            return false;//先不显示,其他算出来在说
         }
     }
     else
@@ -2460,6 +2428,53 @@ bool My_Table_ProxyModel::filterAcceptsRow(int sourceRow, const QModelIndex &sou
         }
     }
     return QSortFilterProxyModel::filterAcceptsRow(sourceRow, sourceParent);
+}
+QFuture<bool> My_Table_ProxyModel::hasMatchInSubtreeAsync(const QModelIndex &sourceIndex) const
+{
+    if (!sourceIndex.isValid())
+    {
+        return QtConcurrent::run([]() -> bool
+        {
+            return false;
+        });
+    }
+
+    QString rootPath = fsModel->filePath(sourceIndex);
+    QFileInfo rootInfo = fsModel->fileInfo(sourceIndex);
+    QString pattern = m_pattern;
+    bool showHidden = m_showHidden;
+
+    if (!rootInfo.isDir())
+    {
+        bool immediateMatch = rootInfo.fileName().contains(pattern, Qt::CaseInsensitive);
+        return QtConcurrent::run([immediateMatch]() -> bool
+        {
+            return immediateMatch;
+        });
+    }
+
+    char func_m_padding[7] = {};
+
+    return QtConcurrent::run([rootPath, pattern, showHidden, func_m_padding]() -> bool
+    {
+        (void) func_m_padding;
+        QFileInfo rootInfo(rootPath);
+        if (rootInfo.fileName().contains(pattern, Qt::CaseInsensitive))
+        {
+            return true;
+        }
+        QDirIterator::IteratorFlags flags = QDirIterator::Subdirectories | QDirIterator::FollowSymlinks;
+        QDirIterator it(rootPath, QDir::Files | QDir::Dirs | QDir::NoDotAndDotDot | (showHidden ? QDir::Hidden : QDir::NoDot), flags);
+        while (it.hasNext())
+        {
+            it.next();
+            if (it.fileName().contains(pattern, Qt::CaseInsensitive))
+            {
+                return true;
+            }
+        }
+        return false;
+    });
 }
 bool My_Table_ProxyModel::lessThan(const QModelIndex &left, const QModelIndex &right) const
 {

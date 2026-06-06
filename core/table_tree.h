@@ -5,6 +5,7 @@
 #include <QFileSystemModel>
 #include "core/tools/multilinetextinputdialog.h"
 #include "core/module/preview_file_widget.h"
+#include "core/module/my_icon_provider.h"
 class My_TableView_Delegate : public QStyledItemDelegate
 {
 public:
@@ -21,32 +22,45 @@ class My_Table_ProxyModel : public QSortFilterProxyModel
 {
     Q_OBJECT
 public:
-    explicit My_Table_ProxyModel(QObject *parent = nullptr, My_Table_View *m_root = nullptr, int *m_sort_type = nullptr);
+    explicit My_Table_ProxyModel(QObject *parent = nullptr, My_Table_View *m_root = nullptr, int *m_sort_type = nullptr, QFileSystemModel *m_fsModel = nullptr);
     void setSearchPattern(const QString &pattern, bool deeply_search = false);
     void setShowHidden(bool show);
 protected:
     virtual bool filterAcceptsRow(int sourceRow, const QModelIndex &sourceParent) const override;
     virtual bool lessThan(const QModelIndex &left, const QModelIndex &right) const override;
 private:
+    My_Table_View *root = nullptr;
     QString m_pattern;
-    char my_padding[6];
     bool m_showHidden = false;
     bool m_deeply_search = false;
-    My_Table_View *root = nullptr;
+    char my_padding[6];
     int *sort_type_ptr = nullptr;
+    QFileSystemModel *fsModel = nullptr;
+
+private:
+    QFuture<bool> hasMatchInSubtreeAsync(const QModelIndex &sourceIndex) const;
+
+    mutable QSet<QString> m_matchedDirsCache;//给const函数用
+    mutable QMutex m_cacheMutex;
+    mutable QSet<QString> m_pendingDirs;
+    mutable QMutex m_pendingMutex;
     bool hasMatchInSubtree(const QModelIndex &sourceIndex) const;
+private slots:
+    void onMatchCheckFinished(const QString &dirPath, bool hasMatch) const;
 };
 class My_Table_View : public QListView
 {
     Q_OBJECT
 public:
-    explicit My_Table_View(QWidget *parent);
+    explicit My_Table_View(QWidget *parent, QString *m_root_path_ptr);
     ~My_Table_View() override;
     void p_save(QSettings *settings);
     void p_load(QSettings *settings);
     QFileSystemModel *F_model = nullptr;
     My_Table_ProxyModel *proxyModel = nullptr;
     static My_Table_View * catch_ptr;
+    QString *root_path_ptr = nullptr;
+    void backToPath();
 protected:
     void dropEvent(QDropEvent *event) override;
     void dragMoveEvent(QDragMoveEvent *event) override;
@@ -85,14 +99,6 @@ private slots:
     void updateFolderSize();
     void onSizeCalculated();
 };
-class My_Table_Icon_Provider : public QFileIconProvider
-{
-public:
-    My_Table_Icon_Provider() = default;
-    QIcon icon(IconType type) const override;
-    QIcon icon(const QFileInfo &info) const override;
-    QSize get_Image_Size(QString path) const;
-};
 class File_Table : public Basic_Widget
 {
     Q_OBJECT
@@ -122,10 +128,10 @@ protected:
     void set_tree_view_style();
     QWidget *carrier_widget = new QWidget(this->get_self());
     QFileSystemModel *model = new QFileSystemModel(this);
-    My_Table_View *treeView = new My_Table_View(carrier_widget);
-    My_Table_ProxyModel *proxyModel = new My_Table_ProxyModel(this, treeView, &sort_type);
+    My_Table_View *treeView = new My_Table_View(carrier_widget, &root_path);
+    My_Table_ProxyModel *proxyModel = new My_Table_ProxyModel(this, treeView, &sort_type, model);
     My_TableView_Delegate *my_delegate = new My_TableView_Delegate(this, &hover_color, &select_color, &radius);
-    My_Table_Icon_Provider *icon_provider = new My_Table_Icon_Provider;
+    My_Icon_Provider *icon_provider = new My_Icon_Provider;
     QLineEdit *search_edit = new QLineEdit(carrier_widget);
     QPushButton *deeply_search_button = new QPushButton(tr("深层搜索"), carrier_widget);
     QAction *search_img_action = new QAction(this);
@@ -209,7 +215,7 @@ public:
     void first_set_preview_pos();
 private:
     MultiLineTextInputDialog *m_dialog = new MultiLineTextInputDialog(nullptr);
-    Preview_File_Widget *preview_file_widget;
+    Preview_File_Widget *preview_file_widget = nullptr;
 };
 
 #endif // TABLE_TREE_H

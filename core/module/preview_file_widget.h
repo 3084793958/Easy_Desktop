@@ -21,6 +21,8 @@
 #include "interfaces/file-preview/preview_file_interface.h"
 #include "interfaces/file-preview/file_preview_plugin.h"
 
+#include "core/module/zip_treeview.h"
+
 class Preview_File_Widget;
 class GraphicsViewer : public QGraphicsView, public GraphicsViewer_Interface
 {
@@ -98,7 +100,7 @@ private slots:
     void updateFolderSize();
     void onSizeCalculated();
 };
-class Preview_File_Widget : public Basic_Widget, public Preview_File_Interface
+class Preview_File_Widget : public Basic_Widget, public Preview_File_Interface, public Preview_File_Interface_V_0_0_2
 {
     Q_OBJECT
 public:
@@ -111,6 +113,7 @@ public:
         TypePdf,
         TypeFolder,
         TypeFont,
+        TypeTar,
         TypeUnKnown
     };
     explicit Preview_File_Widget(QWidget *parent, QAction *m_preview_action);
@@ -143,6 +146,7 @@ private:
     void setupAudioPreview(const QFileInfo &info) override;
     void setupSvgPreview(const QFileInfo &info) override;
     void setupFontPreview(const QFileInfo &info) override;
+    void setupTarPreview(const QFileInfo &info) override;
 private:
     QAction *preview_action = nullptr;
 private slots:
@@ -197,6 +201,8 @@ private:
     GraphicsViewer *m_videoViewer = new GraphicsViewer(this->get_self(), this);
 
     Info_Widget *m_infoWidget = new Info_Widget(this->get_self());
+
+    Zip_TreeView_Carrier *m_zip_treeview = new Zip_TreeView_Carrier(this->get_self());
 private:
     QTimer *holding_pos_timer = new QTimer(this);
     int holding_time = 0;
@@ -263,6 +269,11 @@ private:
      QColor *m_disabled_text_color = nullptr;
      QString *m_checked_icon_path = nullptr;
      QFileInfo previewing_file_info;
+public:
+     //V_0_0_2
+     virtual Zip_TreeView_Carrier_Interface *get_m_zip_treeview() override;
+     virtual QWidget *get_m_zip_treeview_as_QWidget() override;
+     //V_0_0_2
 };
 
 #endif // PREVIEW_FILE_WIDGET_H

@@ -18,7 +18,7 @@ public:
     const QString Ext_Spec = "";
     //ADD
 
-    P_Version Plugin_Version{0, 0, 1};//不使用const,用于欺骗Easy_Desktop
+    P_Version Plugin_Version{0, 0, 2};//不使用const,用于欺骗Easy_Desktop
 
     ///
     /// \brief inited
@@ -54,7 +54,7 @@ public:
     ///
     virtual QString Plugin_Name() = 0;
     ///
-    /// \brief init(QList<QPair<System_Control, void *>> ptr_list)
+    /// \brief init(Preview_File_Interface *ptr, QWidget *carrier)
     /// 初始化时传递指针.ptr:Preview_File_Widget的简化接口,通过接口获取控件,基本够用了 carrier:控件的容器
     /// \param ptr
     /// \param carrier
@@ -122,6 +122,18 @@ public:
     virtual void resetZoom()
     {}
     //0.0.1
+
+    //0.0.2
+    ///
+    /// \brief init_V_0_0_2
+    /// 用于V0.0.2版本的拓展,给你一个V0.0.2的Interface,可调用V0.0.2支持的函数
+    /// \param ptr
+    ///
+    virtual void init_V_0_0_2(Preview_File_Interface_V_0_0_2 *ptr)
+    {
+        (void) ptr;
+    }
+    //0.0.2
 };
 
 QT_BEGIN_NAMESPACE

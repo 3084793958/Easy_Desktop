@@ -39,6 +39,14 @@ public:
     virtual void resetZoom() = 0;
 };
 
+class Zip_TreeView_Carrier_Interface
+{
+public:
+    virtual ~Zip_TreeView_Carrier_Interface() {}
+    virtual void setupTar(const QFileInfo &info) = 0;
+    virtual void clear() = 0;
+};
+
 class QPdfView;
 class QGraphicsView;
 
@@ -106,6 +114,15 @@ public:
     virtual void Set_Speed(int value) = 0;
     virtual void Set_Volume(int value) = 0;
     virtual void Set_Position(int value) = 0;
+};
+
+class Preview_File_Interface_V_0_0_2
+{
+public:
+    virtual ~Preview_File_Interface_V_0_0_2() {}
+    virtual void setupTarPreview(const QFileInfo &info) = 0;
+    virtual Zip_TreeView_Carrier_Interface *get_m_zip_treeview() = 0;
+    virtual QWidget *get_m_zip_treeview_as_QWidget() = 0;
 };
 
 #endif // PREVIEW_FILE_INTERFACE_H

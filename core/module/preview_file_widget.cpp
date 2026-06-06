@@ -85,6 +85,7 @@ Preview_File_Widget::Preview_File_Widget(QWidget *parent, QAction *m_preview_act
         m_pdfViewer->resize(size - QSize(10, 150));
 #endif
         m_videoViewer->resize(size - QSize(10, 150));
+        m_zip_treeview->resize(size - QSize(10, 150));
         for (int i = 0; i < preview_file_plugin_list.count(); ++i)
         {
             if (preview_file_plugin_list[i])
@@ -157,6 +158,7 @@ Preview_File_Widget::Preview_File_Widget(QWidget *parent, QAction *m_preview_act
     m_pdfViewer->move(5, 145);
 #endif
     m_videoViewer->move(5, 145);
+    m_zip_treeview->move(5, 145);
     clearCurrentPreview();
 
     connect(prevButton, &QPushButton::clicked, this, &Preview_File_Widget::onPrevClicked);
@@ -224,6 +226,18 @@ Preview_File_Widget::Preview_File_Widget(QWidget *parent, QAction *m_preview_act
             holding_time = 0;
         }
     });
+    connect(m_zip_treeview, &Zip_TreeView_Carrier::loadingFinished, this, [=](bool success)
+    {
+        if (success)
+        {
+            m_textEdit->hide();
+            m_zip_treeview->show();
+        }
+        else
+        {
+            m_textEdit->setPlainText(tr("加载失败"));
+        }
+    });
     resize(350, 400);
 }
 void Preview_File_Widget::Set_Speed(int value)
@@ -289,6 +303,7 @@ void Preview_File_Widget::save(QSettings *settings, QString Token)
 {
     Basic_Widget::save(settings, Token);
     m_textEdit->H_save_no_text(settings, Token + "preview_textedit_");
+    m_zip_treeview->save(settings, Token + "preview_zip_treeview_");
     settings->setValue("auto_play_action", auto_play_action->isIconVisibleInMenu());
     QStringList plugin_path_list = {};
     for (int i = 0; i < preview_file_plugin_list.count(); ++i)
@@ -310,6 +325,7 @@ void Preview_File_Widget::load(QSettings *settings, QString Token)
 {
     Basic_Widget::load(settings, Token);
     m_textEdit->H_load_no_text(settings, Token + "preview_textedit_");
+    m_zip_treeview->load(settings, Token + "preview_zip_treeview_");
     auto_play_action->setIconVisibleInMenu(settings->value("auto_play_action", false).toBool());
     QStringList plugin_path_list = settings->value("plugin_path_list").toStringList();
     for (int i = 0; i < plugin_path_list.count(); ++i)
@@ -327,6 +343,7 @@ void Preview_File_Widget::set_icon(QString checked_icon_path)
     textEdit_Mode_HEX->setIcon(QIcon(checked_icon_path));
     auto_play_action->setIcon(QIcon(checked_icon_path));
     m_textEdit->set_icon(checked_icon_path);
+    m_zip_treeview->set_icon(checked_icon_path);
 }
 void Preview_File_Widget::updatePreview(QStringList selectionFileList, QString parent_dir, bool force_update)
 {
@@ -437,6 +454,11 @@ void Preview_File_Widget::updateCurrentPreview()
         setupFontPreview(info);
         break;
     }
+    case ContentType::TypeTar:
+    {
+        setupTarPreview(info);
+        break;
+    }
     default:
     {
         break;
@@ -471,6 +493,9 @@ void Preview_File_Widget::clearCurrentPreview()
 
     m_videoViewer->hide();
     m_videoViewer->clear();
+
+    m_zip_treeview->clear();
+    m_zip_treeview->hide();
 
     force_read_Button->setEnabled(false);
     force_read_action->setEnabled(false);
@@ -858,6 +883,12 @@ void Preview_File_Widget::setupFontPreview(const QFileInfo &info)
     m_textEdit->updateLineNumberAreaWidth();
     m_textEdit->updateStatusBar();
 }
+void Preview_File_Widget::setupTarPreview(const QFileInfo &info)
+{
+    m_textEdit->setPlainText(tr("加载中..."));
+    m_textEdit->show();
+    m_zip_treeview->setupTar(info);
+}
 void Preview_File_Widget::resizeEvent(QResizeEvent *event)
 {
     Basic_Widget::resizeEvent(event);
@@ -1164,6 +1195,14 @@ static const QStringList textMimeTypes =
     "text/x-c", "text/x-c++", "text/x-java", "text/x-python",
     "application/x-ms-dos-executable"
 };
+static const QStringList tarMimeTypes =
+{
+    "application/x-tar", "application/tar", "application/gzip",
+    "application/x-bzip2", "application/x-xz", "application/x-lzip",
+    "application/x-lz4-compressed-tar", "application/x-zstd-compressed-tar",
+    "application/x-lzma-compressed-tar", "application/x-compress",
+    "application/zip", "application/x-zip-compressed"
+};
 Preview_File_Widget::ContentType Preview_File_Widget::getContentType(const QFileInfo &info)
 {
     if (info.isDir())
@@ -1229,6 +1268,16 @@ Preview_File_Widget::ContentType Preview_File_Widget::getContentType(const QFile
     {
         return ContentType::TypeFont;
     }
+    if (tarMimeTypes.contains(mimeName))
+    {
+        return ContentType::TypeTar;
+    }
+    if (suffix == "tar" || suffix == "tgz" || suffix == "tbz" || suffix == "tbz2" || suffix == "txz" || suffix == "tar" || suffix == "zip" ||
+        info.fileName().endsWith(".tar.gz") || info.fileName().endsWith(".tar.bz2") || info.fileName().endsWith(".tar.xz") || info.fileName().endsWith(".tar.zst") || info.fileName().endsWith(".tar.lz") || info.fileName().endsWith(".tar.lz4") || info.fileName().endsWith(".tar.lzma") || info.fileName().endsWith(".tar.Z"))
+    {
+        return ContentType::TypeTar;
+    }
+
     return ContentType::TypeUnKnown;
 }
 QIcon Preview_File_Widget::get_icon(const QFileInfo &info)
@@ -2039,6 +2088,10 @@ void Preview_File_Widget::load_plugin(QString filepath)
                 if (plugin_interface->Plugin_Version >= P_Version{0, 0, 1})
                 {
                     plugin_interface->init(this, this->get_self());
+                    if (plugin_interface->Plugin_Version >= P_Version{0, 0, 2})
+                    {
+                        plugin_interface->init_V_0_0_2(this);
+                    }
                     plugin_interface->your_plugin_loader = plugin_loader;
                     plugin_interface->plugin_path = filepath;
                     plugin_interface->inited = true;
@@ -2060,6 +2113,14 @@ bool Preview_File_Widget::is_Ext_plugin(QPluginLoader *plugin_loader)
     if (!meta_value.isObject()) return false;
     QJsonObject meta_obj = meta_value.toObject();
     return meta_obj.contains("Ext_Preview_Plugin");
+}
+Zip_TreeView_Carrier_Interface *Preview_File_Widget::get_m_zip_treeview()
+{
+    return m_zip_treeview;
+}
+QWidget *Preview_File_Widget::get_m_zip_treeview_as_QWidget()
+{
+    return m_zip_treeview;
 }
 bool Preview_File_Widget::Contains_Ext_Plugin(QString Ext_name, QString plugin_controller_name)
 {

@@ -84,7 +84,7 @@ My_Label::My_Label(QWidget *parent)
 
 My_Label::~My_Label()
 {
-    dbus.disconnect("", "", "", "", this, nullptr);
+    dbus.disconnect(dbus_service, dbus_path, dbus_interface, dbus_name, this, SLOT(DBusMessageReceived(QDBusMessage)));//奇怪,没有全断的打法吗
     if (my_label_list)
     {
         my_label_list->removeOne(this);
@@ -236,7 +236,7 @@ void My_Label::contextMenuEvent(QContextMenuEvent *event)
         dbus_path = m_dbus_path;
         dbus_interface = m_dbus_interface;
         dbus_name = m_dbus_name;
-        dbus.disconnect("", "", "", "", this, nullptr);
+        dbus.disconnect(dbus_service, dbus_path, dbus_interface, dbus_name, this, SLOT(DBusMessageReceived(QDBusMessage)));
         dbus.connect(dbus_service, dbus_path, dbus_interface, dbus_name, this, SLOT(DBusMessageReceived(QDBusMessage)));
     }
     else
@@ -344,7 +344,7 @@ void My_Label::load(QSettings *settings)
     dbus_name = settings->value("dbus_name", "").toString();
     dbus_setup = settings->value("dbus_setup", false).toBool();
     dbus_setup_action->setIconVisibleInMenu(dbus_setup);
-    dbus.disconnect("", "", "", "", this, nullptr);
+    dbus.disconnect(dbus_service, dbus_path, dbus_interface, dbus_name, this, SLOT(DBusMessageReceived(QDBusMessage)));
     dbus.connect(dbus_service, dbus_path, dbus_interface, dbus_name, this, SLOT(DBusMessageReceived(QDBusMessage)));
     auto_set_font_size();
 }

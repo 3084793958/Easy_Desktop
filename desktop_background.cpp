@@ -25,32 +25,6 @@ void Desktop_Background::set_Desktop_Size(int d_width, int d_height)
     desktop_width = d_width;
     desktop_height = d_height;
 }
-Path_Info::Path_Info(uint m_id)
-{
-    id = m_id;
-    Empty = true;
-}
-Path_Info::Path_Info(uint m_id, QString m_name, bool m_is_image, QString m_path, Scale_Type m_scale_type, bool m_center, bool m_mouse_effect,
-                     qreal m_k_mouse_move_width, qreal m_k_mouse_move_height, int m_delta_x, int m_delta_y,
-                     bool m_on_Antialiasing, Mouse_Control_Type m_mouse_control_type, int m_wallpaper_width, int m_wallpaper_height)
-{
-    Empty = false;
-    id = m_id;
-    name = m_name;
-    is_image = m_is_image;
-    path = m_path;
-    scale_type = m_scale_type;
-    center = m_center;
-    mouse_effect = m_mouse_effect;
-    k_mouse_move_width = m_k_mouse_move_width;
-    k_mouse_move_height = m_k_mouse_move_height;
-    delta_x = m_delta_x;
-    delta_y = m_delta_y;
-    on_Antialiasing = m_on_Antialiasing;
-    mouse_control_type = m_mouse_control_type;
-    wallpaper_width = m_wallpaper_width;
-    wallpaper_height = m_wallpaper_height;
-}
 void Path_List::Sort()
 {
     std::sort(begin(), end(), sort_data);
@@ -64,6 +38,19 @@ void Desktop_Background::mouse_move_event(int mouse_x, int mouse_y)
     if (!btnCheck->doing)
     {
         return;
+    }
+    if (use_plugin)
+    {
+        if (plugin_interface)
+        {
+            if (plugin_interface->Plugin_Version >= P_Version{0, 0, 1})
+            {
+                if (plugin_interface->inited)
+                {
+                    plugin_interface->mouseMoveEvent(mouse_x, mouse_y);
+                }
+            }
+        }
     }
     int move_x;
     int move_y;
@@ -120,6 +107,30 @@ void Desktop_Background::Update_Widget()
     media_player->stop();
     image_background->hide();
     graphicsView->hide();
+    unload_plugin();
+    if (path_list[Path_List_Index].path.endsWith(".so"))
+    {
+        use_plugin = true;
+        load_plugin(path_list[Path_List_Index].path);
+        if (use_plugin)
+        {
+            if (plugin_interface)
+            {
+                if (plugin_interface->Plugin_Version >= P_Version{0, 0, 1})
+                {
+                    if (plugin_interface->inited)
+                    {
+                        wallpaper_plugin_item = plugin_interface->wallpaperItem();
+                        wallpaper_plugin_item->setParent(this);
+                        plugin_interface->sizeChange(this->size());
+                        wallpaper_plugin_item->show();
+                    }
+                }
+            }
+        }
+        return;
+    }
+    use_plugin = false;
     if (path_list[Path_List_Index].is_image)
     {
         image_movie->setFileName(path_list[Path_List_Index].path);
@@ -158,6 +169,19 @@ void Desktop_Background::geometry_change()
     {
         return;
     }
+    if (use_plugin)
+    {
+        if (plugin_interface)
+        {
+            if (plugin_interface->Plugin_Version >= P_Version{0, 0, 1})
+            {
+                if (plugin_interface->inited)
+                {
+                    plugin_interface->sizeChange(QSize(desktop_width, desktop_height));
+                }
+            }
+        }
+    }
     if (path_list[Path_List_Index].is_image)
     {
         image_movie->setFileName(path_list[Path_List_Index].path);
@@ -169,9 +193,100 @@ void Desktop_Background::geometry_change()
     }
     Desktop_Background::Second_Update_Widget();
 }
+void Desktop_Background::load_plugin(QString filepath)
+{
+    if (filepath.isEmpty()) return;
+    if (plugin_loader->isLoaded()) unload_plugin();
+    plugin_loader->setFileName(filepath);
+    if (!plugin_loader->load())
+    {
+        qDebug() << tr("插件导入失败:") << plugin_loader->errorString();
+        use_plugin = false;
+        return;
+    }
+    QObject *pluginInstance = plugin_loader->instance();
+    if (!pluginInstance)
+    {
+        plugin_loader->unload();
+        use_plugin = false;
+        return;
+    }
+    plugin_interface = qobject_cast<Ext_Wallpaper_PluginInterface *>(pluginInstance);
+    if (plugin_interface)
+    {
+        if (is_Ext_plugin())
+        {
+            if (Desktop_Background::Contains_Ext_Plugin(plugin_interface->Ext_Name, "Easy_Desktop_Wallpaper"))
+            {
+                if (plugin_interface->Plugin_Version >= P_Version{0, 0, 1})
+                {
+                    plugin_interface->init(path_list[Path_List_Index], send_position_sender);
+                    plugin_interface->inited = true;
+                    if (theme_color)
+                    {
+                        plugin_interface->update_style(*theme_color, *theme_background_color, *theme_text_color, *select_text_color, *disabled_text_color, *checked_icon_path);
+                    }
+                }
+            }
+        }
+    }
+}
+void Desktop_Background::unload_plugin()
+{
+    if (!plugin_loader->isLoaded()) return;
+    if (!plugin_interface) return;
+    if (is_Ext_plugin())
+    {
+        if (Desktop_Background::Contains_Ext_Plugin(plugin_interface->Ext_Name, "Easy_Desktop_Wallpaper"))
+        {
+            if (plugin_interface->Plugin_Version >= P_Version{0, 0, 1})
+            {
+                wallpaper_plugin_item->setParent(nullptr);
+                wallpaper_plugin_item->hide();
+                wallpaper_plugin_item = nullptr;
+                plugin_interface->RemovePlugin();
+            }
+        }
+    }
+    plugin_loader->unload();
+}
+bool Desktop_Background::Contains_Ext_Plugin(QString Ext_name, QString plugin_controller_name)
+{
+    QStringList ext_list = Ext_name.split("|");
+    return ext_list.contains(plugin_controller_name);
+}
+bool Desktop_Background::is_Ext_plugin()
+{
+    QJsonObject root_obj = plugin_loader->metaData();
+    if (!root_obj.contains("MetaData")) return false;
+    QJsonValue meta_value = root_obj.value("MetaData");
+    if (!meta_value.isObject()) return false;
+    QJsonObject meta_obj = meta_value.toObject();
+    return meta_obj.contains("Ext_Wallpaper_Plugin");
+}
+void Desktop_Background::style_update()
+{
+    if (use_plugin)
+    {
+        if (plugin_interface)
+        {
+            if (plugin_interface->Plugin_Version >= P_Version{0, 0, 1})
+            {
+                if (plugin_interface->inited)
+                {
+                    plugin_interface->update_style(*theme_color, *theme_background_color, *theme_text_color, *select_text_color, *disabled_text_color, *checked_icon_path);
+                }
+            }
+        }
+    }
+}
 void Desktop_Background::Second_Update_Widget()
 {
     if (sending_info)
+    {
+        return;
+    }
+    if (use_plugin)
     {
         return;
     }
@@ -345,6 +460,19 @@ void Desktop_Background::Second_Update_Widget()
 }
 void Desktop_Background::Play()
 {
+    if (use_plugin)
+    {
+        if (plugin_interface)
+        {
+            if (plugin_interface->Plugin_Version >= P_Version{0, 0, 1})
+            {
+                if (plugin_interface->inited)
+                {
+                    plugin_interface->play();
+                }
+            }
+        }
+    }
     if (image_background->isVisible())
     {
         if (image_movie->state() != QMovie::MovieState::Running)
@@ -369,6 +497,19 @@ void Desktop_Background::Play()
 }
 void Desktop_Background::Pause()
 {
+    if (use_plugin)
+    {
+        if (plugin_interface)
+        {
+            if (plugin_interface->Plugin_Version >= P_Version{0, 0, 1})
+            {
+                if (plugin_interface->inited)
+                {
+                    plugin_interface->pause();
+                }
+            }
+        }
+    }
     if (image_background->isVisible())
     {
         if (image_movie->state() == QMovie::MovieState::Running)
@@ -524,16 +665,50 @@ Desktop_Background::Desktop_Background(QWidget *parent)
         text += QString::number(sec);
         emit send_position(result, text);
     });
+    connect(send_position_sender, &P_Sender::sig_Send_Data, this, [=](QVariant var)
+    {
+        QList<QVariant> item_list = var.toList();
+        if (item_list.count() == 2)
+        {
+            emit send_position(item_list[0].toInt(), item_list[1].toString());
+        }
+    });
 }
 void Desktop_Background::Set_Speed(int value)
 {
     qreal result = static_cast<qreal>(value) / 100;
     media_player->setPlaybackRate(result);
     image_movie->setSpeed(value);
+    if (use_plugin)
+    {
+        if (plugin_interface)
+        {
+            if (plugin_interface->Plugin_Version >= P_Version{0, 0, 1})
+            {
+                if (plugin_interface->inited)
+                {
+                    plugin_interface->setSpeed(value);
+                }
+            }
+        }
+    }
 }
 void Desktop_Background::Set_Volume(int value)
 {
     media_player->setVolume(value);
+    if (use_plugin)
+    {
+        if (plugin_interface)
+        {
+            if (plugin_interface->Plugin_Version >= P_Version{0, 0, 1})
+            {
+                if (plugin_interface->inited)
+                {
+                    plugin_interface->setVolume(value);
+                }
+            }
+        }
+    }
 }
 void Desktop_Background::Set_Position(int value)
 {
@@ -541,6 +716,19 @@ void Desktop_Background::Set_Position(int value)
     holding_time = 0;
     holding_pos_timer->start();
     image_movie->jumpToFrame(static_cast<int>(static_cast<double>(image_movie->frameCount() * value) / 100));
+    if (use_plugin)
+    {
+        if (plugin_interface)
+        {
+            if (plugin_interface->Plugin_Version >= P_Version{0, 0, 1})
+            {
+                if (plugin_interface->inited)
+                {
+                    plugin_interface->setPosition(value);
+                }
+            }
+        }
+    }
 }
 static bool sort_data(Path_Info list1, Path_Info list2)
 {

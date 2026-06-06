@@ -22,7 +22,7 @@
 #DEFINES += USE_DTK #使用DTK #dde-dock插件V2.0.0需要DTK支持,该项需要开启
 DEFINES += USE_CHART #使用QChart
 DEFINES += USE_PDF #使用Pdf
-QT += core gui widgets multimedia multimediawidgets x11extras dbus svg
+QT += core gui widgets multimedia multimediawidgets x11extras dbus svg gui-private
 contains(DEFINES, USE_DTK) {
     QT += dtkcore dtkgui dtkwidget
 }
@@ -67,7 +67,11 @@ SOURCES += \
     core/tools/my_rsvg_support.cpp \
     interfaces/easy_desktop_class.cpp \
     core/module/plugincontroller.cpp \
-    core/table_tree.cpp
+    core/table_tree.cpp \
+    core/module/my_icon_provider.cpp \
+    core/module/zip_treeview.cpp \
+    core/module/my_treeview_delegate.cpp \
+    interfaces/wallpaper/wallpaper_info_def.cpp
 
 contains(DEFINES, USE_CHART) {
     SOURCES += \
@@ -115,7 +119,12 @@ HEADERS += \
     interfaces/file-preview/preview_file_interface.h \
     core/module/plugincontroller.h \
     interfaces/media-widget-action/media_widgetaction_interface.h \
-    core/table_tree.h
+    core/table_tree.h \
+    core/module/my_icon_provider.h \
+    core/module/zip_treeview.h \
+    core/module/my_treeview_delegate.h \
+    interfaces/wallpaper/wallpaper_plugin.h \
+    interfaces/wallpaper/wallpaper_info_def.h
 
 contains(DEFINES, USE_CHART) {
     HEADERS += \

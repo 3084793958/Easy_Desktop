@@ -98,6 +98,14 @@ All_Control::All_Control(QWidget *parent, QString m_load_path, int m_workspace, 
     main_desktop->select_text_color = &select_text_color;
     main_desktop->disabled_text_color = &disabled_text_color;
     main_desktop->checked_icon_path = &checked_icon_path;
+
+    background->theme_color = &theme_color;
+    background->theme_background_color = &theme_background_color;
+    background->theme_text_color = &theme_text_color;
+    background->select_text_color = &select_text_color;
+    background->disabled_text_color = &disabled_text_color;
+    background->checked_icon_path = &checked_icon_path;
+
     Update_Widget();
     main_desktop->load();
     setting_widget->Table_Update();
@@ -147,6 +155,7 @@ All_Control::All_Control(QWidget *parent, QString m_load_path, int m_workspace, 
                       .arg(theme_color.red()).arg(theme_color.green()).arg(theme_color.blue()).arg(theme_color.alpha())
                       .arg(checked_icon_path));
         main_desktop->update_for_lineedit(theme_color, theme_background_color, theme_text_color, select_text_color, disabled_text_color, checked_icon_path);
+        background->style_update();
     });
     connect(main_desktop, &Desktop_Main::keyscan_loaded, this, [=]
     {
@@ -175,6 +184,7 @@ All_Control::All_Control(QWidget *parent, QString m_load_path, int m_workspace, 
                       .arg(theme_color.red()).arg(theme_color.green()).arg(theme_color.blue()).arg(theme_color.alpha())
                       .arg(checked_icon_path));
         main_desktop->update_for_lineedit(theme_color, theme_background_color, theme_text_color, select_text_color, disabled_text_color, checked_icon_path);
+        background->style_update();
     });
     workspace_timer->setInterval(1000);
     connect(workspace_timer, &QTimer::timeout, this, [=]
@@ -215,6 +225,7 @@ All_Control::All_Control(QWidget *parent, QString m_load_path, int m_workspace, 
                   .arg(theme_color.red()).arg(theme_color.green()).arg(theme_color.blue()).arg(theme_color.alpha())
                   .arg(checked_icon_path));
     main_desktop->update_for_lineedit(theme_color, theme_background_color, theme_text_color, select_text_color, disabled_text_color, checked_icon_path);
+    background->style_update();
 }
 void All_Control::dbus_slot(QDBusMessage message)
 {
