@@ -1399,6 +1399,16 @@ void Desktop_Main::save()
 {
     Desktop_Main::save(load_path);
 }
+static QStringList save_program_list =
+{
+    "dde-file-manager -d -o",
+    "dde-file-manager --show-item",
+    "dde-file-manager -p",
+    "deepin-terminal -w",
+    "deepin-compressor %F compress",
+    "deepin-compressor %F compress_to_zip",
+    "deepin-compressor %F compress_to_7z"
+};
 void Desktop_Main::load()
 {
     QSettings settings(load_path, QSettings::IniFormat);

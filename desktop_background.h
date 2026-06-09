@@ -30,6 +30,8 @@ public:
     void save(QSettings *settings);
     void load(QSettings *settings);
     void geometry_change();
+public:
+    void plugin_settings_event();
 signals:
     void send_position(int value, QString text);
 public:

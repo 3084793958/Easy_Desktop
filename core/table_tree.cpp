@@ -427,7 +427,6 @@ File_Table::File_Table(QWidget *parent)
     search_del_action->setIcon(QIcon(":/base/del.svg"));
     model->setFilter(QDir::Files | QDir::Dirs | QDir::NoDotAndDotDot | QDir::Hidden);
     model->setRootPath(QDir::rootPath());
-    model->setIconProvider(icon_provider);
     proxyModel->setSourceModel(model);
     proxyModel->setShowHidden(false);
     treeView->setModel(proxyModel);

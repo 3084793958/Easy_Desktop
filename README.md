@@ -45,6 +45,23 @@ sudo apt install libqt5pdfwidgets5
 
 记得储存,Easy_Desktop不会帮你储存(/tmp那个是用来备份的)
 
+## 关于编译
+1.安装依赖
+
+```
+./install_dev_deps.sh
+```
+
+2.编译(这个过程大概要40min)
+
+```
+./build_deb.sh
+```
+
+3.取文件
+
+在build/中,其中debs为*.deb输出路径,其他为各版本的编译路径
+
 ## 命令行控制服务
 
 | 选项/方法 | 描述 |
@@ -85,7 +102,7 @@ QT5.15.8 , C++11
 ## Easy_Desktop插件支持
 
 ### 接口
-interface(新)(包含Ext_Plugin_Interface(dde-dock插件变体)和Ext_Preview_PluginInterface(预览控件(Preview_File_Widget)的插件)):
+interface(新)(包含Ext_Plugin_Interface(dde-dock插件变体),Ext_Preview_PluginInterface(预览控件(Preview_File_Widget)的插件),Ext_Wallpaper_Interface(壁纸插件)):
 
 [https://github.com/3084793958/Easy_Desktop_Plugin_Interface](https://github.com/3084793958/Easy_Desktop_Plugin_Interface)
 
@@ -95,9 +112,12 @@ interface(旧)(仅包含Ext_Plugin_Interface V0.0.1):
 
 ### 插件实例
 
-music-island : [https://github.com/3084793958/music-island-B-QT-P](https://github.com/3084793958/music-island-B-QT-P)
+music-island(Ext_Plugin_Interface) : [https://github.com/3084793958/music-island-B-QT-P](https://github.com/3084793958/music-island-B-QT-P)
 
-Window_Container : [https://github.com/3084793958/PPT_LibreOffice_Previewer.git](https://github.com/3084793958/PPT_LibreOffice_Previewer.git)
+Window_Container(Ext_Plugin_Interface) : [https://github.com/3084793958/Window_Container](https://github.com/3084793958/Window_Container)
 
-PPT_LibreOffice_Previewer : [https://github.com/3084793958/PPT_LibreOffice_Previewer](https://github.com/3084793958/PPT_LibreOffice_Previewer)
+PPT_LibreOffice_Previewer(Ext_Preview_PluginInterface) : [https://github.com/3084793958/PPT_LibreOffice_Previewer](https://github.com/3084793958/PPT_LibreOffice_Previewer)
 
+Two_SOI_Previewer(Ext_Preview_PluginInterface) : [https://github.com/3084793958/Two_SOI_Previewer.git](https://github.com/3084793958/Two_SOI_Previewer.git)
+
+Metro_Wallpaper(Ext_Wallpaper_Interface) : [https://github.com/3084793958/Metro_Wallpaper.git](https://github.com/3084793958/Metro_Wallpaper.git)

@@ -7,6 +7,7 @@
 #include "core/module/preview_file_widget.h"
 #include "core/module/my_icon_provider.h"
 #include "core/module/my_treeview_delegate.h"
+#include "core/module/asyncfilesystemmodel.h"
 class My_Tree_View;
 class My_ProxyModel : public QSortFilterProxyModel
 {
@@ -116,7 +117,7 @@ protected:
     int radius = 10;
     void set_tree_view_style();
     QWidget *carrier_widget = new QWidget(this->get_self());
-    QFileSystemModel *model = new QFileSystemModel(this);
+    AsyncFileSystemModel *model = new AsyncFileSystemModel(this);
     My_Tree_View *treeView = new My_Tree_View(carrier_widget, &root_path);
     My_ProxyModel *proxyModel = new My_ProxyModel(this, treeView, model);
     My_TreeView_Delegate *my_delegate = new My_TreeView_Delegate(this, &hover_color, &select_color, &radius, &proposed_action_index);

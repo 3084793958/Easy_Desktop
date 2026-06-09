@@ -230,8 +230,9 @@ Setting_Widget::Setting_Widget(QWidget *parent)
         path_box_list[index]->setText(file_name);
     });
     load_img_button->move(5, 320);
-    load_video_button->move(150, 320);
-    load_plugin_button->move(295, 320);
+    load_video_button->move(120, 320);
+    load_plugin_button->move(235, 320);
+    plugin_settings_button->move(350, 320);
     connect(load_img_button, &QPushButton::released, this, [=]
     {
         QStringList filenames = QFileDialog::getOpenFileNames(nullptr, tr("获取文件"), QDir::homePath(), tr("图像文件") + "(*.png *.jpg *.jpeg *.svg *.gif *.bmp);;" + tr("所有文件") + "(*.*)");
@@ -345,9 +346,13 @@ Setting_Widget::Setting_Widget(QWidget *parent)
         }
         for (int i = 0; i < filenames.count(); i++)
         {
-            path_list<<Path_Info(max_id + static_cast<unsigned>(i),QFileInfo(filenames[i]).fileName(),false,filenames[i],Scale_Type::Full,true,false,0,0,0,0,true);
+            path_list<<Path_Info(max_id + static_cast<unsigned>(i),QFileInfo(filenames[i]).fileName(),true,filenames[i],Scale_Type::Full,true,false,0,0,0,0,true);
         }
         Setting_Widget::private_update();
+    });
+    connect(plugin_settings_button, &QPushButton::released, this, [=]
+    {
+        background_path->plugin_settings_event();
     });
     table_widget->viewport()->installEventFilter(this);//eventFilter需要注册
 }
@@ -361,8 +366,9 @@ void Setting_Widget::resizeEvent(QResizeEvent *event)
     new_button->move(new_size.width() - 120, new_size.height() - 80);
     delete_button->move(new_size.width() - 60, new_size.height() - 80);
     load_img_button->move(5, new_size.height() - 80);
-    load_video_button->move(150, new_size.height() - 80);
-    load_plugin_button->move(295, new_size.height() - 80);
+    load_video_button->move(120, new_size.height() - 80);
+    load_plugin_button->move(235, new_size.height() - 80);
+    plugin_settings_button->move(350, new_size.height() - 80);
     choose_id_text->move(0, new_size.height() - 35);
     choose_id_box->move(50, new_size.height() - 40);
     set_file_button->move(200, new_size.height() - 40);
@@ -837,6 +843,7 @@ void Setting_Widget::add_wallpaper(uint m_id, QString m_name, bool m_is_image, Q
     path_list<<Path_Info(m_id, m_name, m_is_image, m_path, m_scale_type, m_center, m_mouse_effect,
                          m_k_mouse_move_width, m_k_mouse_move_height, m_delta_x, m_delta_y,
                          m_on_Antialiasing, m_mouse_control_type, m_wallpaper_width, m_wallpaper_height);
+    background_path->path_list = path_list;
     Setting_Widget::private_update();
 }
 int Setting_Widget::Get_id_to_Index(int id)

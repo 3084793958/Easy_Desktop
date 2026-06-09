@@ -6,6 +6,7 @@
 #include "core/tools/multilinetextinputdialog.h"
 #include "core/module/preview_file_widget.h"
 #include "core/module/my_icon_provider.h"
+#include "core/module/asyncfilesystemmodel.h"
 class My_TableView_Delegate : public QStyledItemDelegate
 {
 public:
@@ -127,7 +128,7 @@ protected:
     int sort_type = 0;
     void set_tree_view_style();
     QWidget *carrier_widget = new QWidget(this->get_self());
-    QFileSystemModel *model = new QFileSystemModel(this);
+    AsyncFileSystemModel *model = new AsyncFileSystemModel(this);
     My_Table_View *treeView = new My_Table_View(carrier_widget, &root_path);
     My_Table_ProxyModel *proxyModel = new My_Table_ProxyModel(this, treeView, &sort_type, model);
     My_TableView_Delegate *my_delegate = new My_TableView_Delegate(this, &hover_color, &select_color, &radius);

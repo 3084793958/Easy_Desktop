@@ -121,13 +121,17 @@ void Desktop_Background::Update_Widget()
                     if (plugin_interface->inited)
                     {
                         wallpaper_plugin_item = plugin_interface->wallpaperItem();
-                        wallpaper_plugin_item->setParent(this);
-                        plugin_interface->sizeChange(this->size());
-                        wallpaper_plugin_item->show();
+                        if (wallpaper_plugin_item)
+                        {
+                            wallpaper_plugin_item->setParent(this);
+                            plugin_interface->sizeChange(this->size());
+                            wallpaper_plugin_item->show();
+                        }
                     }
                 }
             }
         }
+        updating = false;
         return;
     }
     use_plugin = false;
@@ -193,6 +197,22 @@ void Desktop_Background::geometry_change()
     }
     Desktop_Background::Second_Update_Widget();
 }
+void Desktop_Background::plugin_settings_event()
+{
+    if (use_plugin)
+    {
+        if (plugin_interface)
+        {
+            if (plugin_interface->Plugin_Version >= P_Version{0, 0, 1})
+            {
+                if (plugin_interface->inited)
+                {
+                    plugin_interface->settingsEvent();
+                }
+            }
+        }
+    }
+}
 void Desktop_Background::load_plugin(QString filepath)
 {
     if (filepath.isEmpty()) return;
@@ -241,9 +261,12 @@ void Desktop_Background::unload_plugin()
         {
             if (plugin_interface->Plugin_Version >= P_Version{0, 0, 1})
             {
-                wallpaper_plugin_item->setParent(nullptr);
-                wallpaper_plugin_item->hide();
-                wallpaper_plugin_item = nullptr;
+                if (wallpaper_plugin_item)
+                {
+                    wallpaper_plugin_item->setParent(nullptr);
+                    wallpaper_plugin_item->hide();
+                    wallpaper_plugin_item = nullptr;
+                }
                 plugin_interface->RemovePlugin();
             }
         }

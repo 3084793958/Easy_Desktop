@@ -71,7 +71,9 @@ SOURCES += \
     core/module/my_icon_provider.cpp \
     core/module/zip_treeview.cpp \
     core/module/my_treeview_delegate.cpp \
-    interfaces/wallpaper/wallpaper_info_def.cpp
+    interfaces/wallpaper/wallpaper_info_def.cpp \
+    core/module/asynciconloader.cpp \
+    core/module/asyncfilesystemmodel.cpp
 
 contains(DEFINES, USE_CHART) {
     SOURCES += \
@@ -124,7 +126,9 @@ HEADERS += \
     core/module/zip_treeview.h \
     core/module/my_treeview_delegate.h \
     interfaces/wallpaper/wallpaper_plugin.h \
-    interfaces/wallpaper/wallpaper_info_def.h
+    interfaces/wallpaper/wallpaper_info_def.h \
+    core/module/asynciconloader.h \
+    core/module/asyncfilesystemmodel.h
 
 contains(DEFINES, USE_CHART) {
     HEADERS += \

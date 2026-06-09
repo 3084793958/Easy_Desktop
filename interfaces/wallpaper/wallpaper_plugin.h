@@ -40,7 +40,7 @@ public:
     /// \brief init(const Path_Info &info, P_Sender *send_position_sender)
     /// 初始化时传递用户设定的信息,其中,info包含wallpaper信息,send_position_sender为更新进度条的sender,使用Send_Data(QList<QVariant>() << int value << QString text)
     /// \param info
-    /// \paramsend_position_sender
+    /// \param send_position_sender
     ///
     virtual void init(const Path_Info &info, P_Sender *send_position_sender)
     {
@@ -125,6 +125,12 @@ public:
     {
         (void) size;
     }
+    ///
+    /// \brief settingsEvent
+    /// 呼出插件的设置窗口的时间
+    ///
+    virtual void settingsEvent()
+    {}
     ///
     /// \brief wallpaperItem
     /// 给出一个wallpaper的实现,Easy_Desktop会将其渲染[必须实现]

@@ -614,6 +614,14 @@
     </message>
 </context>
 <context>
+    <name>Desktop_Background</name>
+    <message>
+        <location filename="../desktop_background.cpp" line="223"/>
+        <source>插件导入失败:</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>Desktop_Control_Dock</name>
     <message>
         <location filename="../desktop_main.h" line="64"/>
@@ -1107,8 +1115,8 @@
     <message>
         <location filename="../core/table_tree.cpp" line="369"/>
         <location filename="../core/table_tree.cpp" line="1392"/>
-        <location filename="../core/table_tree.h" line="163"/>
-        <location filename="../core/table_tree.h" line="195"/>
+        <location filename="../core/table_tree.h" line="170"/>
+        <location filename="../core/table_tree.h" line="202"/>
         <source>重命名</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1120,13 +1128,13 @@
     </message>
     <message>
         <location filename="../core/table_tree.cpp" line="424"/>
-        <location filename="../core/table_tree.h" line="196"/>
+        <location filename="../core/table_tree.h" line="203"/>
         <source>搜索</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../core/table_tree.cpp" line="848"/>
-        <location filename="../core/table_tree.h" line="147"/>
+        <location filename="../core/table_tree.h" line="154"/>
         <source>新建文件</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1137,7 +1145,7 @@
     </message>
     <message>
         <location filename="../core/table_tree.cpp" line="902"/>
-        <location filename="../core/table_tree.h" line="148"/>
+        <location filename="../core/table_tree.h" line="155"/>
         <source>新建文件夹</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1171,214 +1179,214 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../core/table_tree.h" line="130"/>
+        <location filename="../core/table_tree.h" line="137"/>
         <source>深层搜索</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../core/table_tree.h" line="135"/>
-        <location filename="../core/table_tree.h" line="189"/>
+        <location filename="../core/table_tree.h" line="142"/>
+        <location filename="../core/table_tree.h" line="196"/>
         <source>打开</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../core/table_tree.h" line="136"/>
+        <location filename="../core/table_tree.h" line="143"/>
         <source>打开方式</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../core/table_tree.h" line="137"/>
+        <location filename="../core/table_tree.h" line="144"/>
         <source>打开所在位置</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../core/table_tree.h" line="139"/>
+        <location filename="../core/table_tree.h" line="146"/>
         <source>在终端中打开</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../core/table_tree.h" line="142"/>
+        <location filename="../core/table_tree.h" line="149"/>
         <source>压缩</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../core/table_tree.h" line="143"/>
+        <location filename="../core/table_tree.h" line="150"/>
         <source>压缩到zip</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../core/table_tree.h" line="144"/>
+        <location filename="../core/table_tree.h" line="151"/>
         <source>压缩到7z</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../core/table_tree.h" line="146"/>
+        <location filename="../core/table_tree.h" line="153"/>
         <source>新建</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../core/table_tree.h" line="150"/>
+        <location filename="../core/table_tree.h" line="157"/>
         <source>控制</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../core/table_tree.h" line="151"/>
+        <location filename="../core/table_tree.h" line="158"/>
         <source>进入</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../core/table_tree.h" line="152"/>
+        <location filename="../core/table_tree.h" line="159"/>
         <source>返回上级</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../core/table_tree.h" line="153"/>
-        <location filename="../core/table_tree.h" line="198"/>
+        <location filename="../core/table_tree.h" line="160"/>
+        <location filename="../core/table_tree.h" line="205"/>
         <source>显示隐藏文件</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../core/table_tree.h" line="154"/>
+        <location filename="../core/table_tree.h" line="161"/>
         <source>显示预览窗口</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../core/table_tree.h" line="156"/>
+        <location filename="../core/table_tree.h" line="163"/>
         <source>全选</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../core/table_tree.h" line="157"/>
+        <location filename="../core/table_tree.h" line="164"/>
         <source>清除选择</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../core/table_tree.h" line="158"/>
+        <location filename="../core/table_tree.h" line="165"/>
         <source>刷新</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../core/table_tree.h" line="160"/>
-        <location filename="../core/table_tree.h" line="191"/>
+        <location filename="../core/table_tree.h" line="167"/>
+        <location filename="../core/table_tree.h" line="198"/>
         <source>剪切</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../core/table_tree.h" line="161"/>
-        <location filename="../core/table_tree.h" line="190"/>
+        <location filename="../core/table_tree.h" line="168"/>
+        <location filename="../core/table_tree.h" line="197"/>
         <source>复制</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../core/table_tree.h" line="162"/>
-        <location filename="../core/table_tree.h" line="192"/>
+        <location filename="../core/table_tree.h" line="169"/>
+        <location filename="../core/table_tree.h" line="199"/>
         <source>粘贴</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../core/table_tree.h" line="164"/>
-        <location filename="../core/table_tree.h" line="193"/>
+        <location filename="../core/table_tree.h" line="171"/>
+        <location filename="../core/table_tree.h" line="200"/>
         <source>删除</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../core/table_tree.h" line="165"/>
-        <location filename="../core/table_tree.h" line="197"/>
+        <location filename="../core/table_tree.h" line="172"/>
+        <location filename="../core/table_tree.h" line="204"/>
         <source>属性</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../core/table_tree.h" line="167"/>
+        <location filename="../core/table_tree.h" line="174"/>
         <source>图标视图控制</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../core/table_tree.h" line="168"/>
+        <location filename="../core/table_tree.h" line="175"/>
         <source>单击模式</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../core/table_tree.h" line="169"/>
+        <location filename="../core/table_tree.h" line="176"/>
         <source>设置文件夹路径</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../core/table_tree.h" line="170"/>
+        <location filename="../core/table_tree.h" line="177"/>
         <source>设置外观</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../core/table_tree.h" line="171"/>
+        <location filename="../core/table_tree.h" line="178"/>
         <source>显示状态栏</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../core/table_tree.h" line="172"/>
+        <location filename="../core/table_tree.h" line="179"/>
         <source>设置状态栏字体颜色</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../core/table_tree.h" line="174"/>
+        <location filename="../core/table_tree.h" line="181"/>
         <source>排序方式</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../core/table_tree.h" line="175"/>
+        <location filename="../core/table_tree.h" line="182"/>
         <source>名称(顺)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../core/table_tree.h" line="176"/>
+        <location filename="../core/table_tree.h" line="183"/>
         <source>大小(顺)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../core/table_tree.h" line="177"/>
+        <location filename="../core/table_tree.h" line="184"/>
         <source>日期(顺)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../core/table_tree.h" line="178"/>
+        <location filename="../core/table_tree.h" line="185"/>
         <source>名称(反)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../core/table_tree.h" line="179"/>
+        <location filename="../core/table_tree.h" line="186"/>
         <source>大小(反)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../core/table_tree.h" line="180"/>
+        <location filename="../core/table_tree.h" line="187"/>
         <source>日期(反)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../core/table_tree.h" line="182"/>
+        <location filename="../core/table_tree.h" line="189"/>
         <source>图标大小</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../core/table_tree.h" line="183"/>
+        <location filename="../core/table_tree.h" line="190"/>
         <source>字体</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../core/table_tree.h" line="184"/>
+        <location filename="../core/table_tree.h" line="191"/>
         <source>悬停颜色</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../core/table_tree.h" line="185"/>
+        <location filename="../core/table_tree.h" line="192"/>
         <source>选择颜色</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../core/table_tree.h" line="186"/>
+        <location filename="../core/table_tree.h" line="193"/>
         <source>圆角大小</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../core/table_tree.h" line="194"/>
+        <location filename="../core/table_tree.h" line="201"/>
         <source>强制删除</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1386,245 +1394,245 @@
 <context>
     <name>File_Tree</name>
     <message>
-        <location filename="../core/file_tree.cpp" line="343"/>
-        <location filename="../core/file_tree.cpp" line="1375"/>
-        <location filename="../core/file_tree.h" line="162"/>
-        <location filename="../core/file_tree.h" line="185"/>
+        <location filename="../core/file_tree.cpp" line="344"/>
+        <location filename="../core/file_tree.cpp" line="1376"/>
+        <location filename="../core/file_tree.h" line="159"/>
+        <location filename="../core/file_tree.h" line="182"/>
         <source>重命名</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../core/file_tree.cpp" line="343"/>
-        <location filename="../core/file_tree.cpp" line="1375"/>
+        <location filename="../core/file_tree.cpp" line="344"/>
+        <location filename="../core/file_tree.cpp" line="1376"/>
         <source>获取新名称:(请勿添加\n)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../core/file_tree.cpp" line="398"/>
-        <location filename="../core/file_tree.h" line="186"/>
+        <location filename="../core/file_tree.cpp" line="399"/>
+        <location filename="../core/file_tree.h" line="183"/>
         <source>搜索</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../core/file_tree.cpp" line="831"/>
-        <location filename="../core/file_tree.h" line="146"/>
+        <location filename="../core/file_tree.cpp" line="832"/>
+        <location filename="../core/file_tree.h" line="143"/>
         <source>新建文件</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../core/file_tree.cpp" line="831"/>
+        <location filename="../core/file_tree.cpp" line="832"/>
         <source>获取文件名:(一行一文件)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../core/file_tree.cpp" line="885"/>
-        <location filename="../core/file_tree.h" line="147"/>
+        <location filename="../core/file_tree.cpp" line="886"/>
+        <location filename="../core/file_tree.h" line="144"/>
         <source>新建文件夹</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../core/file_tree.cpp" line="885"/>
+        <location filename="../core/file_tree.cpp" line="886"/>
         <source>获取文件夹名:(一行一文件夹)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../core/file_tree.cpp" line="1460"/>
+        <location filename="../core/file_tree.cpp" line="1461"/>
         <source>获取文件夹</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../core/file_tree.cpp" line="1477"/>
-        <location filename="../core/file_tree.cpp" line="1525"/>
+        <location filename="../core/file_tree.cpp" line="1478"/>
+        <location filename="../core/file_tree.cpp" line="1526"/>
         <source>获取数值</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../core/file_tree.cpp" line="1477"/>
-        <location filename="../core/file_tree.cpp" line="1525"/>
+        <location filename="../core/file_tree.cpp" line="1478"/>
+        <location filename="../core/file_tree.cpp" line="1526"/>
         <source>大小:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../core/file_tree.cpp" line="1500"/>
-        <location filename="../core/file_tree.cpp" line="1514"/>
-        <location filename="../core/file_tree.cpp" line="1544"/>
+        <location filename="../core/file_tree.cpp" line="1501"/>
+        <location filename="../core/file_tree.cpp" line="1515"/>
+        <location filename="../core/file_tree.cpp" line="1545"/>
         <source>获取颜色</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../core/file_tree.h" line="129"/>
+        <location filename="../core/file_tree.h" line="126"/>
         <source>深层搜索</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../core/file_tree.h" line="134"/>
-        <location filename="../core/file_tree.h" line="179"/>
+        <location filename="../core/file_tree.h" line="131"/>
+        <location filename="../core/file_tree.h" line="176"/>
         <source>打开</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../core/file_tree.h" line="135"/>
+        <location filename="../core/file_tree.h" line="132"/>
         <source>打开方式</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../core/file_tree.h" line="136"/>
+        <location filename="../core/file_tree.h" line="133"/>
         <source>打开所在位置</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../core/file_tree.h" line="138"/>
+        <location filename="../core/file_tree.h" line="135"/>
         <source>在终端中打开</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../core/file_tree.h" line="141"/>
+        <location filename="../core/file_tree.h" line="138"/>
         <source>压缩</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../core/file_tree.h" line="142"/>
+        <location filename="../core/file_tree.h" line="139"/>
         <source>压缩到zip</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../core/file_tree.h" line="143"/>
+        <location filename="../core/file_tree.h" line="140"/>
         <source>压缩到7z</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../core/file_tree.h" line="145"/>
+        <location filename="../core/file_tree.h" line="142"/>
         <source>新建</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../core/file_tree.h" line="149"/>
+        <location filename="../core/file_tree.h" line="146"/>
         <source>控制</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../core/file_tree.h" line="150"/>
+        <location filename="../core/file_tree.h" line="147"/>
         <source>进入</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../core/file_tree.h" line="151"/>
+        <location filename="../core/file_tree.h" line="148"/>
         <source>返回上级</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../core/file_tree.h" line="152"/>
-        <location filename="../core/file_tree.h" line="188"/>
+        <location filename="../core/file_tree.h" line="149"/>
+        <location filename="../core/file_tree.h" line="185"/>
         <source>显示隐藏文件</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../core/file_tree.h" line="153"/>
+        <location filename="../core/file_tree.h" line="150"/>
         <source>显示预览窗口</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../core/file_tree.h" line="155"/>
+        <location filename="../core/file_tree.h" line="152"/>
         <source>全选</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../core/file_tree.h" line="156"/>
+        <location filename="../core/file_tree.h" line="153"/>
         <source>清除选择</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../core/file_tree.h" line="157"/>
+        <location filename="../core/file_tree.h" line="154"/>
         <source>刷新</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../core/file_tree.h" line="159"/>
-        <location filename="../core/file_tree.h" line="181"/>
+        <location filename="../core/file_tree.h" line="156"/>
+        <location filename="../core/file_tree.h" line="178"/>
         <source>剪切</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../core/file_tree.h" line="157"/>
+        <location filename="../core/file_tree.h" line="177"/>
+        <source>复制</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../core/file_tree.h" line="158"/>
+        <location filename="../core/file_tree.h" line="179"/>
+        <source>粘贴</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../core/file_tree.h" line="160"/>
         <location filename="../core/file_tree.h" line="180"/>
-        <source>复制</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../core/file_tree.h" line="161"/>
-        <location filename="../core/file_tree.h" line="182"/>
-        <source>粘贴</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../core/file_tree.h" line="163"/>
-        <location filename="../core/file_tree.h" line="183"/>
         <source>删除</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../core/file_tree.h" line="164"/>
-        <location filename="../core/file_tree.h" line="187"/>
+        <location filename="../core/file_tree.h" line="161"/>
+        <location filename="../core/file_tree.h" line="184"/>
         <source>属性</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../core/file_tree.h" line="166"/>
+        <location filename="../core/file_tree.h" line="163"/>
         <source>树状视图控制</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../core/file_tree.h" line="167"/>
+        <location filename="../core/file_tree.h" line="164"/>
         <source>单击模式</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../core/file_tree.h" line="168"/>
+        <location filename="../core/file_tree.h" line="165"/>
         <source>设置文件夹路径</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../core/file_tree.h" line="169"/>
+        <location filename="../core/file_tree.h" line="166"/>
         <source>设置外观</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../core/file_tree.h" line="170"/>
+        <location filename="../core/file_tree.h" line="167"/>
         <source>显示状态栏</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../core/file_tree.h" line="171"/>
+        <location filename="../core/file_tree.h" line="168"/>
         <source>设置状态栏字体颜色</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../core/file_tree.h" line="172"/>
+        <location filename="../core/file_tree.h" line="169"/>
         <source>图标大小</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../core/file_tree.h" line="173"/>
+        <location filename="../core/file_tree.h" line="170"/>
         <source>字体</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../core/file_tree.h" line="174"/>
+        <location filename="../core/file_tree.h" line="171"/>
         <source>悬停颜色</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../core/file_tree.h" line="175"/>
+        <location filename="../core/file_tree.h" line="172"/>
         <source>选择颜色</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../core/file_tree.h" line="176"/>
+        <location filename="../core/file_tree.h" line="173"/>
         <source>圆角大小</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../core/file_tree.h" line="184"/>
+        <location filename="../core/file_tree.h" line="181"/>
         <source>强制删除</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1735,58 +1743,58 @@
 <context>
     <name>Info_Widget</name>
     <message>
-        <location filename="../core/module/preview_file_widget.cpp" line="1403"/>
+        <location filename="../core/module/preview_file_widget.cpp" line="1476"/>
         <source>名称:%1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../core/module/preview_file_widget.cpp" line="1450"/>
+        <location filename="../core/module/preview_file_widget.cpp" line="1523"/>
         <source>文件夹</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../core/module/preview_file_widget.cpp" line="1442"/>
-        <location filename="../core/module/preview_file_widget.cpp" line="1537"/>
+        <location filename="../core/module/preview_file_widget.cpp" line="1515"/>
+        <location filename="../core/module/preview_file_widget.cpp" line="1610"/>
         <source>大小:%1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../core/module/preview_file_widget.cpp" line="1425"/>
+        <location filename="../core/module/preview_file_widget.cpp" line="1498"/>
         <source>大小:文件夹</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../core/module/preview_file_widget.cpp" line="1445"/>
+        <location filename="../core/module/preview_file_widget.cpp" line="1518"/>
         <source>修改时间:%1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../core/module/preview_file_widget.cpp" line="1454"/>
+        <location filename="../core/module/preview_file_widget.cpp" line="1527"/>
         <source>符号链接</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../core/module/preview_file_widget.cpp" line="1461"/>
+        <location filename="../core/module/preview_file_widget.cpp" line="1534"/>
         <source>文件</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../core/module/preview_file_widget.cpp" line="1465"/>
+        <location filename="../core/module/preview_file_widget.cpp" line="1538"/>
         <source>%1 文件</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../core/module/preview_file_widget.cpp" line="1470"/>
+        <location filename="../core/module/preview_file_widget.cpp" line="1543"/>
         <source>未知</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../core/module/preview_file_widget.cpp" line="1472"/>
+        <location filename="../core/module/preview_file_widget.cpp" line="1545"/>
         <source>类型:%1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../core/module/preview_file_widget.cpp" line="1527"/>
+        <location filename="../core/module/preview_file_widget.cpp" line="1600"/>
         <source>大小:%1(计算中)</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2326,17 +2334,19 @@ PID:</source>
 <context>
     <name>My_Table_View</name>
     <message>
-        <location filename="../core/table_tree.cpp" line="2189"/>
-        <source>选择: %1 个文件 (共 %2)  %3 个文件夹(包含 %4 项) [总选择大小:%8] |根文件夹: 总文件: %5 个 (共 %6)  总文件夹: %7 个</source>
+        <location filename="../core/table_tree.cpp" line="2114"/>
+        <source>选择: %1 个文件 (共 %2)  %3 个文件夹(包含 %4 项) [总选择大小:%8] 
+根文件夹: 总文件: %5 个 (共 %6)  总文件夹: %7 个</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../core/table_tree.cpp" line="2200"/>
-        <source>选择: %1 个文件 (共 %2)  %3 个文件夹(包含 %4 项) [总选择大小:%5] |根文件夹: 总文件: %6 个 (共 %7)  总文件夹: %8 个</source>
+        <location filename="../core/table_tree.cpp" line="2125"/>
+        <source>选择: %1 个文件 (共 %2)  %3 个文件夹(包含 %4 项) [总选择大小:%5] 
+根文件夹: 总文件: %6 个 (共 %7)  总文件夹: %8 个</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../core/table_tree.cpp" line="2280"/>
+        <location filename="../core/table_tree.cpp" line="2205"/>
         <source>(计算中)</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2344,17 +2354,19 @@ PID:</source>
 <context>
     <name>My_Tree_View</name>
     <message>
-        <location filename="../core/file_tree.cpp" line="2060"/>
-        <source>选择: %1 个文件 (共 %2)  %3 个文件夹(包含 %4 项) [总选择大小:%8] |根文件夹: 总文件: %5 个 (共 %6)  总文件夹: %7 个</source>
+        <location filename="../core/file_tree.cpp" line="2012"/>
+        <source>选择: %1 个文件 (共 %2)  %3 个文件夹(包含 %4 项) [总选择大小:%8] 
+根文件夹: 总文件: %5 个 (共 %6)  总文件夹: %7 个</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../core/file_tree.cpp" line="2071"/>
-        <source>选择: %1 个文件 (共 %2)  %3 个文件夹(包含 %4 项) [总选择大小:%5] |根文件夹: 总文件: %6 个 (共 %7)  总文件夹: %8 个</source>
+        <location filename="../core/file_tree.cpp" line="2023"/>
+        <source>选择: %1 个文件 (共 %2)  %3 个文件夹(包含 %4 项) [总选择大小:%5] 
+根文件夹: 总文件: %6 个 (共 %7)  总文件夹: %8 个</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../core/file_tree.cpp" line="2151"/>
+        <location filename="../core/file_tree.cpp" line="2102"/>
         <source>(计算中)</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2602,98 +2614,103 @@ PID:</source>
 <context>
     <name>Preview_File_Widget</name>
     <message>
-        <location filename="../core/module/preview_file_widget.cpp" line="141"/>
-        <location filename="../core/module/preview_file_widget.h" line="154"/>
+        <location filename="../core/module/preview_file_widget.cpp" line="148"/>
+        <location filename="../core/module/preview_file_widget.h" line="162"/>
         <source>纯文本</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../core/module/preview_file_widget.cpp" line="142"/>
-        <location filename="../core/module/preview_file_widget.h" line="155"/>
+        <location filename="../core/module/preview_file_widget.cpp" line="149"/>
+        <location filename="../core/module/preview_file_widget.h" line="163"/>
         <source>HTML</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../core/module/preview_file_widget.cpp" line="143"/>
-        <location filename="../core/module/preview_file_widget.h" line="156"/>
+        <location filename="../core/module/preview_file_widget.cpp" line="150"/>
+        <location filename="../core/module/preview_file_widget.h" line="164"/>
         <source>Markdown</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../core/module/preview_file_widget.cpp" line="144"/>
-        <location filename="../core/module/preview_file_widget.h" line="157"/>
+        <location filename="../core/module/preview_file_widget.cpp" line="151"/>
+        <location filename="../core/module/preview_file_widget.h" line="165"/>
         <source>查看svg</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../core/module/preview_file_widget.cpp" line="145"/>
-        <location filename="../core/module/preview_file_widget.h" line="158"/>
+        <location filename="../core/module/preview_file_widget.cpp" line="152"/>
+        <location filename="../core/module/preview_file_widget.h" line="166"/>
         <source>十六进制</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../core/module/preview_file_widget.cpp" line="564"/>
-        <location filename="../core/module/preview_file_widget.cpp" line="572"/>
+        <location filename="../core/module/preview_file_widget.cpp" line="238"/>
+        <source>加载失败</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../core/module/preview_file_widget.cpp" line="601"/>
+        <location filename="../core/module/preview_file_widget.cpp" line="609"/>
         <source>无法读取文件:%1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../core/module/preview_file_widget.cpp" line="588"/>
+        <location filename="../core/module/preview_file_widget.cpp" line="626"/>
         <source>无法加载 PDF文件或文件为空</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../core/module/preview_file_widget.cpp" line="640"/>
+        <location filename="../core/module/preview_file_widget.cpp" line="681"/>
         <source>无法加载图片:%1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../core/module/preview_file_widget.cpp" line="757"/>
+        <location filename="../core/module/preview_file_widget.cpp" line="798"/>
         <source>无法加载SVG文件:%1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../core/module/preview_file_widget.cpp" line="772"/>
+        <location filename="../core/module/preview_file_widget.cpp" line="813"/>
         <source>无法加载字体文件</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../core/module/preview_file_widget.cpp" line="779"/>
+        <location filename="../core/module/preview_file_widget.cpp" line="820"/>
         <source>字体文件未包含任何有效字体族</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../core/module/preview_file_widget.cpp" line="787"/>
+        <location filename="../core/module/preview_file_widget.cpp" line="828"/>
         <source>文件名: %1
 </source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../core/module/preview_file_widget.cpp" line="788"/>
+        <location filename="../core/module/preview_file_widget.cpp" line="829"/>
         <source>文件大小: %1
 </source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../core/module/preview_file_widget.cpp" line="789"/>
+        <location filename="../core/module/preview_file_widget.cpp" line="830"/>
         <source>字体族名称: %1
 </source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../core/module/preview_file_widget.cpp" line="793"/>
+        <location filename="../core/module/preview_file_widget.cpp" line="834"/>
         <source>其他族名: %1
 </source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../core/module/preview_file_widget.cpp" line="799"/>
+        <location filename="../core/module/preview_file_widget.cpp" line="840"/>
         <source>可用样式: %1
 </source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../core/module/preview_file_widget.cpp" line="801"/>
+        <location filename="../core/module/preview_file_widget.cpp" line="842"/>
         <source>示例:
 void Info_Widget::updateFolderSize()
 {
@@ -2734,134 +2751,139 @@ void Info_Widget::updateFolderSize()
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../core/module/preview_file_widget.cpp" line="987"/>
+        <location filename="../core/module/preview_file_widget.cpp" line="888"/>
+        <source>加载中...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../core/module/preview_file_widget.cpp" line="1036"/>
         <source>获取插件</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../core/module/preview_file_widget.cpp" line="987"/>
+        <location filename="../core/module/preview_file_widget.cpp" line="1036"/>
         <source>插件</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../core/module/preview_file_widget.cpp" line="987"/>
+        <location filename="../core/module/preview_file_widget.cpp" line="1036"/>
         <source>所有文件</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../core/module/preview_file_widget.cpp" line="1022"/>
-        <location filename="../core/module/preview_file_widget.cpp" line="1027"/>
+        <location filename="../core/module/preview_file_widget.cpp" line="1071"/>
+        <location filename="../core/module/preview_file_widget.cpp" line="1076"/>
         <source>移动插件</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../core/module/preview_file_widget.cpp" line="1022"/>
+        <location filename="../core/module/preview_file_widget.cpp" line="1071"/>
         <source>请选择要移动的插件:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../core/module/preview_file_widget.cpp" line="1027"/>
+        <location filename="../core/module/preview_file_widget.cpp" line="1076"/>
         <source>移动到索引(0始):</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../core/module/preview_file_widget.cpp" line="1058"/>
-        <location filename="../core/module/preview_file_widget.h" line="248"/>
+        <location filename="../core/module/preview_file_widget.cpp" line="1107"/>
+        <location filename="../core/module/preview_file_widget.h" line="261"/>
         <source>移除插件</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../core/module/preview_file_widget.cpp" line="1058"/>
+        <location filename="../core/module/preview_file_widget.cpp" line="1107"/>
         <source>请选择要移除的插件:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../core/module/preview_file_widget.cpp" line="1108"/>
+        <location filename="../core/module/preview_file_widget.cpp" line="1161"/>
         <source>是否强制读取?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../core/module/preview_file_widget.cpp" line="1985"/>
+        <location filename="../core/module/preview_file_widget.cpp" line="2072"/>
         <source>插件导入失败:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../core/module/preview_file_widget.h" line="150"/>
+        <location filename="../core/module/preview_file_widget.h" line="158"/>
         <source>上一个</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../core/module/preview_file_widget.h" line="151"/>
+        <location filename="../core/module/preview_file_widget.h" line="159"/>
         <source>下一个</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../core/module/preview_file_widget.h" line="153"/>
+        <location filename="../core/module/preview_file_widget.h" line="161"/>
         <source>文本查看方式</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../core/module/preview_file_widget.h" line="160"/>
-        <location filename="../core/module/preview_file_widget.h" line="171"/>
+        <location filename="../core/module/preview_file_widget.h" line="168"/>
+        <location filename="../core/module/preview_file_widget.h" line="179"/>
         <source>上一页</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../core/module/preview_file_widget.h" line="161"/>
-        <location filename="../core/module/preview_file_widget.h" line="172"/>
+        <location filename="../core/module/preview_file_widget.h" line="169"/>
+        <location filename="../core/module/preview_file_widget.h" line="180"/>
         <source>下一页</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../core/module/preview_file_widget.h" line="162"/>
+        <location filename="../core/module/preview_file_widget.h" line="170"/>
         <source>重置大小</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../core/module/preview_file_widget.h" line="163"/>
+        <location filename="../core/module/preview_file_widget.h" line="171"/>
         <source>音视频自动播放</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../core/module/preview_file_widget.h" line="164"/>
-        <location filename="../core/module/preview_file_widget.h" line="175"/>
+        <location filename="../core/module/preview_file_widget.h" line="172"/>
+        <location filename="../core/module/preview_file_widget.h" line="183"/>
         <source>强制文本读取</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../core/module/preview_file_widget.h" line="165"/>
         <location filename="../core/module/preview_file_widget.h" line="173"/>
+        <location filename="../core/module/preview_file_widget.h" line="181"/>
         <source>播放</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../core/module/preview_file_widget.h" line="166"/>
         <location filename="../core/module/preview_file_widget.h" line="174"/>
+        <location filename="../core/module/preview_file_widget.h" line="182"/>
         <source>暂停</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../core/module/preview_file_widget.h" line="169"/>
+        <location filename="../core/module/preview_file_widget.h" line="177"/>
         <source>&lt;</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../core/module/preview_file_widget.h" line="170"/>
+        <location filename="../core/module/preview_file_widget.h" line="178"/>
         <source>&gt;</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../core/module/preview_file_widget.h" line="245"/>
+        <location filename="../core/module/preview_file_widget.h" line="258"/>
         <source>插件控制</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../core/module/preview_file_widget.h" line="246"/>
+        <location filename="../core/module/preview_file_widget.h" line="259"/>
         <source>载入插件</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../core/module/preview_file_widget.h" line="247"/>
+        <location filename="../core/module/preview_file_widget.h" line="260"/>
         <source>设置插件索引</source>
         <translation type="unfinished"></translation>
     </message>
@@ -3415,109 +3437,116 @@ void Info_Widget::updateFolderSize()
     </message>
     <message>
         <location filename="../setting_widget.cpp" line="228"/>
-        <location filename="../setting_widget.cpp" line="236"/>
-        <location filename="../setting_widget.cpp" line="275"/>
+        <location filename="../setting_widget.cpp" line="238"/>
+        <location filename="../setting_widget.cpp" line="277"/>
+        <location filename="../setting_widget.cpp" line="316"/>
         <source>获取文件</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../setting_widget.cpp" line="228"/>
-        <location filename="../setting_widget.cpp" line="236"/>
-        <location filename="../setting_widget.cpp" line="275"/>
+        <location filename="../setting_widget.cpp" line="238"/>
+        <location filename="../setting_widget.cpp" line="277"/>
+        <location filename="../setting_widget.cpp" line="316"/>
         <source>所有文件</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../setting_widget.cpp" line="236"/>
+        <location filename="../setting_widget.cpp" line="238"/>
         <source>图像文件</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../setting_widget.cpp" line="275"/>
+        <location filename="../setting_widget.cpp" line="277"/>
         <source>视频文件</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../setting_widget.cpp" line="468"/>
+        <location filename="../setting_widget.cpp" line="316"/>
+        <source>插件文件</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../setting_widget.cpp" line="515"/>
         <source>输入名称:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../setting_widget.cpp" line="470"/>
+        <location filename="../setting_widget.cpp" line="517"/>
         <source>图像</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../setting_widget.cpp" line="470"/>
+        <location filename="../setting_widget.cpp" line="517"/>
         <source>视频</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../setting_widget.cpp" line="472"/>
+        <location filename="../setting_widget.cpp" line="519"/>
         <source>输入路径:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../setting_widget.cpp" line="474"/>
+        <location filename="../setting_widget.cpp" line="521"/>
         <source>不缩放</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../setting_widget.cpp" line="474"/>
+        <location filename="../setting_widget.cpp" line="521"/>
         <source>全缩放</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../setting_widget.cpp" line="474"/>
+        <location filename="../setting_widget.cpp" line="521"/>
         <source>宽基准</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../setting_widget.cpp" line="474"/>
+        <location filename="../setting_widget.cpp" line="521"/>
         <source>高基准</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../setting_widget.cpp" line="474"/>
+        <location filename="../setting_widget.cpp" line="521"/>
         <source>短基准</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../setting_widget.cpp" line="474"/>
+        <location filename="../setting_widget.cpp" line="521"/>
         <source>长基准</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../setting_widget.cpp" line="474"/>
+        <location filename="../setting_widget.cpp" line="521"/>
         <source>饱满</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../setting_widget.cpp" line="474"/>
+        <location filename="../setting_widget.cpp" line="521"/>
         <source>自定义宽高</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../setting_widget.cpp" line="520"/>
-        <location filename="../setting_widget.cpp" line="522"/>
-        <location filename="../setting_widget.cpp" line="532"/>
+        <location filename="../setting_widget.cpp" line="567"/>
+        <location filename="../setting_widget.cpp" line="569"/>
+        <location filename="../setting_widget.cpp" line="579"/>
         <source>是</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../setting_widget.cpp" line="520"/>
-        <location filename="../setting_widget.cpp" line="522"/>
-        <location filename="../setting_widget.cpp" line="532"/>
+        <location filename="../setting_widget.cpp" line="567"/>
+        <location filename="../setting_widget.cpp" line="569"/>
+        <location filename="../setting_widget.cpp" line="579"/>
         <source>否</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../setting_widget.cpp" line="534"/>
+        <location filename="../setting_widget.cpp" line="581"/>
         <source>跟随桌面</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../setting_widget.cpp" line="534"/>
+        <location filename="../setting_widget.cpp" line="581"/>
         <source>跟随壁纸</source>
         <translation type="unfinished"></translation>
     </message>
@@ -3557,7 +3586,17 @@ void Info_Widget::updateFolderSize()
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <location filename="../setting_widget.h" line="48"/>
+        <source>批量加载插件</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <location filename="../setting_widget.h" line="49"/>
+        <source>插件设置</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../setting_widget.h" line="51"/>
         <source>选择id:</source>
         <translation type="unfinished"></translation>
     </message>
@@ -3617,6 +3656,107 @@ void Info_Widget::updateFolderSize()
     <message>
         <location filename="../experimental_settings.h" line="25"/>
         <source>导入图像</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>Zip_TreeView</name>
+    <message>
+        <location filename="../core/module/zip_treeview.cpp" line="28"/>
+        <source>名称</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../core/module/zip_treeview.cpp" line="28"/>
+        <source>大小</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../core/module/zip_treeview.cpp" line="28"/>
+        <source>类型</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../core/module/zip_treeview.cpp" line="28"/>
+        <source>修改日期</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../core/module/zip_treeview.cpp" line="72"/>
+        <location filename="../core/module/zip_treeview.cpp" line="113"/>
+        <location filename="../core/module/zip_treeview.cpp" line="114"/>
+        <source>文件夹</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../core/module/zip_treeview.cpp" line="122"/>
+        <location filename="../core/module/zip_treeview.cpp" line="126"/>
+        <source>文件</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../core/module/zip_treeview.cpp" line="602"/>
+        <location filename="../core/module/zip_treeview.cpp" line="648"/>
+        <source>获取数值</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../core/module/zip_treeview.cpp" line="602"/>
+        <location filename="../core/module/zip_treeview.cpp" line="648"/>
+        <source>大小:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../core/module/zip_treeview.cpp" line="625"/>
+        <location filename="../core/module/zip_treeview.cpp" line="638"/>
+        <location filename="../core/module/zip_treeview.cpp" line="666"/>
+        <source>获取颜色</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../core/module/zip_treeview.cpp" line="894"/>
+        <source>选择: 文件%1个(%2); 文件夹%3个</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../core/module/zip_treeview.h" line="85"/>
+        <location filename="../core/module/zip_treeview.h" line="95"/>
+        <source>复制名称</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../core/module/zip_treeview.h" line="86"/>
+        <source>显示状态栏</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../core/module/zip_treeview.h" line="87"/>
+        <source>设置状态栏字体颜色</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../core/module/zip_treeview.h" line="88"/>
+        <source>图标大小</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../core/module/zip_treeview.h" line="89"/>
+        <source>字体</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../core/module/zip_treeview.h" line="90"/>
+        <source>悬停颜色</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../core/module/zip_treeview.h" line="91"/>
+        <source>选择颜色</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../core/module/zip_treeview.h" line="92"/>
+        <source>圆角大小</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
