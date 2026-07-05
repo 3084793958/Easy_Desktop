@@ -2,6 +2,7 @@
 #define BASIC_WIDGET_H
 #include <QtWidgets>
 #include "tools/my_x11_libs.h"
+#include "core/tools/trans_action.h"
 enum class Towards
 {
     No,
@@ -88,29 +89,29 @@ signals:
     void close_signals();
     void size_changed(QSize size);
 public:
-    QMenu *basic_control = new QMenu(tr("基础操作"), this);
-    QAction *move_to_page_action = new QAction(tr("移动到页"), this);
-    QAction *set_background_radius = new QAction(tr("设置圆角大小"), this);
-    QAction *set_background_color = new QAction(tr("设置背景颜色"), this);
-    QAction *show_close_button = new QAction(tr("显示关闭窗口按钮"), this);
-    QMenu *close_button_pos_menu = new QMenu(tr("关闭窗口按钮位置"), this);
-    QAction *close_button_pos_top_left = new QAction(tr("左上"), this);
-    QAction *close_button_pos_top_right = new QAction(tr("右上"), this);
-    QAction *close_button_pos_bottom_left = new QAction(tr("左下"), this);
-    QAction *close_button_pos_bottom_right = new QAction(tr("右下"), this);
+    QMenu *basic_control = new Trans_Menu(tr("基础操作"), "基础操作", this->metaObject()->className(), this);
+    QAction *move_to_page_action = new Trans_Action(tr("移动到页"), "移动到页", this->metaObject()->className(), this);
+    QAction *set_background_radius = new Trans_Action(tr("设置圆角大小"), "设置圆角大小", this->metaObject()->className(), this);
+    QAction *set_background_color = new Trans_Action(tr("设置背景颜色"), "设置背景颜色", this->metaObject()->className(), this);
+    QAction *show_close_button = new Trans_Action(tr("显示关闭窗口按钮"), "显示关闭窗口按钮", this->metaObject()->className(), this);
+    QMenu *close_button_pos_menu = new Trans_Menu(tr("关闭窗口按钮位置"), "关闭窗口按钮位置", this->metaObject()->className(), this);
+    QAction *close_button_pos_top_left = new Trans_Action(tr("左上"), "左上", this->metaObject()->className(), this);
+    QAction *close_button_pos_top_right = new Trans_Action(tr("右上"), "右上", this->metaObject()->className(), this);
+    QAction *close_button_pos_bottom_left = new Trans_Action(tr("左下"), "左下", this->metaObject()->className(), this);
+    QAction *close_button_pos_bottom_right = new Trans_Action(tr("右下"), "右下", this->metaObject()->className(), this);
     Button_Pos close_button_pos = Button_Pos::Top_Right;
-    QAction *show_select_button = new QAction(tr("允许选择"), this);
-    QMenu *select_button_pos_menu = new QMenu(tr("选择按钮位置"), this);
-    QAction *select_button_pos_top_left = new QAction(tr("左上"), this);
-    QAction *select_button_pos_top_right = new QAction(tr("右上"), this);
-    QAction *select_button_pos_bottom_left = new QAction(tr("左下"), this);
-    QAction *select_button_pos_bottom_right = new QAction(tr("右下"), this);
+    QAction *show_select_button = new Trans_Action(tr("允许选择"), "允许选择", this->metaObject()->className(), this);
+    QMenu *select_button_pos_menu = new Trans_Menu(tr("选择按钮位置"), "选择按钮位置", this->metaObject()->className(), this);
+    QAction *select_button_pos_top_left = new Trans_Action(tr("左上"), "左上", this->metaObject()->className(), this);
+    QAction *select_button_pos_top_right = new Trans_Action(tr("右上"), "右上", this->metaObject()->className(), this);
+    QAction *select_button_pos_bottom_left = new Trans_Action(tr("左下"), "左下", this->metaObject()->className(), this);
+    QAction *select_button_pos_bottom_right = new Trans_Action(tr("右下"), "右下", this->metaObject()->className(), this);
     Button_Pos select_button_pos = Button_Pos::Top_Left;
     void update_close_button_pos();
-    QAction *set_pos_action = new QAction(tr("设置位置"), this);
-    QAction *set_size_action = new QAction(tr("设置大小"), this);
-    QAction *close_action = new QAction(tr("关闭窗口"), this);
-    QPushButton *close_button = new QPushButton(tr("×"), this);
+    QAction *set_pos_action = new Trans_Action(tr("设置位置"), "设置位置", this->metaObject()->className(), this);
+    QAction *set_size_action = new Trans_Action(tr("设置大小"), "设置大小", this->metaObject()->className(), this);
+    QAction *close_action = new Trans_Action(tr("关闭窗口"), "关闭窗口", this->metaObject()->className(), this);
+    QPushButton *close_button = new Trans_PushButton(tr("×"), "×", this->metaObject()->className(), this);
     QPushButton *select_button = new QPushButton(this);
 protected:
     void moveToDesktop(int index);

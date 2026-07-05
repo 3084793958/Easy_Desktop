@@ -18,13 +18,13 @@ public:
     QString *file_open_info_process;
     QString *terminal_process = nullptr;
 private:
-    QAction *open_way = new QAction(tr("打开方式"), this);
-    QAction *open_path_way = new QAction(tr("打开所在位置"), this);
-    QAction *open_in_Terminal_action = new QAction(tr("在终端中打开"), this);
-    QMenu *set_file_process = new QMenu(tr("设置文件信息"), this);
-    QAction *set_file_as_file = new QAction(tr("文件"), this);
-    QAction *set_file_as_dir = new QAction(tr("文件夹"), this);
-    QAction *show_info = new QAction(tr("属性"), this);
+    QAction *open_way = new Trans_Action(tr("打开方式"), "打开方式", this->metaObject()->className(), this);
+    QAction *open_path_way = new Trans_Action(tr("打开所在位置"), "打开所在位置", this->metaObject()->className(), this);
+    QAction *open_in_Terminal_action = new Trans_Action(tr("在终端中打开"), "在终端中打开", this->metaObject()->className(), this);
+    QMenu *set_file_process = new Trans_Menu(tr("设置文件信息"), "设置文件信息", this->metaObject()->className(), this);
+    QAction *set_file_as_file = new Trans_Action(tr("文件"), "文件", this->metaObject()->className(), this);
+    QAction *set_file_as_dir = new Trans_Action(tr("文件夹"), "文件夹", this->metaObject()->className(), this);
+    QAction *show_info = new Trans_Action(tr("属性"), "属性", this->metaObject()->className(), this);
 private:
     void contextMenuEvent(QContextMenuEvent *event);
     void update_running_path();

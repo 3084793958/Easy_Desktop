@@ -18,6 +18,8 @@
 
 #include "interfaces/file-preview/preview_file_interface.h"
 
+#include "core/tools/trans_action.h"
+
 class Zip_TreeView_ProxyModel : public QSortFilterProxyModel
 {
     Q_OBJECT
@@ -82,17 +84,17 @@ private:
     My_TreeView_Delegate *my_delegate = new My_TreeView_Delegate(this, &hover_color, &select_color, &radius, &proposed_action_index);
 private:
     QMenu *menu = new QMenu(this);
-    QAction *copy_name_action = new QAction(tr("复制名称"), this);
-    QAction *set_show_status_bar = new QAction(tr("显示状态栏"), this);
-    QAction *set_show_status_bar_text_color = new QAction(tr("设置状态栏字体颜色"), this);
-    QAction *set_icon_size_action = new QAction(tr("图标大小"), this);
-    QAction *set_font_action = new QAction(tr("字体"), this);
-    QAction *set_hover_color = new QAction(tr("悬停颜色"), this);
-    QAction *set_select_color = new QAction(tr("选择颜色"), this);
-    QAction *set_select_radius = new QAction(tr("圆角大小"), this);
+    QAction *copy_name_action = new Trans_Action(tr("复制名称"), "复制名称", this->metaObject()->className(), this);
+    QAction *set_show_status_bar = new Trans_Action(tr("显示状态栏"), "显示状态栏", this->metaObject()->className(), this);
+    QAction *set_show_status_bar_text_color = new Trans_Action(tr("设置状态栏字体颜色"), "设置状态栏字体颜色", this->metaObject()->className(), this);
+    QAction *set_icon_size_action = new Trans_Action(tr("图标大小"), "图标大小", this->metaObject()->className(), this);
+    QAction *set_font_action = new Trans_Action(tr("字体"), "字体", this->metaObject()->className(), this);
+    QAction *set_hover_color = new Trans_Action(tr("悬停颜色"), "悬停颜色", this->metaObject()->className(), this);
+    QAction *set_select_color = new Trans_Action(tr("选择颜色"), "选择颜色", this->metaObject()->className(), this);
+    QAction *set_select_radius = new Trans_Action(tr("圆角大小"), "圆角大小", this->metaObject()->className(), this);
 
     //shortcut
-    QAction *shortcut_copy_name_action = new QAction(tr("复制名称"), this);
+    QAction *shortcut_copy_name_action = new Trans_Action(tr("复制名称"), "复制名称", this->metaObject()->className(), this);
 private:
     virtual void wheelEvent(QWheelEvent *event) override;
     void contextMenuEvent(QContextMenuEvent *event) override;

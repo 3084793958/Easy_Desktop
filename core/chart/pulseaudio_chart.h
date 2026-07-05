@@ -32,19 +32,19 @@ private:
     QFont font = QFontDatabase::systemFont(QFontDatabase::FixedFont);
     void update_data_size();
     void contextMenuEvent(QContextMenuEvent *event);
-    QAction *start_monitor = new QAction(tr("开始侦测"), this);
-    QAction *stop_monitor = new QAction(tr("停止侦测"), this);
-    QAction *set_update_time = new QAction(tr("设置侦测间隔"), this);
-    QAction *set_vector_long = new QAction(tr("设置数据点数量"), this);
-    QMenu *set_use_rms = new QMenu(tr("设置侦测格式"), this);
-    QAction *use_rms_action = new QAction(tr("RMS"), this);
-    QAction *use_dB_action = new QAction(tr("dB"), this);
-    QMenu *set_monitor_type = new QMenu(tr("设置侦测模式"), this);
-    QAction *output_action = new QAction(tr("扬声器"), this);
-    QAction *input_action = new QAction(tr("麦克风"), this);
-    QAction *set_max_can_process = new QAction(tr("单次数据点数"), this);
-    QAction *set_text_font = new QAction(tr("设置字体"), this);
-    QAction *set_line_color = new QAction(tr("设置折线颜色"), this);
+    QAction *start_monitor = new Trans_Action(tr("开始侦测"), "开始侦测", this->metaObject()->className(), this);
+    QAction *stop_monitor = new Trans_Action(tr("停止侦测"), "停止侦测", this->metaObject()->className(), this);
+    QAction *set_update_time = new Trans_Action(tr("设置侦测间隔"), "设置侦测间隔", this->metaObject()->className(), this);
+    QAction *set_vector_long = new Trans_Action(tr("设置数据点数量"), "设置数据点数量", this->metaObject()->className(), this);
+    QMenu *set_use_rms = new Trans_Menu(tr("设置侦测格式"), "设置侦测格式", this->metaObject()->className(), this);
+    QAction *use_rms_action = new Trans_Action(tr("RMS"), "RMS", this->metaObject()->className(), this);
+    QAction *use_dB_action = new Trans_Action(tr("dB"), "dB", this->metaObject()->className(), this);
+    QMenu *set_monitor_type = new Trans_Menu(tr("设置侦测模式"), "设置侦测模式", this->metaObject()->className(), this);
+    QAction *output_action = new Trans_Action(tr("扬声器"), "扬声器", this->metaObject()->className(), this);
+    QAction *input_action = new Trans_Action(tr("麦克风"), "麦克风", this->metaObject()->className(), this);
+    QAction *set_max_can_process = new Trans_Action(tr("单次数据点数"), "单次数据点数", this->metaObject()->className(), this);
+    QAction *set_text_font = new Trans_Action(tr("设置字体"), "设置字体", this->metaObject()->className(), this);
+    QAction *set_line_color = new Trans_Action(tr("设置折线颜色"), "设置折线颜色", this->metaObject()->className(), this);
     QMenu *menu = new QMenu(this);
 private:
     enum class Stream_Type

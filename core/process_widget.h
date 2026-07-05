@@ -40,21 +40,21 @@ private:
     QColor basic_color = QColor(255,255,255,50);
 protected:
     QMenu *menu = new QMenu(this);
-    QAction *run_action = new QAction(tr("运行"), this);
-    QMenu *setting_menu = new QMenu(tr("设置"), this);
-    QAction *single_press_mode_action = new QAction(tr("单击模式"), this);
-    QAction *set_image = new QAction(tr("设置图像"), this);
-    QAction *reset_image = new QAction(tr("还原图像"), this);
-    QAction *set_name = new QAction(tr("设置名称"), this);
-    QAction *set_font = new QAction(tr("设置字体"), this);
-    QAction *set_auto_resize = new QAction(tr("自动缩放字体"), this);
-    QAction *set_text_color = new QAction(tr("设置文本颜色"), this);
-    QMenu *name_out_line_menu = new QMenu(tr("设置描边"), this);
-    QAction *set_out_line_width = new QAction(tr("设置描边大小"), this);
-    QAction *set_out_line_color = new QAction(tr("设置描边颜色"), this);
-    QAction *set_process = new QAction(tr("设置进程信息"), this);
-    QAction *set_by_desktop = new QAction(tr("通过.desktop设置"), this);
-    QAction *break_out = new QAction(tr("移入/脱离"), this);
+    QAction *run_action = new Trans_Action(tr("运行"), "运行", this->metaObject()->className(), this);
+    QMenu *setting_menu = new Trans_Menu(tr("设置"), "设置", this->metaObject()->className(), this);
+    QAction *single_press_mode_action = new Trans_Action(tr("单击模式"), "单击模式", this->metaObject()->className(), this);
+    QAction *set_image = new Trans_Action(tr("设置图像"), "设置图像", this->metaObject()->className(), this);
+    QAction *reset_image = new Trans_Action(tr("还原图像"), "还原图像", this->metaObject()->className(), this);
+    QAction *set_name = new Trans_Action(tr("设置名称"), "设置名称", this->metaObject()->className(), this);
+    QAction *set_font = new Trans_Action(tr("设置字体"), "设置字体", this->metaObject()->className(), this);
+    QAction *set_auto_resize = new Trans_Action(tr("自动缩放字体"), "自动缩放字体", this->metaObject()->className(), this);
+    QAction *set_text_color = new Trans_Action(tr("设置文本颜色"), "设置文本颜色", this->metaObject()->className(), this);
+    QMenu *name_out_line_menu = new Trans_Menu(tr("设置描边"), "设置描边", this->metaObject()->className(), this);
+    QAction *set_out_line_width = new Trans_Action(tr("设置描边大小"), "设置描边大小", this->metaObject()->className(), this);
+    QAction *set_out_line_color = new Trans_Action(tr("设置描边颜色"), "设置描边颜色", this->metaObject()->className(), this);
+    QAction *set_process = new Trans_Action(tr("设置进程信息"), "设置进程信息", this->metaObject()->className(), this);
+    QAction *set_by_desktop = new Trans_Action(tr("通过.desktop设置"), "通过.desktop设置", this->metaObject()->className(), this);
+    QAction *break_out = new Trans_Action(tr("移入/脱离"), "移入/脱离", this->metaObject()->className(), this);
     QTimer *double_click_timer = new QTimer(this);
 private:
     virtual void mousePressEvent(QMouseEvent *event);

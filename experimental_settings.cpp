@@ -80,6 +80,10 @@ Experimental_Settings::Experimental_Settings(QWidget *parent)
     geometry_edit->resize(170, 40);
     set_theme_color_button->move(310, 290);
     set_theme_color_button->resize(85, 40);
+
+    set_translation_path->move(310, 335);
+    set_translation_path->resize(85, 40);
+
     update_button->move(310, 540);
     update_button->resize(85, 40);
     resize(450, 585);
@@ -98,6 +102,13 @@ Experimental_Settings::Experimental_Settings(QWidget *parent)
         set_theme_dialog->activateWindow();
         set_theme_dialog->show();
     });
+    connect(set_translation_path, &QPushButton::clicked, this, [=]
+    {
+        if (m_dialog->Setup(tr("设置翻译"), tr("设置翻译文件\n使用 换行符 分隔不同的翻译文件\n':/base/qtbase_zh_CN.qm'为基础QT中文翻译"), m_translation_path.replace("|", "\n")) == QDialog::Accepted)
+        {
+            m_translation_path = m_dialog->getText().replace("\n", "|");
+        }
+    });
     connect(set_theme_dialog, &Theme_Set_Dialog::Call_X11_Raise, this, [=]{My_X11_Libs::X11_Raise();});
 }
 void Experimental_Settings::resizeEvent(QResizeEvent *event)
@@ -106,6 +117,7 @@ void Experimental_Settings::resizeEvent(QResizeEvent *event)
     load_path_edit->resize(event->size().width() - 170, 40);
     update_button->move(event->size().width() - 90, 540);
     set_theme_color_button->move(event->size().width() - 90, 290);
+    set_translation_path->move(event->size().width() - 90, 335);
     dbus_id_label->move(event->size().width() / 2 + 5, 50);
     dbus_id_edit->move(event->size().width() / 2 + 65, 50);
     dbus_id_edit->resize(event->size().width() / 2 - 70, 40);
@@ -125,6 +137,7 @@ void Experimental_Settings::resizeEvent(QResizeEvent *event)
 void Experimental_Settings::update_data()
 {
     load_path_edit->setText(*load_path);
+    m_translation_path = *translation_path;
     dbus_id_edit->setValue(*dbus_id);
     keyscan_timer_edit->setValue(*keyscan_timer);
     stay_on_top_box->setCheckState(*stay_on_top ? Qt::CheckState::Checked : Qt::CheckState::Unchecked);
@@ -151,6 +164,7 @@ void Experimental_Settings::update_data()
 void Experimental_Settings::send_data()
 {
     *load_path = load_path_edit->text();
+    *translation_path = m_translation_path;
     *dbus_id = dbus_id_edit->value();
     *keyscan_timer = keyscan_timer_edit->value();
     *stay_on_top = stay_on_top_box->checkState() == Qt::CheckState::Checked;
@@ -198,6 +212,18 @@ void Experimental_Settings::send_data()
     *disabled_text_color = m_disabled_text_color;
     *checked_icon_path = m_checked_icon_path;
     emit has_sended();
+}
+void Experimental_Settings::load(QSettings *settings)
+{
+    settings->beginGroup("Experimental_Settings");
+    m_dialog->p_load_no_text(settings, "Experimental_dialog_");
+    settings->endGroup();
+}
+void Experimental_Settings::save(QSettings *settings)
+{
+    settings->beginGroup("Experimental_Settings");
+    m_dialog->p_save_no_text(settings, "Experimental_dialog_");
+    settings->endGroup();
 }
 Theme_Set_Dialog::Theme_Set_Dialog(QWidget *parent, QColor *m_theme_color, QColor *m_theme_background_color, QColor *m_theme_text_color, QColor *m_select_text_color, QColor *m_disabled_text_color, QString *m_checked_icon_path)
     :QWidget(parent)

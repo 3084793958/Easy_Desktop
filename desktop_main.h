@@ -25,6 +25,7 @@ public:
     void set_Now_Page(int *m_now_page);
     void set_locking_desktop(bool *m_locking_desktop);
     void Update_Button();
+    void Update_Color_style();
     void set_towards_ptr(bool *m_is_towards_up_and_down);
 private:
     int Button_Number;
@@ -39,6 +40,7 @@ public:
     explicit Desktop_Control_Dock(QWidget *parent);
     void set_Desktop_Size(int d_width, int d_height);
     void Update_Widget();
+    void Update_Color_style();
     void First_Set();
     void Set_Desktop_Number(int *number);
     void Set_Now_page(int *m_now_page);
@@ -47,6 +49,9 @@ public:
     void set_locking_desktop(bool *m_locking_desktop);
     void set_towards_ptr(bool *m_is_towards_up_and_down);
     QPoint *basic_pos = nullptr;
+
+    void load(QSettings *settings);
+    void save(QSettings *settings);
 private:
     int desktop_width;
     int desktop_height;
@@ -61,12 +66,34 @@ private:
     bool on_press = false;
     char m_padding[7];
     QMenu *menu = new QMenu(this);
-    QAction *to_center = new QAction(tr("居中"), this);
-    QAction *call_update = new QAction(tr("更新"), this);
-    QAction *hide_update = new QAction(tr("隐藏"), this);
-    QMenu *control_towards_menu = new QMenu(tr("窗口朝向"), this);
-    QAction *towards_up_and_down_action = new QAction(tr("上下"), this);
-    QAction *towards_left_and_right_action = new QAction(tr("左右"), this);
+    QAction *to_center = new Trans_Action(tr("居中"), "居中", this->metaObject()->className(), this);
+    QAction *call_update = new Trans_Action(tr("更新"), "更新", this->metaObject()->className(), this);
+    QAction *hide_update = new Trans_Action(tr("隐藏"), "隐藏", this->metaObject()->className(), this);
+    QMenu *control_towards_menu = new Trans_Menu(tr("窗口朝向"), "窗口朝向", this->metaObject()->className(), this);
+    QAction *towards_up_and_down_action = new Trans_Action(tr("上下"), "上下", this->metaObject()->className(), this);
+    QAction *towards_left_and_right_action = new Trans_Action(tr("左右"), "左右", this->metaObject()->className(), this);
+
+    QMenu *set_color_menu = new Trans_Menu(tr("设置颜色"), "设置颜色", this->metaObject()->className(), this);
+    QAction *set_background_color_action = new Trans_Action(tr("背景颜色"), "背景颜色", this->metaObject()->className(), this);
+    QAction *set_button_color_action = new Trans_Action(tr("按钮颜色"), "按钮颜色", this->metaObject()->className(), this);
+    QAction *set_button_pressed_color_action = new Trans_Action(tr("按钮颜色pressed"), "按钮颜色pressed", this->metaObject()->className(), this);
+    QAction *set_button_hover_color_action = new Trans_Action(tr("按钮颜色hover"), "按钮颜色hover", this->metaObject()->className(), this);
+
+    QMenu *set_size_menu = new Trans_Menu(tr("设置大小"), "设置大小", this->metaObject()->className(), this);
+    QAction *set_window_broder_action = new Trans_Action(tr("窗口圆角大小"), "窗口圆角大小", this->metaObject()->className(), this);
+    QAction *set_button_broder_action = new Trans_Action(tr("按钮圆角大小"), "按钮圆角大小", this->metaObject()->className(), this);
+    QAction *set_button_length_action = new Trans_Action(tr("当前页按钮长度"), "当前页按钮长度", this->metaObject()->className(), this);
+    QAction *set_button_space_action = new Trans_Action(tr("按钮间距"), "按钮间距", this->metaObject()->className(), this);
+public:
+    QColor bg_color{0, 0, 0, 75};
+    QColor button_color{255, 255, 255, 150};
+    QColor button_pressed_color{255, 255, 255, 200};
+    QColor button_hover_color{255, 255, 255, 150};
+
+    int bg_broder_radius = 10;
+    int button_broder_radius = 5;
+    int button_length = 50;
+    int button_space = 20;
 private:
     virtual void mousePressEvent(QMouseEvent *event);
     virtual void mouseReleaseEvent(QMouseEvent *event);
@@ -141,46 +168,46 @@ private:
     QList<Plugin_Root *> plugin_root_list;
     //ACTION
     QMenu *menu=new QMenu(this);
-    QMenu *play_menu=new QMenu(tr("播放菜单"),this);
-    QAction *background_play_Action = new QAction(tr("播放"),this);
-    QAction *background_pause_Action = new QAction(tr("暂停"),this);
-    QMenu *background_Add_Action = new QMenu(tr("新建控件"),this);
-    QAction *my_clock_action = new QAction(tr("时钟"), this);
-    QAction *text_edit_action = new QAction(tr("文本框"), this);
-    QAction *my_label_action = new QAction(tr("标签"), this);
-    QAction *my_process_action = new QAction(tr("进程按钮"), this);
-    QAction *my_file_action = new QAction(tr("文件按钮"), this);
-    QAction *file_tree_action = new QAction(tr("树状视图文件夹"), this);
-    QAction *file_table_action = new QAction(tr("图标视图文件夹"), this);
-    QAction *my_process_Carrier_action = new QAction(tr("进程/文件按钮载体"), this);
-    QAction *my_program_INNER_action = new QAction(tr("内嵌窗口"), this);
-    QAction *plugin_widget_action = new QAction(tr("插件窗口"), this);
+    QMenu *play_menu=new Trans_Menu(tr("播放菜单"), "播放菜单", this->metaObject()->className(), this);
+    QAction *background_play_Action = new Trans_Action(tr("播放"), "播放", this->metaObject()->className(), this);
+    QAction *background_pause_Action = new Trans_Action(tr("暂停"), "暂停", this->metaObject()->className(), this);
+    QMenu *background_Add_Action = new Trans_Menu(tr("新建控件"), "新建控件", this->metaObject()->className(), this);
+    QAction *my_clock_action = new Trans_Action(tr("时钟"), "时钟", this->metaObject()->className(), this);
+    QAction *text_edit_action = new Trans_Action(tr("文本框"), "文本框", this->metaObject()->className(), this);
+    QAction *my_label_action = new Trans_Action(tr("标签"), "标签", this->metaObject()->className(), this);
+    QAction *my_process_action = new Trans_Action(tr("进程按钮"), "进程按钮", this->metaObject()->className(), this);
+    QAction *my_file_action = new Trans_Action(tr("文件按钮"), "文件按钮", this->metaObject()->className(), this);
+    QAction *file_tree_action = new Trans_Action(tr("树状视图文件夹"), "树状视图文件夹", this->metaObject()->className(), this);
+    QAction *file_table_action = new Trans_Action(tr("图标视图文件夹"), "图标视图文件夹", this->metaObject()->className(), this);
+    QAction *my_process_Carrier_action = new Trans_Action(tr("进程/文件按钮载体"), "进程/文件按钮载体", this->metaObject()->className(), this);
+    QAction *my_program_INNER_action = new Trans_Action(tr("内嵌窗口"), "内嵌窗口", this->metaObject()->className(), this);
+    QAction *plugin_widget_action = new Trans_Action(tr("插件窗口"), "插件窗口", this->metaObject()->className(), this);
 #ifdef USE_CHART
-    QMenu *my_chart_menu = new QMenu(tr("可视化图表"), this);
-    QAction *cpu_chart_action = new QAction(tr("CPU"), this);
-    QAction *ram_chart_action = new QAction(tr("内存"), this);
-    QAction *net_chart_action = new QAction(tr("网络"), this);
-    QAction *disk_chart_action = new QAction(tr("磁盘"), this);
-    QAction *pulseaudio_chart_action = new QAction(tr("声音服务"), this);
+    QMenu *my_chart_menu = new Trans_Menu(tr("可视化图表"), "可视化图表", this->metaObject()->className(), this);
+    QAction *cpu_chart_action = new Trans_Action(tr("CPU"), "CPU", this->metaObject()->className(), this);
+    QAction *ram_chart_action = new Trans_Action(tr("内存"), "内存", this->metaObject()->className(), this);
+    QAction *net_chart_action = new Trans_Action(tr("网络"), "网络", this->metaObject()->className(), this);
+    QAction *disk_chart_action = new Trans_Action(tr("磁盘"), "磁盘", this->metaObject()->className(), this);
+    QAction *pulseaudio_chart_action = new Trans_Action(tr("声音服务"), "声音服务", this->metaObject()->className(), this);
 #endif
-    QMenu *desktop_control_action = new QMenu(tr("桌面控制"),this);
-    QAction *lock_desktop = new QAction(tr("锚定桌面"),this);
-    QAction *unlock_desktop = new QAction(tr("取消锚定"),this);
-    QAction *show_dock_action = new QAction(tr("显示控制窗口"),this);
-    QAction *hide_dock_action = new QAction(tr("隐藏控制窗口"),this);
-    QAction *desktop_control_move_to_center_action = new QAction(tr("控制窗口归中"),this);
-    QAction *Add_new_desktop = new QAction(tr("新建桌面"),this);
-    QAction *delete_this_desktop = new QAction(tr("移除桌面"),this);
-    QMenu *mouse_menu = new QMenu(tr("鼠标控制"),this);
-    QAction *mouse_play_Action = new QAction(tr("应用"),this);
-    QAction *mouse_pause_Action = new QAction(tr("禁用"),this);
-    QMenu *Slider_menu=new QMenu(tr("进度条菜单"),this);
+    QMenu *desktop_control_action = new Trans_Menu(tr("桌面控制"), "桌面控制", this->metaObject()->className(), this);
+    QAction *lock_desktop = new Trans_Action(tr("锚定桌面"), "锚定桌面", this->metaObject()->className(), this);
+    QAction *unlock_desktop = new Trans_Action(tr("取消锚定"), "取消锚定", this->metaObject()->className(), this);
+    QAction *show_dock_action = new Trans_Action(tr("显示控制窗口"), "显示控制窗口", this->metaObject()->className(), this);
+    QAction *hide_dock_action = new Trans_Action(tr("隐藏控制窗口"), "隐藏控制窗口", this->metaObject()->className(), this);
+    QAction *desktop_control_move_to_center_action = new Trans_Action(tr("控制窗口归中"), "控制窗口归中", this->metaObject()->className(), this);
+    QAction *Add_new_desktop = new Trans_Action(tr("新建桌面"), "新建桌面", this->metaObject()->className(), this);
+    QAction *delete_this_desktop = new Trans_Action(tr("移除桌面"), "移除桌面", this->metaObject()->className(), this);
+    QMenu *mouse_menu = new Trans_Menu(tr("鼠标控制"), "鼠标控制", this->metaObject()->className(), this);
+    QAction *mouse_play_Action = new Trans_Action(tr("应用"), "应用", this->metaObject()->className(), this);
+    QAction *mouse_pause_Action = new Trans_Action(tr("禁用"), "禁用", this->metaObject()->className(), this);
+    QMenu *Slider_menu=new Trans_Menu(tr("进度条菜单"), "进度条菜单", this->metaObject()->className(), this);
     Media_WidgetAction *slider_action = new Media_WidgetAction(Slider_menu);
-    QAction *save_Action = new QAction(tr("储存"),this);
-    QAction *load_Action = new QAction(tr("读取"),this);
-    QAction *background_setting_Action = new QAction(tr("壁纸设置"),this);
-    QAction *debugging_setting_Action = new QAction(tr("高级设置"), this);
-    QAction *Quit_Action = new QAction(tr("退出"),this);
+    QAction *save_Action = new Trans_Action(tr("储存"), "储存", this->metaObject()->className(), this);
+    QAction *load_Action = new Trans_Action(tr("读取"), "读取", this->metaObject()->className(), this);
+    QAction *background_setting_Action = new Trans_Action(tr("壁纸设置"), "壁纸设置", this->metaObject()->className(), this);
+    QAction *debugging_setting_Action = new Trans_Action(tr("高级设置"), "高级设置", this->metaObject()->className(), this);
+    QAction *Quit_Action = new Trans_Action(tr("退出"), "退出", this->metaObject()->className(), this);
     //ACTION
     QList<Basic_Desktop *> desktop_core_dock_list;
     Desktop_Control_Dock *control_Dock = new Desktop_Control_Dock(this);

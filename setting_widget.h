@@ -2,11 +2,13 @@
 #define SETTING_WIDGET_H
 #include <QtWidgets>
 #include "desktop_background.h"
+#include "core/tools/trans_action.h"
 class Setting_Widget : public QWidget
 {
     Q_OBJECT
 public:
     explicit Setting_Widget(QWidget *parent = nullptr);
+    void Trans_update();
     void Table_Update();
     void private_update();
     void List_Update();
@@ -37,18 +39,18 @@ private:
     QList<QComboBox*> mouse_control_type_box_list;
     QList<QSpinBox*> wallpaper_width_box_list;
     QList<QSpinBox*> wallpaper_height_box_list;
-    QPushButton *update_button = new QPushButton(tr("更新"),this);
-    QPushButton *sort_button = new QPushButton(tr("排序"),this);
-    QPushButton *load_button = new QPushButton(tr("重载"),this);
-    QPushButton *new_button = new QPushButton(tr("新建"),this);
-    QPushButton *delete_button = new QPushButton(tr("删除"),this);
-    QPushButton *set_file_button = new QPushButton(tr("为当前索引设置文件"),this);
-    QPushButton *load_img_button = new QPushButton(tr("批量加载图像"),this);
-    QPushButton *load_video_button = new QPushButton(tr("批量加载视频"),this);
-    QPushButton *load_plugin_button = new QPushButton(tr("批量加载插件"),this);
-    QPushButton *plugin_settings_button = new QPushButton(tr("插件设置"),this);
+    QPushButton *update_button = new Trans_PushButton(tr("更新"), "更新", this->metaObject()->className(), this);
+    QPushButton *sort_button = new Trans_PushButton(tr("排序"), "排序", this->metaObject()->className(), this);
+    QPushButton *load_button = new Trans_PushButton(tr("重载"), "重载", this->metaObject()->className(), this);
+    QPushButton *new_button = new Trans_PushButton(tr("新建"), "新建", this->metaObject()->className(), this);
+    QPushButton *delete_button = new Trans_PushButton(tr("删除"), "删除", this->metaObject()->className(), this);
+    QPushButton *set_file_button = new Trans_PushButton(tr("为当前索引设置文件"), "为当前索引设置文件", this->metaObject()->className(), this);
+    QPushButton *load_img_button = new Trans_PushButton(tr("批量加载图像"), "批量加载图像", this->metaObject()->className(), this);
+    QPushButton *load_video_button = new Trans_PushButton(tr("批量加载视频"), "批量加载视频", this->metaObject()->className(), this);
+    QPushButton *load_plugin_button = new Trans_PushButton(tr("批量加载插件"), "批量加载插件", this->metaObject()->className(), this);
+    QPushButton *plugin_settings_button = new Trans_PushButton(tr("插件设置"), "插件设置", this->metaObject()->className(), this);
     QSpinBox *choose_id_box = new QSpinBox(this);
-    QLabel *choose_id_text = new QLabel(tr("选择id:"),this);
+    QLabel *choose_id_text = new Trans_Label(tr("选择id:"), "选择id:", this->metaObject()->className(), this);
 private:
     int Get_id_to_Index(int id);
     virtual bool eventFilter(QObject *watched, QEvent *event);

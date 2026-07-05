@@ -1,6 +1,8 @@
 #ifndef EXPERIMENTAL_SETTINGS_H
 #define EXPERIMENTAL_SETTINGS_H
 #include <QtWidgets>
+#include "core/tools/multilinetextinputdialog.h"
+#include "core/tools/trans_action.h"
 class Theme_Set_Dialog : public QWidget
 {
     Q_OBJECT
@@ -10,19 +12,19 @@ public:
 signals:
     void Call_X11_Raise();
 private:
-    QLabel *theme_color_label = new QLabel(tr("主题色:"), this);
+    QLabel *theme_color_label = new Trans_Label(tr("主题色:"), "主题色:", this->metaObject()->className(), this);
     QPushButton *theme_color_button = new QPushButton(this);
-    QLabel *theme_background_color_label = new QLabel(tr("背景色:"), this);
+    QLabel *theme_background_color_label = new Trans_Label(tr("背景色:"), "背景色:", this->metaObject()->className(), this);
     QPushButton *theme_background_color_button = new QPushButton(this);
-    QLabel *theme_text_color_label = new QLabel(tr("字体色:"), this);
+    QLabel *theme_text_color_label = new Trans_Label(tr("字体色:"), "字体色:", this->metaObject()->className(), this);
     QPushButton *theme_text_color_button = new QPushButton(this);
-    QLabel *select_text_color_label = new QLabel(tr("选择字体色:"), this);
+    QLabel *select_text_color_label = new Trans_Label(tr("选择字体色:"), "选择字体色:", this->metaObject()->className(), this);
     QPushButton *select_text_color_button = new QPushButton(this);
-    QLabel *disabled_text_color_label = new QLabel(tr("禁用字体色:"), this);
+    QLabel *disabled_text_color_label = new Trans_Label(tr("禁用字体色:"), "禁用字体色:", this->metaObject()->className(), this);
     QPushButton *disabled_text_color_button = new QPushButton(this);
-    QLabel *checked_icon_path_label = new QLabel(tr("选中图标:"), this);
+    QLabel *checked_icon_path_label = new Trans_Label(tr("选中图标:"), "选中图标:", this->metaObject()->className(), this);
     QComboBox *checked_icon_path_box = new QComboBox(this);
-    QPushButton *checked_icon_path_load_button = new QPushButton(tr("导入图像"), this);
+    QPushButton *checked_icon_path_load_button = new Trans_PushButton(tr("导入图像"), "导入图像", this->metaObject()->className(), this);
     void set_color(QColor *ptr);
 private:
     QColor *theme_color;
@@ -37,40 +39,43 @@ class Experimental_Settings : public QWidget
     Q_OBJECT
 public:
     explicit Experimental_Settings(QWidget *parent = nullptr);
-    QLabel *load_path_label = new QLabel(tr("配置文件:"), this);
+    QLabel *load_path_label = new Trans_Label(tr("配置文件:"), "配置文件:", this->metaObject()->className(), this);
     QLineEdit *load_path_edit = new QLineEdit(this);
-    QPushButton *set_load_path =new QPushButton(tr("设置路径"), this);
-    QLabel *workspace_label = new QLabel(tr("工作区:"), this);
+    QPushButton *set_load_path =new Trans_PushButton(tr("设置路径"), "设置路径", this->metaObject()->className(), this);
+
+    QPushButton *set_translation_path =new Trans_PushButton(tr("设置翻译"), "设置翻译", this->metaObject()->className(), this);
+
+    QLabel *workspace_label = new Trans_Label(tr("工作区:"), "工作区:", this->metaObject()->className(), this);
     QSpinBox *workspace_box = new QSpinBox(this);
-    QCheckBox *stay_on_top_box = new QCheckBox(tr("置顶"), this);
-    QLabel *stay_on_top_timer_label = new QLabel(tr("置顶侦测(ms):"), this);
+    QCheckBox *stay_on_top_box = new Trans_CheckBox(tr("置顶"), "置顶", this->metaObject()->className(), this);
+    QLabel *stay_on_top_timer_label = new Trans_Label(tr("置顶侦测(ms):"), "置顶侦测(ms):", this->metaObject()->className(), this);
     QSpinBox *stay_on_top_timer_edit = new QSpinBox(this);
-    QLabel *keyscan_label = new QLabel(tr("鼠标侦测(ms):"), this);
+    QLabel *keyscan_label = new Trans_Label(tr("鼠标侦测(ms):"), "鼠标侦测(ms):", this->metaObject()->className(), this);
     QSpinBox *keyscan_timer_edit = new QSpinBox(this);
-    QCheckBox *allow_drop_box = new QCheckBox(tr("允许拖入"), this);
-    QLabel *dbus_id_label = new QLabel(tr("dbus-id:"), this);
+    QCheckBox *allow_drop_box = new Trans_CheckBox(tr("允许拖入"), "允许拖入", this->metaObject()->className(), this);
+    QLabel *dbus_id_label = new Trans_Label(tr("dbus-id:"), "dbus-id:", this->metaObject()->className(), this);
     QSpinBox *dbus_id_edit = new QSpinBox(this);
-    QLabel *geometry_label = new QLabel(tr("空间结构:"), this);
-    QCheckBox *always_refresh = new QCheckBox(tr("持续刷新"), this);
+    QLabel *geometry_label = new Trans_Label(tr("空间结构:"), "空间结构:", this->metaObject()->className(), this);
+    QCheckBox *always_refresh = new Trans_CheckBox(tr("持续刷新"), "持续刷新", this->metaObject()->className(), this);
     QLineEdit *geometry_edit = new QLineEdit(this);
-    QLabel *file_open_way_label = new QLabel(tr("[打开方式]进程:"), this);
+    QLabel *file_open_way_label = new Trans_Label(tr("[打开方式]进程:"), "[打开方式]进程:", this->metaObject()->className(), this);
     QLineEdit *file_open_way_edit = new QLineEdit(this);
-    QLabel *file_path_way_label = new QLabel(tr("[打开文件位置]进程:"), this);
+    QLabel *file_path_way_label = new Trans_Label(tr("[打开文件位置]进程:"), "[打开文件位置]进程:", this->metaObject()->className(), this);
     QLineEdit *file_path_way_edit = new QLineEdit(this);
-    QLabel *file_info_way_label = new QLabel(tr("[属性]进程:"), this);
+    QLabel *file_info_way_label = new Trans_Label(tr("[属性]进程:"), "[属性]进程:", this->metaObject()->className(), this);
     QLineEdit *file_info_way_edit = new QLineEdit(this);
 
-    QLabel *open_terminal_label = new QLabel(tr("[终端]进程:"), this);
+    QLabel *open_terminal_label = new Trans_Label(tr("[终端]进程:"), "[终端]进程:", this->metaObject()->className(), this);
     QLineEdit *open_terminal_edit = new QLineEdit(this);
-    QLabel *compressor_label = new QLabel(tr("[压缩](%F模式):"), this);
+    QLabel *compressor_label = new Trans_Label(tr("[压缩](%F模式):"), "[压缩](%F模式):", this->metaObject()->className(), this);
     QLineEdit *compressor_edit = new QLineEdit(this);
-    QLabel *compressor_zip_label = new QLabel(tr("[压缩为zip](%F模式):"), this);
+    QLabel *compressor_zip_label = new Trans_Label(tr("[压缩为zip](%F模式):"), "[压缩为zip](%F模式):", this->metaObject()->className(), this);
     QLineEdit *compressor_zip_edit = new QLineEdit(this);
-    QLabel *compressor_7z_label = new QLabel(tr("[压缩为7z](%F模式):"), this);
+    QLabel *compressor_7z_label = new Trans_Label(tr("[压缩为7z](%F模式):"), "[压缩为7z](%F模式):", this->metaObject()->className(), this);
     QLineEdit *compressor_7z_edit = new QLineEdit(this);
 
-    QPushButton *set_theme_color_button = new QPushButton(tr("颜色设置"), this);
-    QPushButton *update_button = new QPushButton(tr("更新"), this);
+    QPushButton *set_theme_color_button = new Trans_PushButton(tr("颜色设置"), "颜色设置", this->metaObject()->className(), this);
+    QPushButton *update_button = new Trans_PushButton(tr("更新"), "更新", this->metaObject()->className(), this);
     void update_data();
     void send_data();
     bool has_been_set = false;
@@ -78,6 +83,8 @@ signals:
     void has_sended();
 public:
     QString *load_path;
+    QString *translation_path = nullptr;
+    QString m_translation_path = "";
     int *workspace;
     bool *stay_on_top;
     int *on_top_time;
@@ -106,8 +113,12 @@ public:
     QColor m_disabled_text_color;
     QString m_checked_icon_path;
     Theme_Set_Dialog *set_theme_dialog = new Theme_Set_Dialog(nullptr, &m_theme_color, &m_theme_background_color, &m_theme_text_color, &m_select_text_color, &m_disabled_text_color, &m_checked_icon_path);
+    void load(QSettings *settings);
+    void save(QSettings *settings);
 private:
     virtual void resizeEvent(QResizeEvent *event);
+private:
+    MultiLineTextInputDialog *m_dialog = new MultiLineTextInputDialog(nullptr);
 };
 
 #endif // EXPERIMENTAL_SETTINGS_H

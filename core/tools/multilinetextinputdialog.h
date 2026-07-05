@@ -14,6 +14,8 @@ public:
     void p_load(QSettings *settings, QString Token);
     void update_style(QColor theme_color, QColor theme_background_color, QColor theme_text_color, QColor select_text_color, QColor disabled_text_color, QString checked_icon_path);
     void set_icon(QString checked_icon_path);
+    void p_save_no_text(QSettings *settings, QString Token);
+    void p_load_no_text(QSettings *settings, QString Token);
 private:
     Basic_TextEdit *m_textEdit = new Basic_TextEdit(this);
     QLabel *info_label = new QLabel(this);

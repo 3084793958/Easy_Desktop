@@ -9,6 +9,8 @@
 #include <errno.h>
 #include <QMessageBox>
 #include <QCheckBox>
+
+#include "core/tools/trans_action.h"
 struct File_Control
 {
     static bool CopyWithCopyFileRange(const QString &srcPath, const QString &dstPath);
@@ -22,7 +24,7 @@ public:
     explicit File_MessageBox(QWidget *parent, QString filename, int *strategy, int *autoConflictStrategy);
     void Setup();
 private:
-    QCheckBox *checkAuto = new QCheckBox(tr("记住我的选择，以后自动处理"), this);
+    QCheckBox *checkAuto = new Trans_CheckBox(tr("记住我的选择，以后自动处理"), "记住我的选择，以后自动处理", this->metaObject()->className(), this);
     QPushButton *buttonOverwrite = nullptr;
     QPushButton *buttonCoexist = nullptr;
     QPushButton *buttonCancel = nullptr;

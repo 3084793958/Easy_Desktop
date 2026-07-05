@@ -30,13 +30,13 @@ private:
     Basic_TextEdit *m_editor;
     QLineEdit *m_findEdit = new QLineEdit(this);
     QLineEdit *m_replaceEdit = new QLineEdit(this);
-    QPushButton *m_prevBtn = new QPushButton(tr("上一项"), this);
-    QPushButton *m_nextBtn = new QPushButton(tr("下一项"), this);
-    QPushButton *m_replaceBtn = new QPushButton(tr("替换"), this);
-    QPushButton *m_replaceAllBtn = new QPushButton(tr("全部替换"), this);
-    QPushButton *m_closeBtn = new QPushButton(tr("×"), this);
-    QCheckBox *m_caseSensitive = new QCheckBox(tr("区分大小写"), this);
-    QCheckBox *m_wholeWord = new QCheckBox(tr("全词匹配"), this);
+    QPushButton *m_prevBtn = new Trans_PushButton(tr("上一项"), "上一项", this->metaObject()->className(), this);
+    QPushButton *m_nextBtn = new Trans_PushButton(tr("下一项"), "下一项", this->metaObject()->className(), this);
+    QPushButton *m_replaceBtn = new Trans_PushButton(tr("替换"), "替换", this->metaObject()->className(), this);
+    QPushButton *m_replaceAllBtn = new Trans_PushButton(tr("全部替换"), "全部替换", this->metaObject()->className(), this);
+    QPushButton *m_closeBtn = new Trans_PushButton(tr("×"), "×", this->metaObject()->className(), this);
+    QCheckBox *m_caseSensitive = new Trans_CheckBox(tr("区分大小写"), "区分大小写", this->metaObject()->className(), this);
+    QCheckBox *m_wholeWord = new Trans_CheckBox(tr("全词匹配"), "全词匹配", this->metaObject()->className(), this);
 };
 class Basic_TextEdit : public QTextEdit
 {
@@ -51,54 +51,54 @@ public:
 signals:
     void window_contextmenu(QPoint pos);
 private:
-    QMenu *extra_menu = new QMenu(tr("标注"), this);
-    QAction *clear_style_action = new QAction(tr("清除格式"), this);
-    QAction *record_style_action = new QAction(tr("记录格式"), this);
-    QAction *set_style_action = new QAction(tr("应用[记录格式]"), this);
-    QMenu *set_Aa_action = new QMenu(tr("设置大小写"), this);
-    QAction *set_Top_A_action = new QAction(tr("首字母大写"), this);
-    QAction *set_A_action = new QAction(tr("大写"), this);
-    QAction *set_a_action = new QAction(tr("小写"), this);
-    QAction *format_set_font = new QAction(tr("设置字体"), this);
-    QAction *format_set_font_color = new QAction(tr("设置字体颜色"), this);
-    QAction *format_set_background_color = new QAction(tr("设置背景颜色"), this);
-    QAction *set_font_I = new QAction(tr("斜体"), this);
-    QAction *set_font_B = new QAction(tr("粗体"), this);
+    QMenu *extra_menu = new Trans_Menu(tr("标注"), "标注", this->metaObject()->className(), this);
+    QAction *clear_style_action = new Trans_Action(tr("清除格式"), "清除格式", this->metaObject()->className(), this);
+    QAction *record_style_action = new Trans_Action(tr("记录格式"), "记录格式", this->metaObject()->className(), this);
+    QAction *set_style_action = new Trans_Action(tr("应用[记录格式]"), "应用[记录格式]", this->metaObject()->className(), this);
+    QMenu *set_Aa_action = new Trans_Menu(tr("设置大小写"), "设置大小写", this->metaObject()->className(), this);
+    QAction *set_Top_A_action = new Trans_Action(tr("首字母大写"), "首字母大写", this->metaObject()->className(), this);
+    QAction *set_A_action = new Trans_Action(tr("大写"), "大写", this->metaObject()->className(), this);
+    QAction *set_a_action = new Trans_Action(tr("小写"), "小写", this->metaObject()->className(), this);
+    QAction *format_set_font = new Trans_Action(tr("设置字体"), "设置字体", this->metaObject()->className(), this);
+    QAction *format_set_font_color = new Trans_Action(tr("设置字体颜色"), "设置字体颜色", this->metaObject()->className(), this);
+    QAction *format_set_background_color = new Trans_Action(tr("设置背景颜色"), "设置背景颜色", this->metaObject()->className(), this);
+    QAction *set_font_I = new Trans_Action(tr("斜体"), "斜体", this->metaObject()->className(), this);
+    QAction *set_font_B = new Trans_Action(tr("粗体"), "粗体", this->metaObject()->className(), this);
 
-    QMenu *set_control_menu = new QMenu(tr("设置控件"), this);
-    QAction *set_image_size_action = new QAction(tr("修改图片大小"), this);
-    QMenu *set_table = new QMenu(tr("设置表格"), this);
-    QAction *set_table_size_action = new QAction(tr("修改表格大小"), this);
-    QAction *merge_cells_action = new QAction(tr("合并单元格"), this);
-    QAction *split_cells_action = new QAction(tr("拆分单元格"), this);
+    QMenu *set_control_menu = new Trans_Menu(tr("设置控件"), "设置控件", this->metaObject()->className(), this);
+    QAction *set_image_size_action = new Trans_Action(tr("修改图片大小"), "修改图片大小", this->metaObject()->className(), this);
+    QMenu *set_table = new Trans_Menu(tr("设置表格"), "设置表格", this->metaObject()->className(), this);
+    QAction *set_table_size_action = new Trans_Action(tr("修改表格大小"), "修改表格大小", this->metaObject()->className(), this);
+    QAction *merge_cells_action = new Trans_Action(tr("合并单元格"), "合并单元格", this->metaObject()->className(), this);
+    QAction *split_cells_action = new Trans_Action(tr("拆分单元格"), "拆分单元格", this->metaObject()->className(), this);
 
-    QMenu *insert_menu = new QMenu(tr("插入"), this);
-    QAction *insert_image_action = new QAction(tr("图片"), this);
-    QAction *insert_table_action = new QAction(tr("插入表格"), this);
+    QMenu *insert_menu = new Trans_Menu(tr("插入"), "插入", this->metaObject()->className(), this);
+    QAction *insert_image_action = new Trans_Action(tr("图片"), "图片", this->metaObject()->className(), this);
+    QAction *insert_table_action = new Trans_Action(tr("插入表格"), "插入表格", this->metaObject()->className(), this);
 
-    QMenu *extra_mode = new QMenu(tr("模式"), this);
-    QAction *auto_turn_line_action = new QAction(tr("自动换行"), this);
-    QAction *read_only_action = new QAction(tr("只读"), this);
-    QAction *insert_mode_action = new QAction(tr("插入模式"), this);
-    QAction *wheel_change_size_action = new QAction(tr("Ctrl+滚轮修改大小"), this);
-    QAction *center_paste_action = new QAction(tr("鼠标中键粘贴"), this);
+    QMenu *extra_mode = new Trans_Menu(tr("模式"), "模式", this->metaObject()->className(), this);
+    QAction *auto_turn_line_action = new Trans_Action(tr("自动换行"), "自动换行", this->metaObject()->className(), this);
+    QAction *read_only_action = new Trans_Action(tr("只读"), "只读", this->metaObject()->className(), this);
+    QAction *insert_mode_action = new Trans_Action(tr("插入模式"), "插入模式", this->metaObject()->className(), this);
+    QAction *wheel_change_size_action = new Trans_Action(tr("Ctrl+滚轮修改大小"), "Ctrl+滚轮修改大小", this->metaObject()->className(), this);
+    QAction *center_paste_action = new Trans_Action(tr("鼠标中键粘贴"), "鼠标中键粘贴", this->metaObject()->className(), this);
 
-    QMenu *set_apperance_menu = new QMenu(tr("设置外观"), this);
-    QAction *show_line_num_action = new QAction(tr("显示行数"), this);
-    QMenu *set_show_line_pos_menu = new QMenu(tr("设置行数区位置"), this);
-    QAction *set_show_line_pos_left_action = new QAction(tr("左"), this);
-    QAction *set_show_line_pos_right_action = new QAction(tr("右"), this);
-    QAction *set_show_line_text_color_action = new QAction(tr("设置行数区文字颜色"), this);
-    QAction *set_show_line_mark_color_action = new QAction(tr("设置行标注颜色"), this);
-    QAction *set_show_status_bar = new QAction(tr("显示状态栏"), this);
-    QAction *set_show_status_bar_text_color = new QAction(tr("设置状态栏字体颜色"), this);
-    QAction *set_selection_color = new QAction(tr("设置Alt列选择颜色"), this);
-    QAction *set_search_color = new QAction(tr("设置查找与替换颜色[非选中]"), this);
-    QAction *set_search_select_color = new QAction(tr("设置查找与替换颜色[选中]"), this);
+    QMenu *set_apperance_menu = new Trans_Menu(tr("设置外观"), "设置外观", this->metaObject()->className(), this);
+    QAction *show_line_num_action = new Trans_Action(tr("显示行数"), "显示行数", this->metaObject()->className(), this);
+    QMenu *set_show_line_pos_menu = new Trans_Menu(tr("设置行数区位置"), "设置行数区位置", this->metaObject()->className(), this);
+    QAction *set_show_line_pos_left_action = new Trans_Action(tr("左"), "左", this->metaObject()->className(), this);
+    QAction *set_show_line_pos_right_action = new Trans_Action(tr("右"), "右", this->metaObject()->className(), this);
+    QAction *set_show_line_text_color_action = new Trans_Action(tr("设置行数区文字颜色"), "设置行数区文字颜色", this->metaObject()->className(), this);
+    QAction *set_show_line_mark_color_action = new Trans_Action(tr("设置行标注颜色"), "设置行标注颜色", this->metaObject()->className(), this);
+    QAction *set_show_status_bar = new Trans_Action(tr("显示状态栏"), "显示状态栏", this->metaObject()->className(), this);
+    QAction *set_show_status_bar_text_color = new Trans_Action(tr("设置状态栏字体颜色"), "设置状态栏字体颜色", this->metaObject()->className(), this);
+    QAction *set_selection_color = new Trans_Action(tr("设置Alt列选择颜色"), "设置Alt列选择颜色", this->metaObject()->className(), this);
+    QAction *set_search_color = new Trans_Action(tr("设置查找与替换颜色[非选中]"), "设置查找与替换颜色[非选中]", this->metaObject()->className(), this);
+    QAction *set_search_select_color = new Trans_Action(tr("设置查找与替换颜色[选中]"), "设置查找与替换颜色[选中]", this->metaObject()->className(), this);
 
-    QAction *search_for_text_action = new QAction(tr("查找与替换"), this);
-    QAction *jump_to_line = new QAction(tr("跳到行"), this);
-    QAction *window_control = new QAction(tr("窗口控制菜单"), this);
+    QAction *search_for_text_action = new Trans_Action(tr("查找与替换"), "查找与替换", this->metaObject()->className(), this);
+    QAction *jump_to_line = new Trans_Action(tr("跳到行"), "跳到行", this->metaObject()->className(), this);
+    QAction *window_control = new Trans_Action(tr("窗口控制菜单"), "窗口控制菜单", this->metaObject()->className(), this);
     QTextCharFormat basic_format;
     QImage save_image;
     QColor selection_color = QColor(0, 100, 255, 80);

@@ -1645,6 +1645,7 @@ GraphicsViewer::GraphicsViewer(QWidget *parent, Preview_File_Widget *m_preview_p
     setHorizontalScrollBarPolicy(Qt::ScrollBarAsNeeded);
     setVerticalScrollBarPolicy(Qt::ScrollBarAsNeeded);
     setStyleSheet("background: transparent; border: none;");
+    setRenderHints(QPainter::Antialiasing | QPainter::SmoothPixmapTransform);
     gif_movie->setCacheMode(QMovie::CacheAll);
 }
 void GraphicsViewer::setGif(const QFileInfo &info)

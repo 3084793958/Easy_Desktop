@@ -32,7 +32,7 @@
 int main(int argc, char* argv[])
 {
     QString load_path = QDir::homePath() + "/.local/lib/easy_desktop/config.ini";
-    QString translation_path = "";
+    QString translation_path = ":/base/qtbase_zh_CN.qm";
     int workspace = 0;
     int dbus_id = 0;
     bool send_dbus = false;
@@ -41,7 +41,8 @@ int main(int argc, char* argv[])
     bool always_refresh_screen_size = true;
     QRect screen_geometry = QRect(0, 0, 1440, 900);
     bool has_set_geometry = false;
-    for (int i = 1; i <argc; i++)
+    std::vector<const char *> qt_argv_vector = {argv[0]};
+    for (int i = 1; i <argc; ++i)
     {
         if ((strcmp(argv[i], "-config") == 0 || strcmp(argv[i], "-C") == 0) && i + 1 < argc)
         {
@@ -67,7 +68,7 @@ int main(int argc, char* argv[])
             }
             always_refresh_screen_size = strcmp(argv[++i], "false") != 0;
         }
-        else if ((strcmp(argv[i], "-G") == 0 || strcmp(argv[i], "-Geometry")/*很奇怪-geometry过不了*/ == 0) && i + 4 < argc)
+        else if ((strcmp(argv[i], "-G") == 0 || strcmp(argv[i], "-Geometry")/*很奇怪-geometry过不了*/ /*这是因为QT占用了-geometry*/ == 0) && i + 4 < argc)
         {
             has_set_geometry = true;
             always_refresh_screen_size = false;
@@ -95,24 +96,31 @@ int main(int argc, char* argv[])
             }
             break;
         }
-        else
+        else if (strcmp(argv[i], "-help") == 0 || strcmp(argv[i], "-H") == 0 || strcmp(argv[i], "--help") == 0)
         {
             std::cout << "用法: /path/to/Easy_Desktop [选项]" << std::endl << std::endl;
             std::cout << "示例: ./Easy_Desktop -G 0 0 1440 900" << std::endl;
             std::cout << "选项:" << std::endl;
+            std::cout << "  -help, -H, --help                          获取帮助" << std::endl;
+            std::cout << "  -version, -V,                              获取版本信息" << std::endl;
             std::cout << "  -config, -C <路径>                          指定配置文件路径" << std::endl;
             std::cout << "  -translation, -T <路径>                     设置自定义翻译文件路径" << std::endl;
+            std::cout << "                                             使用'|'分隔不同的翻译文件" << std::endl;
+            std::cout << "                                             ':/base/qtbase_zh_CN.qm'为基础QT中文翻译" << std::endl;
             std::cout << "  -workspace, -WS <索引号>                    设置工作空间索引 (0 表示任意空间)" << std::endl;
             std::cout << "  -dbus_id, -D_I <ID>                        设置 dbus_id 号" << std::endl;
             std::cout << "  -always_refresh, -A_R <布尔值>              是否持续刷新空间结构 (true/false)" << std::endl;
             std::cout << "  -Geometry, -G <x y width height>           设置空间结构 (设置后 -always_refresh 自动为 false)" << std::endl;
             std::cout << "  -send_dbus, -S_D <dbus_id> <方法> [参数]    发送 DBus 消息" << std::endl << std::endl;
-            std::cout << "示例: ./Easy_Desktop -S_D 0 add_wallpaper 0 deepin true /usr/share/wallpapers/deepin/Deepin-Technology-Brand-Logo.jpg Scale_Type::Full true true 0.1 0.1 0 0 true" << std::endl;
+            std::cout << "示例: ./Easy_Desktop -S_D 0 add_wallpaper 0 deepin true /usr/share/wallpapers/deepin/Deepin-Technology-Brand-Logo.jpg Scale_Type::Full true true 0.1 0.1 0 0 true" << std::endl << std::endl;
             std::cout << "DBus 方法列表:" << std::endl;
             std::cout << "  save                             储存" << std::endl;
             std::cout << "  load                             读取" << std::endl;
             std::cout << "  exit                             退出" << std::endl;
             std::cout << "  config <路径>                     设置配置文件路径 (不自动加载)" << std::endl;
+            std::cout << "  translation <路径>                设置翻译文件路径(自动加载)" << std::endl;
+            std::cout << "                                   使用'|'分隔不同的翻译文件" << std::endl;
+            std::cout << "                                   ':/base/qtbase_zh_CN.qm'为基础QT中文翻译" << std::endl;
             std::cout << "  workspace <索引>                  切换工作空间" << std::endl;
             std::cout << "  geometry <值>                    设置空间结构或刷新模式" << std::endl;
             std::cout << "                                   格式1: x y width height (禁用自动刷新)" << std::endl;
@@ -140,11 +148,26 @@ int main(int argc, char* argv[])
             std::cout << "                自定高(Int32) (允许为空)" << std::endl;
             return 0;
         }
+        else if (strcmp(argv[i], "-version") == 0 || strcmp(argv[i], "-V") == 0)
+        {
+            std::cout << "1.1.0 (AKA d26.7.4)" << std::endl;
+            return 0;
+        }
+        else
+        {
+            qt_argv_vector.push_back(argv[i]);
+        }
+    }
+    char **argv_qt = const_cast<char **>(qt_argv_vector.data());
+    int argc_qt = static_cast<int>(qt_argv_vector.size());
+    if (argc_qt > 1)
+    {
+        std::cout << "存在Easy_Desktop无法解析数据,将交由QT处理" << std::endl;
     }
 #ifdef USE_DTK
-    Dtk::Widget::DApplication app(argc, argv);
+    Dtk::Widget::DApplication app(argc_qt, argv_qt);
 #else
-    QApplication app(argc, argv);
+    QApplication app(argc_qt, argv_qt);
 #endif
     if (!has_set_geometry)
     {
@@ -171,28 +194,8 @@ int main(int argc, char* argv[])
     }
     app.setQuitOnLastWindowClosed(false);
     app.setApplicationName("Easy_Desktop");
-    QTranslator qtTranslator;
-    if (qtTranslator.load("qtbase_zh_CN.qm",":/base"))
-    {
-        app.installTranslator(&qtTranslator);
-    }
-    if (!translation_path.isEmpty())
-    {
-        QFileInfo trans_file(translation_path);
-        if (trans_file.exists() && trans_file.isFile())
-        {
-            QTranslator *customTranslator = new QTranslator(&app);
-            if (customTranslator->load(translation_path))
-            {
-                app.installTranslator(customTranslator);
-            }
-            else
-            {
-                delete customTranslator;
-            }
-        }
-    }
-    All_Control *all_control = new All_Control(nullptr, load_path, workspace, dbus_id, always_refresh_screen_size, screen_geometry);
+
+    All_Control *all_control = new All_Control(nullptr, &app, load_path, translation_path, workspace, dbus_id, always_refresh_screen_size, screen_geometry);
     std::cout<<"Easy_Desktop: "<<">(O^<)<~GET!"<<std::endl;
     all_control->show();
     return app.exec();

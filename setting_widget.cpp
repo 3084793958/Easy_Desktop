@@ -13,6 +13,7 @@ Setting_Widget::Setting_Widget(QWidget *parent)
     table_widget->setHorizontalHeaderLabels({tr("ID"),tr("名称"),tr("显示方式"),tr("路径"),tr("缩放方式"),tr("居中"),tr("鼠标效果"),tr("鼠标效果宽度系数"),tr("鼠标效果高度系数"),tr("X轴偏移量"),tr("Y轴偏移量"),tr("抗锯齿"),tr("鼠标控制类型"),tr("自定宽"),tr("自定高")});
     table_widget->setAlternatingRowColors(true);
     update_button->move(540,360);
+    update_button->raise();
     connect(update_button, &QPushButton::pressed, this, &Setting_Widget::List_Update);
     sort_button->move(480,360);
     connect(sort_button, &QPushButton::pressed, this, [=]
@@ -355,6 +356,11 @@ Setting_Widget::Setting_Widget(QWidget *parent)
         background_path->plugin_settings_event();
     });
     table_widget->viewport()->installEventFilter(this);//eventFilter需要注册
+}
+void Setting_Widget::Trans_update()
+{
+    setWindowTitle(tr("壁纸设置"));
+    table_widget->setHorizontalHeaderLabels({tr("ID"),tr("名称"),tr("显示方式"),tr("路径"),tr("缩放方式"),tr("居中"),tr("鼠标效果"),tr("鼠标效果宽度系数"),tr("鼠标效果高度系数"),tr("X轴偏移量"),tr("Y轴偏移量"),tr("抗锯齿"),tr("鼠标控制类型"),tr("自定宽"),tr("自定高")});
 }
 void Setting_Widget::resizeEvent(QResizeEvent *event)
 {

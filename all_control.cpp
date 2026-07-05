@@ -43,9 +43,11 @@ void All_Control::Move_To_Workspace(int human_index)
     XFlush(display);
 }
 #undef CursorShape
-All_Control::All_Control(QWidget *parent, QString m_load_path, int m_workspace, int m_dbus_id, bool m_always_refresh_screen_size, QRect m_screen_geometry)
+All_Control::All_Control(QWidget *parent, QApplication *m_app, QString m_load_path, QString m_translation_path, int m_workspace, int m_dbus_id, bool m_always_refresh_screen_size, QRect m_screen_geometry)
     :QWidget(parent)
+    ,app(m_app)
     ,load_path(m_load_path)
+    ,translation_path(m_translation_path)
     ,workspace(m_workspace)
     ,dbus_id(m_dbus_id)
     ,always_refresh_screen_size(m_always_refresh_screen_size)
@@ -60,6 +62,7 @@ All_Control::All_Control(QWidget *parent, QString m_load_path, int m_workspace, 
     experimental_settings->workspace = &workspace;
     experimental_settings->dbus_id = &dbus_id;
     experimental_settings->load_path = &load_path;
+    experimental_settings->translation_path = &translation_path;
     experimental_settings->stay_on_top = &stay_on_top;
     experimental_settings->allow_drop = &allow_drop;
     experimental_settings->on_top_time = &on_top_time;
@@ -129,6 +132,58 @@ All_Control::All_Control(QWidget *parent, QString m_load_path, int m_workspace, 
     connect(experimental_settings, &Experimental_Settings::has_sended, this , [=]
     {
         main_desktop->load_path = load_path;
+        if (app)
+        {
+            while (!customTranslator_list.isEmpty())
+            {
+                auto ptr = customTranslator_list.last();
+                customTranslator_list.pop_back();
+                if (ptr)
+                {
+                    app->removeTranslator(ptr);
+                    delete ptr;
+                }
+            }
+            QStringList translation_path_list = translation_path.split("|", Qt::SkipEmptyParts);
+            for (int i = 0; i < translation_path_list.count(); ++i)
+            {
+                if (translation_path_list[i] == ":/base/qtbase_zh_CN.qm")
+                {
+                    QTranslator *qtTranslator = new QTranslator(app);
+                    if (qtTranslator->load("qtbase_zh_CN.qm",":/base"))
+                    {
+                        app->installTranslator(qtTranslator);
+                        customTranslator_list << qtTranslator;
+                    }
+                    else
+                    {
+                        delete qtTranslator;
+                    }
+                }
+
+                QFileInfo trans_file(translation_path_list[i]);
+                if (trans_file.exists() && trans_file.isFile())
+                {
+                    QTranslator *customTranslator = new QTranslator(app);
+                    if (customTranslator->load(translation_path_list[i]))
+                    {
+                        app->installTranslator(customTranslator);
+                        customTranslator_list << customTranslator;
+                    }
+                    else
+                    {
+                        delete customTranslator;
+                    }
+                }
+            }
+
+            Trans_Action::retranslateAll();
+            Trans_Menu::retranslateAll();
+            Trans_PushButton::retranslateAll();
+            Trans_CheckBox::retranslateAll();
+            Trans_Label::retranslateAll();
+            setting_widget->Trans_update();
+        }
         stay_on_top_timer->setInterval(on_top_time);
         if (stay_on_top)
         {
@@ -210,6 +265,58 @@ All_Control::All_Control(QWidget *parent, QString m_load_path, int m_workspace, 
     {
         main_desktop->save("/tmp/Easy_Desktop/backup_config.ini");
     });
+    if (app)
+    {
+        while (!customTranslator_list.isEmpty())
+        {
+            auto ptr = customTranslator_list.last();
+            customTranslator_list.pop_back();
+            if (ptr)
+            {
+                app->removeTranslator(ptr);
+                delete ptr;
+            }
+        }
+        QStringList translation_path_list = translation_path.split("|", Qt::SkipEmptyParts);
+        for (int i = 0; i < translation_path_list.count(); ++i)
+        {
+            if (translation_path_list[i] == ":/base/qtbase_zh_CN.qm")
+            {
+                QTranslator *qtTranslator = new QTranslator(app);
+                if (qtTranslator->load("qtbase_zh_CN.qm",":/base"))
+                {
+                    app->installTranslator(qtTranslator);
+                    customTranslator_list << qtTranslator;
+                }
+                else
+                {
+                    delete qtTranslator;
+                }
+            }
+
+            QFileInfo trans_file(translation_path_list[i]);
+            if (trans_file.exists() && trans_file.isFile())
+            {
+                QTranslator *customTranslator = new QTranslator(app);
+                if (customTranslator->load(translation_path_list[i]))
+                {
+                    app->installTranslator(customTranslator);
+                    customTranslator_list << customTranslator;
+                }
+                else
+                {
+                    delete customTranslator;
+                }
+            }
+        }
+
+        Trans_Action::retranslateAll();
+        Trans_Menu::retranslateAll();
+        Trans_PushButton::retranslateAll();
+        Trans_CheckBox::retranslateAll();
+        Trans_Label::retranslateAll();
+        setting_widget->Trans_update();
+    }
     auto_save_timer->start();
     setStyleSheet(QString("QMenu{border-radius:10px 10px;background:rgba(%1,%2,%3,%4);margin:0px -1px 0px -1px;padding-top:8px;padding-bottom:8px;icon-size:20px;border-radius:10px 10px}"
                           "QMenu::item{color:rgba(%5,%6,%7,%8);background:rgba(0,0,0,0);}"
@@ -263,6 +370,11 @@ void All_Control::dbus_slot(QDBusMessage message)
         }
         load_path = m_argument[0];
         main_desktop->load_path = load_path;
+        experimental_settings->update_data();
+    }
+    else if (m_method == "translation")
+    {
+        translation_path = m_argument[0];
         experimental_settings->update_data();
     }
     else if(m_method == "workspace")

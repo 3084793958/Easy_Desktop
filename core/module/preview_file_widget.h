@@ -155,32 +155,32 @@ private slots:
     void force_read_file() override;
 private:
     QMenu *menu = new QMenu(this);
-    QAction *prevAction = new QAction(tr("上一个"), this);
-    QAction *nextAction = new QAction(tr("下一个"), this);
+    QAction *prevAction = new Trans_Action(tr("上一个"), "上一个", this->metaObject()->className(), this);
+    QAction *nextAction = new Trans_Action(tr("下一个"), "下一个", this->metaObject()->className(), this);
 
-    QMenu *textEdit_View_Mode_Menu = new QMenu(tr("文本查看方式"), this);
-    QAction *textEdit_Mode_TEXT = new QAction(tr("纯文本"), this);
-    QAction *textEdit_Mode_HTML = new QAction(tr("HTML"), this);
-    QAction *textEdit_Mode_MARKDOWN = new QAction(tr("Markdown"), this);
-    QAction *textEdit_Mode_SVG = new QAction(tr("查看svg"), this);
-    QAction *textEdit_Mode_HEX = new QAction(tr("十六进制"), this);
+    QMenu *textEdit_View_Mode_Menu = new Trans_Menu(tr("文本查看方式"), "文本查看方式", this->metaObject()->className(), this);
+    QAction *textEdit_Mode_TEXT = new Trans_Action(tr("纯文本"), "纯文本", this->metaObject()->className(), this);
+    QAction *textEdit_Mode_HTML = new Trans_Action(tr("HTML"), "HTML", this->metaObject()->className(), this);
+    QAction *textEdit_Mode_MARKDOWN = new Trans_Action(tr("Markdown"), "Markdown", this->metaObject()->className(), this);
+    QAction *textEdit_Mode_SVG = new Trans_Action(tr("查看svg"), "查看svg", this->metaObject()->className(), this);
+    QAction *textEdit_Mode_HEX = new Trans_Action(tr("十六进制"), "十六进制", this->metaObject()->className(), this);
 
-    QAction *prevPage = new QAction(tr("上一页"), this);
-    QAction *nextPage = new QAction(tr("下一页"), this);
-    QAction *reset_size_action = new QAction(tr("重置大小"), this);
-    QAction *auto_play_action = new QAction(tr("音视频自动播放"), this);
-    QAction *force_read_action = new QAction(tr("强制文本读取"), this);
-    QAction *play_action = new QAction(tr("播放"), this);
-    QAction *stop_action = new QAction(tr("暂停"), this);
+    QAction *prevPage = new Trans_Action(tr("上一页"), "上一页", this->metaObject()->className(), this);
+    QAction *nextPage = new Trans_Action(tr("下一页"), "下一页", this->metaObject()->className(), this);
+    QAction *reset_size_action = new Trans_Action(tr("重置大小"), "重置大小", this->metaObject()->className(), this);
+    QAction *auto_play_action = new Trans_Action(tr("音视频自动播放"), "音视频自动播放", this->metaObject()->className(), this);
+    QAction *force_read_action = new Trans_Action(tr("强制文本读取"), "强制文本读取", this->metaObject()->className(), this);
+    QAction *play_action = new Trans_Action(tr("播放"), "播放", this->metaObject()->className(), this);
+    QAction *stop_action = new Trans_Action(tr("暂停"), "暂停", this->metaObject()->className(), this);
     Media_WidgetAction *media_control_action = new Media_WidgetAction(this);
 private:
-    QPushButton *prevButton = new QPushButton(tr("<"), this->get_self());
-    QPushButton *nextButton = new QPushButton(tr(">"), this->get_self());
-    QPushButton *prevPageButton = new QPushButton(tr("上一页"), this->get_self());
-    QPushButton *nextPageButton = new QPushButton(tr("下一页"), this->get_self());
-    QPushButton *playButton = new QPushButton(tr("播放"), this->get_self());
-    QPushButton *stopButton = new QPushButton(tr("暂停"), this->get_self());
-    QPushButton *force_read_Button = new QPushButton(tr("强制文本读取"), this->get_self());
+    QPushButton *prevButton = new Trans_PushButton(tr("<"), "<", this->metaObject()->className(), this->get_self());
+    QPushButton *nextButton = new Trans_PushButton(tr(">"), ">", this->metaObject()->className(), this->get_self());
+    QPushButton *prevPageButton = new Trans_PushButton(tr("上一页"), "上一页", this->metaObject()->className(), this->get_self());
+    QPushButton *nextPageButton = new Trans_PushButton(tr("下一页"), "下一页", this->metaObject()->className(), this->get_self());
+    QPushButton *playButton = new Trans_PushButton(tr("播放"), "播放", this->metaObject()->className(), this->get_self());
+    QPushButton *stopButton = new Trans_PushButton(tr("暂停"), "暂停", this->metaObject()->className(), this->get_self());
+    QPushButton *force_read_Button = new Trans_PushButton(tr("强制文本读取"), "强制文本读取", this->metaObject()->className(), this->get_self());
     QList<QFileInfo> currentFileInfos = {};
     QString m_parent_dir = "";
     int currentIndex = 0;
@@ -255,10 +255,10 @@ public:
     virtual QWidget *get_m_infoWidget() override;
 private:
      QList<Ext_Preview_PluginInterface *> preview_file_plugin_list = {};
-     QMenu *Ext_Preview_Plugin_Control_Menu = new QMenu(tr("插件控制"), this);
-     QAction *Ext_Preview_Plugin_Control_Add_Action = new QAction(tr("载入插件"), this);
-     QAction *Ext_Preview_Plugin_Control_Set_Index_Action = new QAction(tr("设置插件索引"), this);
-     QAction *Ext_Preview_Plugin_Control_Remove_Action = new QAction(tr("移除插件"), this);
+     QMenu *Ext_Preview_Plugin_Control_Menu = new Trans_Menu(tr("插件控制"), "插件控制", this->metaObject()->className(), this);
+     QAction *Ext_Preview_Plugin_Control_Add_Action = new Trans_Action(tr("载入插件"), "载入插件", this->metaObject()->className(), this);
+     QAction *Ext_Preview_Plugin_Control_Set_Index_Action = new Trans_Action(tr("设置插件索引"), "设置插件索引", this->metaObject()->className(), this);
+     QAction *Ext_Preview_Plugin_Control_Remove_Action = new Trans_Action(tr("移除插件"), "移除插件", this->metaObject()->className(), this);
      void load_plugin(QString filepath);
      static bool Contains_Ext_Plugin(QString Ext_name, QString plugin_controller_name);
      bool is_Ext_plugin(QPluginLoader *plugin_loader);

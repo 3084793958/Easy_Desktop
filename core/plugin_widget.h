@@ -105,10 +105,10 @@ public:
     P_Sender *plugin_action_sender = nullptr;
     QAction *plugin_menu_ptr = nullptr;
 public:
-    QMenu *menu = new QMenu(tr("载体菜单"), this);
+    QMenu *menu = new Trans_Menu(tr("载体菜单"), "载体菜单", this->metaObject()->className(), this);
 protected:
-    QAction *set_distance_action = new QAction(tr("设置间距"), this);
-    QAction *set_delta_action = new QAction(tr("设置偏移"), this);
+    QAction *set_distance_action = new Trans_Action(tr("设置间距"), "设置间距", this->metaObject()->className(), this);
+    QAction *set_delta_action = new Trans_Action(tr("设置偏移"), "设置偏移", this->metaObject()->className(), this);
     virtual void contextMenuEvent(QContextMenuEvent *event);
     virtual void wheelEvent(QWheelEvent *event);
     //music-island补丁
@@ -138,18 +138,18 @@ signals:
     void extra_menu_call(QString menuId, bool checked);
     void real_close_event();
 private:
-    QAction *set_plugin_path_action = new QAction(tr("设置插件路径"), this);
-    QAction *tips_always_show_action = new QAction(tr("tips窗口永久显示"), this);
-    QAction *popup_always_show_action = new QAction(tr("popup窗口永久显示"), this);
-    QAction *disable_plugin_action = new QAction(tr("禁用插件"), this);
-    QAction *follow_plugin_show_action = new QAction(tr("插件指导窗口大小"), this);
-    QAction *update_plugin_action = new QAction(tr("强制更新插件"), this);
-    QAction *only_hide_widget_action = new QAction(tr("移除插件"), this);
-    QMenu *set_plugin_position = new QMenu(tr("设置插件位置"), this);
-    QAction *set_top_position = new QAction(tr("Top"), this);
-    QAction *set_right_position = new QAction(tr("Right"), this);
-    QAction *set_bottom_position = new QAction(tr("Bottom"), this);
-    QAction *set_left_position = new QAction(tr("Left"), this);
+    QAction *set_plugin_path_action = new Trans_Action(tr("设置插件路径"), "设置插件路径", this->metaObject()->className(), this);
+    QAction *tips_always_show_action = new Trans_Action(tr("tips窗口永久显示"), "tips窗口永久显示", this->metaObject()->className(), this);
+    QAction *popup_always_show_action = new Trans_Action(tr("popup窗口永久显示"), "popup窗口永久显示", this->metaObject()->className(), this);
+    QAction *disable_plugin_action = new Trans_Action(tr("禁用插件"), "禁用插件", this->metaObject()->className(), this);
+    QAction *follow_plugin_show_action = new Trans_Action(tr("插件指导窗口大小"), "插件指导窗口大小", this->metaObject()->className(), this);
+    QAction *update_plugin_action = new Trans_Action(tr("强制更新插件"), "强制更新插件", this->metaObject()->className(), this);
+    QAction *only_hide_widget_action = new Trans_Action(tr("移除插件"), "移除插件", this->metaObject()->className(), this);
+    QMenu *set_plugin_position = new Trans_Menu(tr("设置插件位置"), "设置插件位置", this->metaObject()->className(), this);
+    QAction *set_top_position = new Trans_Action(tr("Top"), "Top", this->metaObject()->className(), this);
+    QAction *set_right_position = new Trans_Action(tr("Right"), "Right", this->metaObject()->className(), this);
+    QAction *set_bottom_position = new Trans_Action(tr("Bottom"), "Bottom", this->metaObject()->className(), this);
+    QAction *set_left_position = new Trans_Action(tr("Left"), "Left", this->metaObject()->className(), this);
     QMenu *plugin_extra_context_menu = new QMenu(this);
     QTimer *hover_timer = new QTimer(this);
     QPoint press_event_point = QPoint(0, 0);

@@ -3,15 +3,16 @@ set -e
 
 # ========== 配置 ==========
 PRO_FILE="Easy_Desktop.pro"
-VERSION="26.6.8"
+VERSION="1.1.0 (AKA d26.7.4)"
 MAINTAINER="3084793958 <3084793958@qq.com>"
-DESCRIPTION="Easy Desktop - a Qt based desktop"
+DESCRIPTION="Easy Desktop - a desktop"
 SECTION="utils"
 PRIORITY="optional"
 
 SOURCE_DIR="$(pwd)"
 BASE_BUILD_DIR="${SOURCE_DIR}/build"
 OUTPUT_DIR="${BASE_BUILD_DIR}/debs"
+RELEASE_DIR="${BASE_BUILD_DIR}/releases"
 mkdir -p "$OUTPUT_DIR"
 
 VARIANTS=(
@@ -88,11 +89,15 @@ build_one() {
     mkdir -p "$install_dir/usr/local/bin"
     mkdir -p "$install_dir/usr/share/applications"
 
-    if [[ ! -f "Easy_Desktop" ]]; then
+    if [[ -f "Easy_Desktop" ]]; then
+        strip Easy_Desktop
+    else
         echo "ERROR: Easy_Desktop not found!"
         exit 1
     fi
     cp "Easy_Desktop" "$install_dir/usr/local/bin/"
+
+    cp "Easy_Desktop" "$RELEASE_DIR/Easy_Desktop_${suffix_dash}"
 
     cat > "$install_dir/usr/share/applications/easy-desktop.desktop" <<EOF
 [Desktop Entry]

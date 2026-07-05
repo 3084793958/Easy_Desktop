@@ -28,10 +28,6 @@ Dock_Button::Dock_Button(QWidget *parent)
                   "QPushButton:pressed{border-radius:5px 5px;background:rgba(255,255,255,150)}");
     connect(this, &QPushButton::pressed, this, [=]
     {
-        /*if (*locking_desktop)
-        {
-            return;
-        }*/
         int delta_page = Button_Number - *now_page;
         *now_page = Button_Number;
         dynamic_cast<Desktop_Control_Dock*>(this->parent())->Changed_Signals();
@@ -52,21 +48,34 @@ void Dock_Button::set_Now_Page(int *m_now_page)
 }
 void Dock_Button::Update_Button()
 {
+    auto *ptr = dynamic_cast<Desktop_Control_Dock *>(this->parent());
     if (*now_page == Button_Number)
     {
         if (is_towards_up_and_down && *is_towards_up_and_down)
         {
-            resize(10, 50);
+            resize(ptr->button_broder_radius * 2, ptr->button_length);
         }
         else
         {
-            resize(50, 10);
+            resize(ptr->button_length, ptr->button_broder_radius * 2);
         }
     }
     else
     {
-        resize(10 ,10);
+        resize(ptr->button_broder_radius * 2 ,ptr->button_broder_radius * 2);
     }
+}
+void Dock_Button::Update_Color_style()
+{
+    auto *ptr = dynamic_cast<Desktop_Control_Dock *>(this->parent());
+    setStyleSheet(QString("QPushButton{border-radius:%1px %1px;background:rgba(%2,%3,%4,%5)}"
+                          "QPushButton:hover{border-radius:%1px %1px;background:rgba(%6,%7,%8,%9)}"
+                          "QPushButton:pressed{border-radius:%1px %1px;background:rgba(%10,%11,%12,%13)}")
+                  .arg(ptr->button_broder_radius)
+                  .arg(ptr->button_color.red()).arg(ptr->button_color.green()).arg(ptr->button_color.blue()).arg(ptr->button_color.alpha())
+                  .arg(ptr->button_hover_color.red()).arg(ptr->button_hover_color.green()).arg(ptr->button_hover_color.blue()).arg(ptr->button_hover_color.alpha())
+                  .arg(ptr->button_pressed_color.red()).arg(ptr->button_pressed_color.green()).arg(ptr->button_pressed_color.blue()).arg(ptr->button_pressed_color.alpha())
+                  );
 }
 void Dock_Button::set_towards_ptr(bool *m_is_towards_up_and_down)
 {
@@ -84,6 +93,20 @@ Desktop_Control_Dock::Desktop_Control_Dock(QWidget *parent)
     control_towards_menu->addAction(towards_up_and_down_action);
     control_towards_menu->addAction(towards_left_and_right_action);
     menu->addMenu(control_towards_menu);
+
+    set_color_menu->addAction(set_background_color_action);
+    set_color_menu->addAction(set_button_color_action);
+    set_color_menu->addAction(set_button_pressed_color_action);
+    set_color_menu->addAction(set_button_hover_color_action);
+
+    menu->addMenu(set_color_menu);
+
+    set_size_menu->addAction(set_window_broder_action);
+    set_size_menu->addAction(set_button_broder_action);
+    set_size_menu->addAction(set_button_length_action);
+    set_size_menu->addAction(set_button_space_action);
+
+    menu->addMenu(set_size_menu);
     show();
 }
 void Desktop_Control_Dock::Update_Widget()
@@ -121,7 +144,7 @@ void Desktop_Control_Dock::Update_Widget()
             delete button;
         }
     }
-    //distance = 20;
+    //distance = 20; //过时
     for (int i = 0; i < Dock_Button_List.count(); i++)
     {
         Dock_Button_List[i]->set_Number(i);
@@ -130,22 +153,22 @@ void Desktop_Control_Dock::Update_Widget()
         {
             if (is_towards_up_and_down && *is_towards_up_and_down)
             {
-                Dock_Button_List[i]->move(10, 25);
+                Dock_Button_List[i]->move(button_broder_radius * 2, 25);
             }
             else
             {
-                Dock_Button_List[i]->move(25, 10);
+                Dock_Button_List[i]->move(25, button_broder_radius * 2);
             }
         }
         else
         {
             if (is_towards_up_and_down && *is_towards_up_and_down)
             {
-                Dock_Button_List[i]->move(10, Dock_Button_List[i - 1]->y() + Dock_Button_List[i - 1]->height() + 20);
+                Dock_Button_List[i]->move(button_broder_radius * 2, Dock_Button_List[i - 1]->y() + Dock_Button_List[i - 1]->height() + button_space);
             }
             else
             {
-                Dock_Button_List[i]->move(Dock_Button_List[i - 1]->x() + Dock_Button_List[i - 1]->width() + 20, 10);
+                Dock_Button_List[i]->move(Dock_Button_List[i - 1]->x() + Dock_Button_List[i - 1]->width() + button_space, button_broder_radius * 2);
             }
         }
         Dock_Button_List[i]->raise();
@@ -157,11 +180,11 @@ void Desktop_Control_Dock::Update_Widget()
     }
     if (is_towards_up_and_down && *is_towards_up_and_down)
     {
-        resize(30, Dock_Button_List.back()->y() + Dock_Button_List.back()->height() + 25);
+        resize(button_broder_radius * 6, Dock_Button_List.back()->y() + Dock_Button_List.back()->height() + 25);
     }
     else
     {
-        resize(Dock_Button_List.back()->x() + Dock_Button_List.back()->width() + 25, 30);
+        resize(Dock_Button_List.back()->x() + Dock_Button_List.back()->width() + 25, button_broder_radius * 6);
     }
     background->resize(this->size());
     if (is_towards_up_and_down && *is_towards_up_and_down)
@@ -184,6 +207,17 @@ void Desktop_Control_Dock::Update_Widget()
     }
     raise();
 }
+void Desktop_Control_Dock::Update_Color_style()
+{
+    background->setStyleSheet(QString("border-radius:%1px %1px;background:rgba(%2,%3,%4,%5)")
+                              .arg(bg_broder_radius)
+                              .arg(bg_color.red()).arg(bg_color.green()).arg(bg_color.blue()).arg(bg_color.alpha())
+                              );
+    for (int i = 0; i < Dock_Button_List.count(); ++i)
+    {
+        Dock_Button_List[i]->Update_Color_style();
+    }
+}
 void Desktop_Control_Dock::Changed_Signals()
 {
     for (int i = 0; i < Dock_Button_List.count(); i++)
@@ -197,6 +231,7 @@ void Desktop_Control_Dock::First_Set()
     resize(0, 30);
     move(desktop_width / 2, desktop_height - 120);
     Desktop_Control_Dock::Update_Widget();
+    Desktop_Control_Dock::Update_Color_style();
 }
 void Desktop_Control_Dock::set_Desktop_Size(int d_width, int d_height)
 {
@@ -222,6 +257,40 @@ void Desktop_Control_Dock::set_locking_desktop(bool *m_locking_desktop)
 void Desktop_Control_Dock::set_towards_ptr(bool *m_is_towards_up_and_down)
 {
     is_towards_up_and_down = m_is_towards_up_and_down;
+}
+void Desktop_Control_Dock::load(QSettings *settings)
+{
+    settings->beginGroup("Desktop_Control_Dock");
+
+    bg_color = QColor::fromRgba(settings->value("bg_color", QColor(0, 0, 0, 75).rgba()).toUInt());
+    button_color = QColor::fromRgba(settings->value("button_color", QColor(255, 255, 255, 150).rgba()).toUInt());
+    button_pressed_color = QColor::fromRgba(settings->value("button_pressed_color", QColor(255, 255, 255, 200).rgba()).toUInt());
+    button_hover_color = QColor::fromRgba(settings->value("button_hover_color", QColor(255, 255, 255, 150).rgba()).toUInt());
+
+    button_broder_radius = settings->value("button_broder_radius", 5).toInt();
+    bg_broder_radius = settings->value("bg_broder_radius", 10).toInt();
+    button_length = settings->value("button_length", 50).toInt();
+    button_space = settings->value("button_space", 20).toInt();
+
+    settings->endGroup();
+    Desktop_Control_Dock::Update_Color_style();
+    Desktop_Control_Dock::Update_Widget();
+}
+void Desktop_Control_Dock::save(QSettings *settings)
+{
+    settings->beginGroup("Desktop_Control_Dock");
+
+    settings->setValue("bg_color", bg_color.rgba());
+    settings->setValue("button_color", button_color.rgba());
+    settings->setValue("button_pressed_color", button_pressed_color.rgba());
+    settings->setValue("button_hover_color", button_hover_color.rgba());
+
+    settings->setValue("button_broder_radius", button_broder_radius);
+    settings->setValue("bg_broder_radius", bg_broder_radius);
+    settings->setValue("button_length", button_length);
+    settings->setValue("button_space", button_space);
+
+    settings->endGroup();
 }
 void Desktop_Control_Dock::mousePressEvent(QMouseEvent *event)
 {
@@ -265,6 +334,7 @@ void Desktop_Control_Dock::contextMenuEvent(QContextMenuEvent *event)
     else if (know_what == call_update)
     {
         Desktop_Control_Dock::Update_Widget();
+        Desktop_Control_Dock::Update_Color_style();
     }
     else if (know_what == hide_update)
     {
@@ -288,6 +358,109 @@ void Desktop_Control_Dock::contextMenuEvent(QContextMenuEvent *event)
         }
         Desktop_Control_Dock::Update_Widget();
         reinterpret_cast<Desktop_Main *>(this->parent())->Update_Basic_Desktop();
+    }
+
+    else if (know_what == set_background_color_action)
+    {
+        QColorDialog colorDialog;
+        colorDialog.setOption(QColorDialog::ShowAlphaChannel);
+        colorDialog.setCurrentColor(bg_color);
+        colorDialog.setParent(nullptr);
+        colorDialog.setWindowTitle(tr("获取颜色"));
+        if (colorDialog.exec() != QDialog::Accepted)
+        {
+            return;
+        }
+        bg_color = colorDialog.currentColor();
+        Desktop_Control_Dock::Update_Color_style();
+    }
+    else if (know_what == set_button_color_action)
+    {
+        QColorDialog colorDialog;
+        colorDialog.setOption(QColorDialog::ShowAlphaChannel);
+        colorDialog.setCurrentColor(button_color);
+        colorDialog.setParent(nullptr);
+        colorDialog.setWindowTitle(tr("获取颜色"));
+        if (colorDialog.exec() != QDialog::Accepted)
+        {
+            return;
+        }
+        button_color = colorDialog.currentColor();
+        Desktop_Control_Dock::Update_Color_style();
+    }
+    else if (know_what == set_button_pressed_color_action)
+    {
+        QColorDialog colorDialog;
+        colorDialog.setOption(QColorDialog::ShowAlphaChannel);
+        colorDialog.setCurrentColor(button_pressed_color);
+        colorDialog.setParent(nullptr);
+        colorDialog.setWindowTitle(tr("获取颜色"));
+        if (colorDialog.exec() != QDialog::Accepted)
+        {
+            return;
+        }
+        button_pressed_color = colorDialog.currentColor();
+        Desktop_Control_Dock::Update_Color_style();
+    }
+    else if (know_what == set_button_hover_color_action)
+    {
+        QColorDialog colorDialog;
+        colorDialog.setOption(QColorDialog::ShowAlphaChannel);
+        colorDialog.setCurrentColor(button_hover_color);
+        colorDialog.setParent(nullptr);
+        colorDialog.setWindowTitle(tr("获取颜色"));
+        if (colorDialog.exec() != QDialog::Accepted)
+        {
+            return;
+        }
+        button_hover_color = colorDialog.currentColor();
+        Desktop_Control_Dock::Update_Color_style();
+    }
+
+    else if (know_what == set_window_broder_action)
+    {
+        bool ok = false;
+        int new_radius = QInputDialog::getInt(nullptr, tr("获取数值"), tr("圆角大小:"), bg_broder_radius, 0, 2147483647, 1, &ok);
+        if (!ok)
+        {
+            return;
+        }
+        bg_broder_radius = new_radius;
+        Desktop_Control_Dock::Update_Color_style();
+    }
+    else if (know_what == set_button_broder_action)
+    {
+        bool ok = false;
+        int new_radius = QInputDialog::getInt(nullptr, tr("获取数值"), tr("圆角大小:"), button_broder_radius, 0, 2147483647, 1, &ok);
+        if (!ok)
+        {
+            return;
+        }
+        button_broder_radius = new_radius;
+        Desktop_Control_Dock::Update_Color_style();
+        Desktop_Control_Dock::Update_Widget();
+    }
+    else if (know_what == set_button_length_action)
+    {
+        bool ok = false;
+        int new_radius = QInputDialog::getInt(nullptr, tr("获取数值"), tr("按钮长度:"), button_length, 0, 2147483647, 1, &ok);
+        if (!ok)
+        {
+            return;
+        }
+        button_length = new_radius;
+        Desktop_Control_Dock::Update_Widget();
+    }
+    else if (know_what == set_button_space_action)
+    {
+        bool ok = false;
+        int new_radius = QInputDialog::getInt(nullptr, tr("获取数值"), tr("按钮间隔:"), button_space, 0, 2147483647, 1, &ok);
+        if (!ok)
+        {
+            return;
+        }
+        button_space = new_radius;
+        Desktop_Control_Dock::Update_Widget();
     }
 }
 Desktop_Main::Desktop_Main(QWidget *parent)
@@ -1237,6 +1410,7 @@ void Desktop_Main::save(QString path)
     settings.setIniCodec("UTF-8");
     settings.clear();
     desktop_background->save(&settings);
+    experimental_settings->save(&settings);
     //
     settings.beginGroup("Desktop");
     settings.setValue("locking_desktop", locking_desktop);
@@ -1283,6 +1457,7 @@ void Desktop_Main::save(QString path)
     settings.setValue("checked_icon_path", *checked_icon_path);
     settings.endGroup();
     slider_action->save(&settings);
+    control_Dock->save(&settings);
     //
     int count = my_process_carrier_list.count();
     for (int i = 0; i < count; i++)
@@ -1399,22 +1574,28 @@ void Desktop_Main::save()
 {
     Desktop_Main::save(load_path);
 }
-static QStringList save_program_list =
-{
-    "dde-file-manager -d -o",
-    "dde-file-manager --show-item",
-    "dde-file-manager -p",
-    "deepin-terminal -w",
-    "deepin-compressor %F compress",
-    "deepin-compressor %F compress_to_zip",
-    "deepin-compressor %F compress_to_7z"
-};
+
+#include <sys/stat.h>
+#include <unistd.h>
+
 void Desktop_Main::load()
 {
+    //root下要提示
+    if (geteuid() == 0)
+    {
+        QMessageBox::StandardButton name_ans = QMessageBox::question(nullptr, tr("确认配置文件"), "Easy_Desktop警告(Warning):" + tr("当前为root环境,请确认配置文件安全.\n是否读取配置文件:"));
+        if (name_ans != QMessageBox::Yes)
+        {
+            return;
+        }
+    }
+
     QSettings settings(load_path, QSettings::IniFormat);
     settings.setIniCodec("UTF-8");
     desktop_background->load(&settings);
+    experimental_settings->load(&settings);
     setting_widget->Table_Update();
+    control_Dock->load(&settings);//注意作用域
     settings.beginGroup("Desktop");
     locking_desktop = settings.value("locking_desktop", false).toBool();
     allow_dock_show = settings.value("allow_dock_show", true).toBool();
@@ -1828,4 +2009,10 @@ void Desktop_Main::load()
         settings.endGroup();
     }
     update_for_lineedit(*theme_color, *theme_background_color, *theme_text_color, *select_text_color, *disabled_text_color, *checked_icon_path);
+
+    Trans_Action::retranslateAll();
+    Trans_Menu::retranslateAll();
+    Trans_PushButton::retranslateAll();
+    Trans_CheckBox::retranslateAll();
+    Trans_Label::retranslateAll();
 }

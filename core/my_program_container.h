@@ -25,11 +25,11 @@ public:
     virtual void load(QSettings *settings);
 private:
     QMenu *menu = new QMenu(this);
-    QAction *set_program = new QAction(tr("设置程序"), this);
-    QAction *break_program = new QAction(tr("脱离"), this);
-    QAction *focus_action = new QAction(tr("聚焦"), this);
-    QAction *set_distance_action = new QAction(tr("设置间距"), this);
-    QAction *set_delta_action = new QAction(tr("设置偏移"), this);
+    QAction *set_program = new Trans_Action(tr("设置程序"), "设置程序", this->metaObject()->className(), this);
+    QAction *break_program = new Trans_Action(tr("脱离"), "脱离", this->metaObject()->className(), this);
+    QAction *focus_action = new Trans_Action(tr("聚焦"), "聚焦", this->metaObject()->className(), this);
+    QAction *set_distance_action = new Trans_Action(tr("设置间距"), "设置间距", this->metaObject()->className(), this);
+    QAction *set_delta_action = new Trans_Action(tr("设置偏移"), "设置偏移", this->metaObject()->className(), this);
     void update_container();
     QString get_window_class(Display *display, Window window);
     pid_t get_window_pid(Display *display, Window window);

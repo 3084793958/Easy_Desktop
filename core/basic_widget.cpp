@@ -118,7 +118,7 @@ Basic_Widget::~Basic_Widget()
 }
 void Basic_Widget::Update_Background()
 {
-    background->setStyleSheet(QString("border-radius: %1px %1px;background:rgba(%2,%3,%4,%5)").arg(background_radius).arg(background_color.red()).arg(background_color.green()).arg(background_color.blue()).arg(background_color.alpha()));
+    background->setStyleSheet(QString("border-radius: %1px %1px;background:rgba(%2,%3,%4,%5);").arg(background_radius).arg(background_color.red()).arg(background_color.green()).arg(background_color.blue()).arg(background_color.alpha()));
 }
 bool Basic_Widget::set_select(bool select)
 {

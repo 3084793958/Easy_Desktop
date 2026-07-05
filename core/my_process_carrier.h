@@ -85,19 +85,19 @@ private:
     Page_Control_Dock *control_Dock = new Page_Control_Dock(this->Basic_Carrier);
 protected:
     QMenu *menu = new QMenu(this);
-    QAction *create_process_widget_action = new QAction(tr("新建进程按钮"), this);
-    QAction *create_file_widget_action = new QAction(tr("新建文件按钮"), this);
-    QAction *get_process_widget_action = new QAction(tr("载入按钮"), this);
-    QMenu *load_file_action = new QMenu(tr("载入文件(夹)"), this);
-    QAction *load_files = new QAction(tr("载入文件"), this);
-    QAction *load_dir = new QAction(tr("载入文件夹"), this);
-    QAction *create_carrier_action = new QAction(tr("新建页"), this);
-    QAction *delete_carrier_action = new QAction(tr("删除页"), this);
-    QMenu *set_control_dock_pos_menu = new QMenu(tr("设置控制窗口方位"), this);
-    QAction *set_to_top_action = new QAction(tr("顶部"), this);
-    QAction *set_to_bottom_action = new QAction(tr("底部"), this);
-    QAction *set_to_left_action = new QAction(tr("左侧"), this);
-    QAction *set_to_right_action = new QAction(tr("右侧"), this);
+    QAction *create_process_widget_action = new Trans_Action(tr("新建进程按钮"), "新建进程按钮", this->metaObject()->className(), this);
+    QAction *create_file_widget_action = new Trans_Action(tr("新建文件按钮"), "新建文件按钮", this->metaObject()->className(), this);
+    QAction *get_process_widget_action = new Trans_Action(tr("载入按钮"), "载入按钮", this->metaObject()->className(), this);
+    QMenu *load_file_action = new Trans_Menu(tr("载入文件(夹)"), "载入文件(夹)", this->metaObject()->className(), this);
+    QAction *load_files = new Trans_Action(tr("载入文件"), "载入文件", this->metaObject()->className(), this);
+    QAction *load_dir = new Trans_Action(tr("载入文件夹"), "载入文件夹", this->metaObject()->className(), this);
+    QAction *create_carrier_action = new Trans_Action(tr("新建页"), "新建页", this->metaObject()->className(), this);
+    QAction *delete_carrier_action = new Trans_Action(tr("删除页"), "删除页", this->metaObject()->className(), this);
+    QMenu *set_control_dock_pos_menu = new Trans_Menu(tr("设置控制窗口方位"), "设置控制窗口方位", this->metaObject()->className(), this);
+    QAction *set_to_top_action = new Trans_Action(tr("顶部"), "顶部", this->metaObject()->className(), this);
+    QAction *set_to_bottom_action = new Trans_Action(tr("底部"), "底部", this->metaObject()->className(), this);
+    QAction *set_to_left_action = new Trans_Action(tr("左侧"), "左侧", this->metaObject()->className(), this);
+    QAction *set_to_right_action = new Trans_Action(tr("右侧"), "右侧", this->metaObject()->className(), this);
     void context_solution(QAction *know_what, QPoint pos);
 private:
     QList<File_Widget_CreateData> m_pendingItems;

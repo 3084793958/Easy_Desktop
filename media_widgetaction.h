@@ -2,6 +2,7 @@
 #define MEDIA_WIDGETACTION_H
 #include <QtWidgets>
 #include "interfaces/media-widget-action/media_widgetaction_interface.h"
+#include "core/tools/trans_action.h"
 class Media_WidgetAction : public QWidgetAction, public Media_WidgetAction_Interface
 {
     Q_OBJECT
@@ -26,11 +27,11 @@ private:
     bool position_changing = false;
     QWidget *seat_widget = new QWidget;
     QHBoxLayout *sliderbox = new QHBoxLayout();
-    QLabel *setvolume = new QLabel(tr("设置音量\n100%"),seat_widget);
+    QLabel *setvolume = new Trans_Label(tr("设置音量\n100%"), "设置音量\n100%", this->metaObject()->className(), seat_widget);
     QSlider *set_volume_main = new QSlider(Qt::Horizontal,seat_widget);
-    QLabel *setmusic_time=new QLabel(tr("进度条\n00:00"),seat_widget);
+    QLabel *setmusic_time=new Trans_Label(tr("进度条\n00:00"), "进度条\n00:00", this->metaObject()->className(), seat_widget);
     QSlider *set_music_time_main=new QSlider(Qt::Horizontal,seat_widget);
-    QLabel *setmusic_speed=new QLabel(tr("速度\n100%"),seat_widget);
+    QLabel *setmusic_speed=new Trans_Label(tr("速度\n100%"), "速度\n100%", this->metaObject()->className(), seat_widget);
     QSlider *set_music_speed_main=new QSlider(Qt::Horizontal,seat_widget);
 private slots:
     void qslider_doing(int value);

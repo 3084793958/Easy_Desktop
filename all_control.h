@@ -9,9 +9,12 @@ class All_Control : public QWidget
 {
     Q_OBJECT
 public:
-    explicit All_Control(QWidget *parent = nullptr, QString m_load_path = "", int m_workspace = 0, int m_dbus_id = 0, bool m_always_refresh_screen_size = true, QRect m_screen_geometry = QApplication::desktop()->geometry());
+    explicit All_Control(QWidget *parent = nullptr, QApplication *m_app = nullptr, QString m_load_path = "", QString m_translation_path = "", int m_workspace = 0, int m_dbus_id = 0, bool m_always_refresh_screen_size = true, QRect m_screen_geometry = QApplication::desktop()->geometry());
     void Update_Widget();
+    QApplication *app = nullptr;
+    QList<QTranslator *>customTranslator_list = {};
     QString load_path = QDir::homePath() + "/.local/lib/easy_desktop/config.ini";
+    QString translation_path = "";
     bool stay_on_top = true;
     int on_top_time = 5000;
     bool workspace_donotshow = false;

@@ -368,86 +368,86 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../core/basic_widget.h" line="91"/>
+        <location filename="../core/basic_widget.h" line="92"/>
         <source>基础操作</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../core/basic_widget.h" line="92"/>
+        <location filename="../core/basic_widget.h" line="93"/>
         <source>移动到页</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../core/basic_widget.h" line="93"/>
+        <location filename="../core/basic_widget.h" line="94"/>
         <source>设置圆角大小</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../core/basic_widget.h" line="94"/>
+        <location filename="../core/basic_widget.h" line="95"/>
         <source>设置背景颜色</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../core/basic_widget.h" line="95"/>
+        <location filename="../core/basic_widget.h" line="96"/>
         <source>显示关闭窗口按钮</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../core/basic_widget.h" line="96"/>
-        <source>关闭窗口按钮位置</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <location filename="../core/basic_widget.h" line="97"/>
-        <location filename="../core/basic_widget.h" line="104"/>
-        <source>左上</source>
+        <source>关闭窗口按钮位置</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../core/basic_widget.h" line="98"/>
         <location filename="../core/basic_widget.h" line="105"/>
-        <source>右上</source>
+        <source>左上</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../core/basic_widget.h" line="99"/>
         <location filename="../core/basic_widget.h" line="106"/>
-        <source>左下</source>
+        <source>右上</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../core/basic_widget.h" line="100"/>
         <location filename="../core/basic_widget.h" line="107"/>
+        <source>左下</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../core/basic_widget.h" line="101"/>
+        <location filename="../core/basic_widget.h" line="108"/>
         <source>右下</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../core/basic_widget.h" line="102"/>
+        <location filename="../core/basic_widget.h" line="103"/>
         <source>允许选择</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../core/basic_widget.h" line="103"/>
+        <location filename="../core/basic_widget.h" line="104"/>
         <source>选择按钮位置</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../core/basic_widget.h" line="110"/>
+        <location filename="../core/basic_widget.h" line="111"/>
         <source>设置位置</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../core/basic_widget.h" line="111"/>
+        <location filename="../core/basic_widget.h" line="112"/>
         <source>设置大小</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../core/basic_widget.h" line="112"/>
+        <location filename="../core/basic_widget.h" line="113"/>
         <source>关闭窗口</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../core/basic_widget.h" line="113"/>
+        <location filename="../core/basic_widget.h" line="114"/>
         <source>×</source>
         <translation type="unfinished"></translation>
     </message>
@@ -624,332 +624,425 @@
 <context>
     <name>Desktop_Control_Dock</name>
     <message>
-        <location filename="../desktop_main.h" line="64"/>
+        <location filename="../desktop_main.h" line="69"/>
         <source>居中</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../desktop_main.h" line="65"/>
+        <location filename="../desktop_main.h" line="70"/>
         <source>更新</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../desktop_main.h" line="66"/>
+        <location filename="../desktop_main.h" line="71"/>
         <source>隐藏</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../desktop_main.h" line="67"/>
+        <location filename="../desktop_main.h" line="72"/>
         <source>窗口朝向</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../desktop_main.h" line="68"/>
+        <location filename="../desktop_main.h" line="73"/>
         <source>上下</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../desktop_main.h" line="69"/>
+        <location filename="../desktop_main.h" line="74"/>
         <source>左右</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../desktop_main.h" line="76"/>
+        <source>设置颜色</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../desktop_main.h" line="77"/>
+        <source>背景颜色</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../desktop_main.h" line="78"/>
+        <source>按钮颜色</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../desktop_main.h" line="79"/>
+        <source>按钮颜色pressed</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../desktop_main.h" line="80"/>
+        <source>按钮颜色hover</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../desktop_main.h" line="82"/>
+        <source>设置大小</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../desktop_main.h" line="83"/>
+        <source>窗口圆角大小</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../desktop_main.h" line="84"/>
+        <source>按钮圆角大小</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../desktop_main.h" line="85"/>
+        <source>当前页按钮长度</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../desktop_main.h" line="86"/>
+        <source>按钮间距</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../desktop_main.cpp" line="369"/>
+        <location filename="../desktop_main.cpp" line="383"/>
+        <location filename="../desktop_main.cpp" line="397"/>
+        <location filename="../desktop_main.cpp" line="411"/>
+        <source>获取颜色</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../desktop_main.cpp" line="423"/>
+        <location filename="../desktop_main.cpp" line="434"/>
+        <location filename="../desktop_main.cpp" line="446"/>
+        <location filename="../desktop_main.cpp" line="457"/>
+        <source>获取数值</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../desktop_main.cpp" line="423"/>
+        <location filename="../desktop_main.cpp" line="434"/>
+        <source>圆角大小:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../desktop_main.cpp" line="446"/>
+        <source>按钮长度:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../desktop_main.cpp" line="457"/>
+        <source>按钮间隔:</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
     <name>Desktop_Main</name>
     <message>
-        <location filename="../desktop_main.cpp" line="496"/>
+        <location filename="../desktop_main.cpp" line="669"/>
         <source>删除当前桌面</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../desktop_main.cpp" line="496"/>
+        <location filename="../desktop_main.cpp" line="669"/>
         <source>是否删除当前桌面?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../desktop_main.cpp" line="789"/>
-        <location filename="../desktop_main.cpp" line="795"/>
-        <location filename="../desktop_main.cpp" line="801"/>
-        <location filename="../desktop_main.cpp" line="807"/>
-        <location filename="../desktop_main.cpp" line="816"/>
-        <location filename="../desktop_main.cpp" line="822"/>
-        <location filename="../desktop_main.cpp" line="828"/>
+        <location filename="../desktop_main.cpp" line="962"/>
+        <location filename="../desktop_main.cpp" line="968"/>
+        <location filename="../desktop_main.cpp" line="974"/>
+        <location filename="../desktop_main.cpp" line="980"/>
+        <location filename="../desktop_main.cpp" line="989"/>
+        <location filename="../desktop_main.cpp" line="995"/>
+        <location filename="../desktop_main.cpp" line="1001"/>
         <source>获取数值</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../desktop_main.cpp" line="789"/>
+        <location filename="../desktop_main.cpp" line="962"/>
         <source>位置坐标:(x,y),宽度:width,高度:height,横向间隔:delta_x,纵向间隔:delta_y
 设置x</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../desktop_main.cpp" line="795"/>
-        <location filename="../desktop_main.cpp" line="801"/>
-        <location filename="../desktop_main.cpp" line="807"/>
-        <location filename="../desktop_main.cpp" line="816"/>
-        <location filename="../desktop_main.cpp" line="822"/>
+        <location filename="../desktop_main.cpp" line="968"/>
+        <location filename="../desktop_main.cpp" line="974"/>
+        <location filename="../desktop_main.cpp" line="980"/>
+        <location filename="../desktop_main.cpp" line="989"/>
+        <location filename="../desktop_main.cpp" line="995"/>
         <source>位置坐标:(</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../desktop_main.cpp" line="795"/>
+        <location filename="../desktop_main.cpp" line="968"/>
         <source>,y),宽度:width,高度:height,横向间隔:delta_x,纵向间隔:delta_y
 设置y</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../desktop_main.cpp" line="801"/>
-        <location filename="../desktop_main.cpp" line="807"/>
-        <location filename="../desktop_main.cpp" line="816"/>
-        <location filename="../desktop_main.cpp" line="822"/>
+        <location filename="../desktop_main.cpp" line="974"/>
+        <location filename="../desktop_main.cpp" line="980"/>
+        <location filename="../desktop_main.cpp" line="989"/>
+        <location filename="../desktop_main.cpp" line="995"/>
         <source>,</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../desktop_main.cpp" line="801"/>
+        <location filename="../desktop_main.cpp" line="974"/>
         <source>),宽度:width,高度:height,横向间隔:delta_x,纵向间隔:delta_y
 设置width</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../desktop_main.cpp" line="807"/>
-        <location filename="../desktop_main.cpp" line="816"/>
-        <location filename="../desktop_main.cpp" line="822"/>
+        <location filename="../desktop_main.cpp" line="980"/>
+        <location filename="../desktop_main.cpp" line="989"/>
+        <location filename="../desktop_main.cpp" line="995"/>
         <source>),宽度:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../desktop_main.cpp" line="807"/>
+        <location filename="../desktop_main.cpp" line="980"/>
         <source>,高度:height,横向间隔:delta_x,纵向间隔:delta_y
 设置height</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../desktop_main.cpp" line="816"/>
-        <location filename="../desktop_main.cpp" line="822"/>
+        <location filename="../desktop_main.cpp" line="989"/>
+        <location filename="../desktop_main.cpp" line="995"/>
         <source>,高度:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../desktop_main.cpp" line="816"/>
+        <location filename="../desktop_main.cpp" line="989"/>
         <source>,横向间隔:delta_x,纵向间隔:delta_y
 设置delta_x</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../desktop_main.cpp" line="822"/>
+        <location filename="../desktop_main.cpp" line="995"/>
         <source>,横向间隔:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../desktop_main.cpp" line="822"/>
+        <location filename="../desktop_main.cpp" line="995"/>
         <source>,纵向间隔:delta_y
 设置delta_y</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../desktop_main.cpp" line="828"/>
+        <location filename="../desktop_main.cpp" line="1001"/>
         <source>设置列数</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../desktop_main.cpp" line="835"/>
+        <location filename="../desktop_main.cpp" line="1008"/>
         <source>显示关闭按钮</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../desktop_main.cpp" line="835"/>
+        <location filename="../desktop_main.cpp" line="1008"/>
         <source>是</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../desktop_main.cpp" line="835"/>
+        <location filename="../desktop_main.cpp" line="1008"/>
         <source>否</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../desktop_main.h" line="144"/>
-        <source>播放菜单</source>
+        <location filename="../desktop_main.cpp" line="1586"/>
+        <source>确认配置文件</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../desktop_main.h" line="145"/>
-        <source>播放</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../desktop_main.h" line="146"/>
-        <source>暂停</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../desktop_main.h" line="147"/>
-        <source>新建控件</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../desktop_main.h" line="148"/>
-        <source>时钟</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../desktop_main.h" line="149"/>
-        <source>文本框</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../desktop_main.h" line="150"/>
-        <source>标签</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../desktop_main.h" line="151"/>
-        <source>进程按钮</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../desktop_main.h" line="152"/>
-        <source>文件按钮</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../desktop_main.h" line="153"/>
-        <source>树状视图文件夹</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../desktop_main.h" line="154"/>
-        <source>图标视图文件夹</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../desktop_main.h" line="155"/>
-        <source>进程/文件按钮载体</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../desktop_main.h" line="156"/>
-        <source>内嵌窗口</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../desktop_main.h" line="157"/>
-        <source>插件窗口</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../desktop_main.h" line="159"/>
-        <source>可视化图表</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../desktop_main.h" line="160"/>
-        <source>CPU</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../desktop_main.h" line="161"/>
-        <source>内存</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../desktop_main.h" line="162"/>
-        <source>网络</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../desktop_main.h" line="163"/>
-        <source>磁盘</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../desktop_main.h" line="164"/>
-        <source>声音服务</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../desktop_main.h" line="166"/>
-        <source>桌面控制</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../desktop_main.h" line="167"/>
-        <source>锚定桌面</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../desktop_main.h" line="168"/>
-        <source>取消锚定</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../desktop_main.h" line="169"/>
-        <source>显示控制窗口</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../desktop_main.h" line="170"/>
-        <source>隐藏控制窗口</source>
+        <location filename="../desktop_main.cpp" line="1586"/>
+        <source>当前为root环境,请确认配置文件安全.
+是否读取配置文件:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../desktop_main.h" line="171"/>
-        <source>控制窗口归中</source>
+        <source>播放菜单</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../desktop_main.h" line="172"/>
-        <source>新建桌面</source>
+        <source>播放</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../desktop_main.h" line="173"/>
-        <source>移除桌面</source>
+        <source>暂停</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../desktop_main.h" line="174"/>
-        <source>鼠标控制</source>
+        <source>新建控件</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../desktop_main.h" line="175"/>
-        <source>应用</source>
+        <source>时钟</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../desktop_main.h" line="176"/>
-        <source>禁用</source>
+        <source>文本框</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../desktop_main.h" line="177"/>
-        <source>进度条菜单</source>
+        <source>标签</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../desktop_main.h" line="178"/>
+        <source>进程按钮</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../desktop_main.h" line="179"/>
-        <source>储存</source>
+        <source>文件按钮</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../desktop_main.h" line="180"/>
-        <source>读取</source>
+        <source>树状视图文件夹</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../desktop_main.h" line="181"/>
-        <source>壁纸设置</source>
+        <source>图标视图文件夹</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../desktop_main.h" line="182"/>
-        <source>高级设置</source>
+        <source>进程/文件按钮载体</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../desktop_main.h" line="183"/>
+        <source>内嵌窗口</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../desktop_main.h" line="184"/>
+        <source>插件窗口</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../desktop_main.h" line="186"/>
+        <source>可视化图表</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../desktop_main.h" line="187"/>
+        <source>CPU</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../desktop_main.h" line="188"/>
+        <source>内存</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../desktop_main.h" line="189"/>
+        <source>网络</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../desktop_main.h" line="190"/>
+        <source>磁盘</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../desktop_main.h" line="191"/>
+        <source>声音服务</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../desktop_main.h" line="193"/>
+        <source>桌面控制</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../desktop_main.h" line="194"/>
+        <source>锚定桌面</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../desktop_main.h" line="195"/>
+        <source>取消锚定</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../desktop_main.h" line="196"/>
+        <source>显示控制窗口</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../desktop_main.h" line="197"/>
+        <source>隐藏控制窗口</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../desktop_main.h" line="198"/>
+        <source>控制窗口归中</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../desktop_main.h" line="199"/>
+        <source>新建桌面</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../desktop_main.h" line="200"/>
+        <source>移除桌面</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../desktop_main.h" line="201"/>
+        <source>鼠标控制</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../desktop_main.h" line="202"/>
+        <source>应用</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../desktop_main.h" line="203"/>
+        <source>禁用</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../desktop_main.h" line="204"/>
+        <source>进度条菜单</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../desktop_main.h" line="206"/>
+        <source>储存</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../desktop_main.h" line="207"/>
+        <source>读取</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../desktop_main.h" line="208"/>
+        <source>壁纸设置</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../desktop_main.h" line="209"/>
+        <source>高级设置</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../desktop_main.h" line="210"/>
         <source>退出</source>
         <translation type="unfinished"></translation>
     </message>
@@ -962,112 +1055,125 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../experimental_settings.cpp" line="89"/>
+        <location filename="../experimental_settings.cpp" line="93"/>
         <source>获取配置文件</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../experimental_settings.cpp" line="89"/>
+        <location filename="../experimental_settings.cpp" line="93"/>
         <source>配置文件</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../experimental_settings.cpp" line="89"/>
+        <location filename="../experimental_settings.cpp" line="93"/>
         <source>所有文件</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../experimental_settings.h" line="40"/>
-        <source>配置文件:</source>
+        <location filename="../experimental_settings.cpp" line="107"/>
+        <location filename="../experimental_settings.h" line="46"/>
+        <source>设置翻译</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../experimental_settings.cpp" line="107"/>
+        <source>设置翻译文件
+使用 换行符 分隔不同的翻译文件
+&apos;:/base/qtbase_zh_CN.qm&apos;为基础QT中文翻译</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../experimental_settings.h" line="42"/>
+        <source>配置文件:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../experimental_settings.h" line="44"/>
         <source>设置路径</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../experimental_settings.h" line="43"/>
+        <location filename="../experimental_settings.h" line="48"/>
         <source>工作区:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../experimental_settings.h" line="45"/>
+        <location filename="../experimental_settings.h" line="50"/>
         <source>置顶</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../experimental_settings.h" line="46"/>
+        <location filename="../experimental_settings.h" line="51"/>
         <source>置顶侦测(ms):</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../experimental_settings.h" line="48"/>
+        <location filename="../experimental_settings.h" line="53"/>
         <source>鼠标侦测(ms):</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../experimental_settings.h" line="50"/>
+        <location filename="../experimental_settings.h" line="55"/>
         <source>允许拖入</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../experimental_settings.h" line="51"/>
+        <location filename="../experimental_settings.h" line="56"/>
         <source>dbus-id:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../experimental_settings.h" line="53"/>
+        <location filename="../experimental_settings.h" line="58"/>
         <source>空间结构:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../experimental_settings.h" line="54"/>
+        <location filename="../experimental_settings.h" line="59"/>
         <source>持续刷新</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../experimental_settings.h" line="56"/>
+        <location filename="../experimental_settings.h" line="61"/>
         <source>[打开方式]进程:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../experimental_settings.h" line="58"/>
+        <location filename="../experimental_settings.h" line="63"/>
         <source>[打开文件位置]进程:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../experimental_settings.h" line="60"/>
+        <location filename="../experimental_settings.h" line="65"/>
         <source>[属性]进程:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../experimental_settings.h" line="63"/>
+        <location filename="../experimental_settings.h" line="68"/>
         <source>[终端]进程:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../experimental_settings.h" line="65"/>
+        <location filename="../experimental_settings.h" line="70"/>
         <source>[压缩](%F模式):</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../experimental_settings.h" line="67"/>
+        <location filename="../experimental_settings.h" line="72"/>
         <source>[压缩为zip](%F模式):</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../experimental_settings.h" line="69"/>
+        <location filename="../experimental_settings.h" line="74"/>
         <source>[压缩为7z](%F模式):</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../experimental_settings.h" line="72"/>
+        <location filename="../experimental_settings.h" line="77"/>
         <source>颜色设置</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../experimental_settings.h" line="73"/>
+        <location filename="../experimental_settings.h" line="78"/>
         <source>更新</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1105,7 +1211,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../core/tools/file_control.h" line="25"/>
+        <location filename="../core/tools/file_control.h" line="27"/>
         <source>记住我的选择，以后自动处理</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1822,19 +1928,19 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../media_widgetaction.h" line="29"/>
+        <location filename="../media_widgetaction.h" line="30"/>
         <source>设置音量
 100%</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../media_widgetaction.h" line="31"/>
+        <location filename="../media_widgetaction.h" line="32"/>
         <source>进度条
 00:00</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../media_widgetaction.h" line="33"/>
+        <location filename="../media_widgetaction.h" line="34"/>
         <source>速度
 100%</source>
         <translation type="unfinished"></translation>
@@ -2803,7 +2909,7 @@ void Info_Widget::updateFolderSize()
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../core/module/preview_file_widget.cpp" line="2072"/>
+        <location filename="../core/module/preview_file_widget.cpp" line="2073"/>
         <source>插件导入失败:</source>
         <translation type="unfinished"></translation>
     </message>
@@ -3426,7 +3532,7 @@ void Info_Widget::updateFolderSize()
     </message>
     <message>
         <location filename="../setting_widget.cpp" line="182"/>
-        <location filename="../setting_widget.h" line="44"/>
+        <location filename="../setting_widget.h" line="45"/>
         <source>删除</source>
         <translation type="unfinished"></translation>
     </message>
@@ -3551,52 +3657,52 @@ void Info_Widget::updateFolderSize()
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../setting_widget.h" line="40"/>
+        <location filename="../setting_widget.h" line="41"/>
         <source>更新</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../setting_widget.h" line="41"/>
+        <location filename="../setting_widget.h" line="42"/>
         <source>排序</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../setting_widget.h" line="42"/>
+        <location filename="../setting_widget.h" line="43"/>
         <source>重载</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../setting_widget.h" line="43"/>
+        <location filename="../setting_widget.h" line="44"/>
         <source>新建</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../setting_widget.h" line="45"/>
+        <location filename="../setting_widget.h" line="46"/>
         <source>为当前索引设置文件</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../setting_widget.h" line="46"/>
+        <location filename="../setting_widget.h" line="47"/>
         <source>批量加载图像</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../setting_widget.h" line="47"/>
+        <location filename="../setting_widget.h" line="48"/>
         <source>批量加载视频</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../setting_widget.h" line="48"/>
+        <location filename="../setting_widget.h" line="49"/>
         <source>批量加载插件</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../setting_widget.h" line="49"/>
+        <location filename="../setting_widget.h" line="50"/>
         <source>插件设置</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../setting_widget.h" line="51"/>
+        <location filename="../setting_widget.h" line="52"/>
         <source>选择id:</source>
         <translation type="unfinished"></translation>
     </message>
@@ -3604,57 +3710,57 @@ void Info_Widget::updateFolderSize()
 <context>
     <name>Theme_Set_Dialog</name>
     <message>
-        <location filename="../experimental_settings.cpp" line="248"/>
+        <location filename="../experimental_settings.cpp" line="274"/>
         <source>获取图像</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../experimental_settings.cpp" line="248"/>
+        <location filename="../experimental_settings.cpp" line="274"/>
         <source>图像文件</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../experimental_settings.cpp" line="248"/>
+        <location filename="../experimental_settings.cpp" line="274"/>
         <source>所有文件</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../experimental_settings.cpp" line="285"/>
+        <location filename="../experimental_settings.cpp" line="311"/>
         <source>获取颜色</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../experimental_settings.h" line="13"/>
+        <location filename="../experimental_settings.h" line="15"/>
         <source>主题色:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../experimental_settings.h" line="15"/>
+        <location filename="../experimental_settings.h" line="17"/>
         <source>背景色:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../experimental_settings.h" line="17"/>
+        <location filename="../experimental_settings.h" line="19"/>
         <source>字体色:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../experimental_settings.h" line="19"/>
+        <location filename="../experimental_settings.h" line="21"/>
         <source>选择字体色:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../experimental_settings.h" line="21"/>
+        <location filename="../experimental_settings.h" line="23"/>
         <source>禁用字体色:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../experimental_settings.h" line="23"/>
+        <location filename="../experimental_settings.h" line="25"/>
         <source>选中图标:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../experimental_settings.h" line="25"/>
+        <location filename="../experimental_settings.h" line="27"/>
         <source>导入图像</source>
         <translation type="unfinished"></translation>
     </message>
@@ -3719,43 +3825,43 @@ void Info_Widget::updateFolderSize()
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../core/module/zip_treeview.h" line="85"/>
-        <location filename="../core/module/zip_treeview.h" line="95"/>
+        <location filename="../core/module/zip_treeview.h" line="87"/>
+        <location filename="../core/module/zip_treeview.h" line="97"/>
         <source>复制名称</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../core/module/zip_treeview.h" line="86"/>
+        <location filename="../core/module/zip_treeview.h" line="88"/>
         <source>显示状态栏</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../core/module/zip_treeview.h" line="87"/>
+        <location filename="../core/module/zip_treeview.h" line="89"/>
         <source>设置状态栏字体颜色</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../core/module/zip_treeview.h" line="88"/>
+        <location filename="../core/module/zip_treeview.h" line="90"/>
         <source>图标大小</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../core/module/zip_treeview.h" line="89"/>
+        <location filename="../core/module/zip_treeview.h" line="91"/>
         <source>字体</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../core/module/zip_treeview.h" line="90"/>
+        <location filename="../core/module/zip_treeview.h" line="92"/>
         <source>悬停颜色</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../core/module/zip_treeview.h" line="91"/>
+        <location filename="../core/module/zip_treeview.h" line="93"/>
         <source>选择颜色</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../core/module/zip_treeview.h" line="92"/>
+        <location filename="../core/module/zip_treeview.h" line="94"/>
         <source>圆角大小</source>
         <translation type="unfinished"></translation>
     </message>

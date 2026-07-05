@@ -73,7 +73,9 @@ SOURCES += \
     core/module/my_treeview_delegate.cpp \
     interfaces/wallpaper/wallpaper_info_def.cpp \
     core/module/asynciconloader.cpp \
-    core/module/asyncfilesystemmodel.cpp
+    core/module/asyncfilesystemmodel.cpp \
+    core/tools/trans_action.cpp \
+    core/module/audio_wave_preview.cpp
 
 contains(DEFINES, USE_CHART) {
     SOURCES += \
@@ -128,7 +130,10 @@ HEADERS += \
     interfaces/wallpaper/wallpaper_plugin.h \
     interfaces/wallpaper/wallpaper_info_def.h \
     core/module/asynciconloader.h \
-    core/module/asyncfilesystemmodel.h
+    core/module/asyncfilesystemmodel.h \
+    core/tools/trans_object.h \
+    core/tools/trans_action.h \
+    core/module/audio_wave_preview.h
 
 contains(DEFINES, USE_CHART) {
     HEADERS += \
@@ -153,3 +158,4 @@ RESOURCES += \
 
 TRANSLATIONS += translations/Original.ts
 TRANSLATIONS += translations/Literary_Chinese.ts
+TRANSLATIONS += translations/Qute_Language.ts

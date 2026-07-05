@@ -43,6 +43,14 @@ void MultiLineTextInputDialog::p_load(QSettings *settings, QString Token)
 {
     m_textEdit->H_load(settings, Token);
 }
+void MultiLineTextInputDialog::p_save_no_text(QSettings *settings, QString Token)
+{
+    m_textEdit->H_save_no_text(settings, Token);
+}
+void MultiLineTextInputDialog::p_load_no_text(QSettings *settings, QString Token)
+{
+    m_textEdit->H_load_no_text(settings, Token);
+}
 void MultiLineTextInputDialog::update_style(QColor theme_color, QColor theme_background_color, QColor theme_text_color, QColor select_text_color, QColor disabled_text_color, QString checked_icon_path)
 {
     m_textEdit->setStyleSheet(QString("QMenu{border-radius:10px 10px;background:rgba(%1,%2,%3,%4);margin:0px -1px 0px -1px;padding-top:8px;padding-bottom:8px;icon-size:20px;border-radius:10px 10px}"
