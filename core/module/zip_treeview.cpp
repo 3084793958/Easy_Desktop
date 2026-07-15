@@ -16,6 +16,8 @@
 #include <QDrag>
 #include <QClipboard>
 
+#include "core/tools/trans_sender.h"
+
 Zip_TreeView * Zip_TreeView::catch_ptr;
 //将路径列表构建为QStandardItemModel
 void Zip_TreeView::buildTreeModelFromPaths(QStandardItemModel *model, const QList<Paths_File_Info> &paths)
@@ -137,6 +139,178 @@ void Zip_TreeView::buildTreeModelFromPaths(QStandardItemModel *model, const QLis
         }
     }
 }
+
+void Zip_TreeView::refreshTreeModel(QStandardItemModel *model, const QList<Paths_File_Info> &paths)
+{
+    if (!model)
+    {
+        return;
+    }
+
+    //构建新路径信息映射
+    QSet<QString> newPathSet;
+    QMap<QString, const Paths_File_Info *> pathToInfo;
+    for (const Paths_File_Info &info : paths)
+    {
+        QString stdPath = info.name;
+        if (stdPath.endsWith('/'))
+        {
+            stdPath.chop(1);
+        }
+        if (stdPath.isEmpty())
+        {
+            continue;
+        }
+        newPathSet.insert(stdPath);
+        pathToInfo.insert(stdPath, &info);
+    }
+
+    //获取映射
+    QMap<QString, QStandardItem *> existingPathToItem;
+    QStandardItem *root = model->invisibleRootItem();
+    collectExistingItems(root, existingPathToItem);
+
+    QSet<QString> processedPaths;
+
+    for (const QString &path : newPathSet)
+    {
+        processedPaths.insert(path);
+        QStandardItem *item = existingPathToItem.value(path);
+        if (!item)
+        {
+            createPathInModel(model, path, pathToInfo, existingPathToItem);
+        }
+        else
+        {
+            updateNodeData(model, item, path, pathToInfo);
+        }
+        existingPathToItem.remove(path);
+    }
+    for (auto it = existingPathToItem.begin(); it != existingPathToItem.end(); ++it)
+    {
+        QStandardItem *item = it.value();
+        QStandardItem *parent = item->parent() ? item->parent() : root;
+        parent->removeRow(item->row());
+    }
+}
+void Zip_TreeView::collectExistingItems(QStandardItem *parent, QMap<QString, QStandardItem *> &pathToItem)
+{
+    for (int i = 0; i < parent->rowCount(); ++i)
+    {
+        QStandardItem *item = parent->child(i, 0);
+        if (!item)
+        {
+            continue;
+        }
+        QVariant data = item->data(Qt::UserRole);
+        if (data.canConvert<QList<QVariant>>())
+        {
+            QList<QVariant> list = data.toList();
+            if (list.size() >= 3 && list[0].toString() == "name")
+            {
+                QString path = list[2].toString();
+                pathToItem.insert(path, item);
+                collectExistingItems(item, pathToItem);
+            }
+        }
+    }
+}
+void Zip_TreeView::createPathInModel(QStandardItemModel *model, const QString &path, const QMap<QString, const Paths_File_Info *> &pathToInfo, QMap<QString, QStandardItem *> &existingPathToItem)
+{
+    QStringList parts = path.split('/', Qt::SkipEmptyParts);
+    if (parts.isEmpty())
+    {
+        return;
+    }
+    QStandardItem *root = model->invisibleRootItem();
+    QString currentPath;
+    QStandardItem *parent = root;
+
+    for (int i = 0; i < parts.size(); ++i)
+    {
+        const QString &part = parts[i];
+        currentPath += (currentPath.isEmpty() ? part : "/" + part);
+
+        QStandardItem *item = existingPathToItem.value(currentPath);
+        if (!item)
+        {
+            item = new QStandardItem(part);
+            QStandardItem *sizeItem = new QStandardItem;
+            QStandardItem *typeItem = new QStandardItem;
+            QStandardItem *timeItem = new QStandardItem;
+            parent->appendRow({item, sizeItem, typeItem, timeItem});
+            existingPathToItem.insert(currentPath, item);
+        }
+        if (pathToInfo.contains(currentPath))
+        {
+            updateNodeData(model, item, currentPath, pathToInfo);
+        }
+        parent = item;
+    }
+}
+void Zip_TreeView::updateNodeData(QStandardItemModel *model, QStandardItem *item, const QString &path, const QMap<QString, const Paths_File_Info *> &pathToInfo)
+{
+    const Paths_File_Info *info = pathToInfo.value(path);
+    if (!info)
+    {
+        return;
+    }
+
+    bool isFolder = info->name.endsWith('/');
+    QModelIndex idx = item->index();
+    QStandardItem *sizeItem = model->itemFromIndex(idx.sibling(idx.row(), 1));
+    QStandardItem *typeItem = model->itemFromIndex(idx.sibling(idx.row(), 2));
+    QStandardItem *timeItem = model->itemFromIndex(idx.sibling(idx.row(), 3));
+    if (!sizeItem || !typeItem || !timeItem)
+    {
+        return;
+    }
+
+    if (isFolder)
+    {
+        item->setIcon(QIcon::fromTheme("folder"));
+    }
+    else
+    {
+        QMimeDatabase mimeDb;
+        QMimeType mimeType = mimeDb.mimeTypeForFile(info->name);
+        QString iconName = mimeType.iconName();
+        QIcon icon = QIcon::fromTheme(iconName);
+        if (icon.isNull()) {
+            iconName = mimeType.genericIconName();
+            icon = QIcon::fromTheme(iconName);
+        }
+        if (icon.isNull())
+            iconName = "unknown";
+        item->setIcon(QIcon::fromTheme(iconName));
+    }
+
+    if (isFolder)
+    {
+        sizeItem->setText(tr("文件夹"));
+        typeItem->setText(tr("文件夹"));
+    }
+    else
+    {
+        sizeItem->setText(formatSize(info->length.toLongLong()));
+        QString suffix = info->name.split(".").last();
+        if (suffix.isEmpty() || info->name == suffix)
+        {
+            typeItem->setText(tr("文件"));
+        }
+        else
+        {
+            typeItem->setText(suffix + " " + tr("文件"));
+        }
+    }
+    timeItem->setText(info->date + " " + info->time);
+
+    item->setData(QList<QVariant>() << "name" << isFolder << path << info->length.toLongLong(), Qt::UserRole);
+    sizeItem->setData(QList<QVariant>() << "size" << info->length.toLongLong() << isFolder, Qt::UserRole);
+    typeItem->setData(QList<QVariant>() << "type" << isFolder, Qt::UserRole);
+    timeItem->setData(QList<QVariant>() << "date" << QDateTime::fromString(info->date + " " + info->time, "yyyy-MM-dd hh:mm:ss"), Qt::UserRole);//时间不关心你是什么
+}
+
 void Zip_TreeView::load(QSettings *settings, QString Token)
 {
     column_width1 = settings->value(Token + "column_width1", 150).toInt();
@@ -159,6 +333,7 @@ void Zip_TreeView::load(QSettings *settings, QString Token)
     set_show_status_bar->setIconVisibleInMenu(settings->value(Token + "set_show_status_bar", false).toBool());
     this->m_statusBar->setVisible(set_show_status_bar->isIconVisibleInMenu());
     statusBar_text_color = QColor::fromRgba(settings->value(Token + "statusBar_text_color", QColor(50, 50, 50, 255).rgba()).toUInt());
+    set_tree_view_style();
     updateStatusBar_style();
     updateStatusBar();
 }
@@ -241,9 +416,7 @@ Zip_TreeView::Zip_TreeView(QWidget *parent)
                                                    "QScrollBar::add-line:horizontal,QScrollBar::sub-line:horizontal{width:0px;}"
                                                    "QScrollBar::add-page:horizontal,QScrollBar::sub-page:horizontal{background:none;}");
 
-    this->setStyleSheet(QString("QTreeView{background:rgba(0,0,0,0);color:rgb(60,60,60);selection-background-color:rgba(0,0,0,0);}"
-                                "QTreeView::item:first{color:rgb(0,0,0)}"
-                                "QTreeView::item:selected{color:rgb(255,255,255);border: 0px solid rgba(255,255,255,0)}"));
+    set_tree_view_style();
 
     setIconSize(QSize(24, 24));
     setIndentation(24);
@@ -273,6 +446,9 @@ Zip_TreeView::Zip_TreeView(QWidget *parent)
     menu->addAction(set_select_color);
     menu->addAction(set_select_radius);
 
+    proxyModel->setFilterKeyColumn(0);
+    proxyModel->setFilterCaseSensitivity(Qt::CaseInsensitive);
+
     shortcut_copy_name_action->setShortcut(QKeySequence::Copy);
     shortcut_copy_name_action->setShortcutContext(Qt::WidgetWithChildrenShortcut);
     connect(shortcut_copy_name_action, &QAction::triggered, this, [=]
@@ -296,6 +472,22 @@ Zip_TreeView::Zip_TreeView(QWidget *parent)
     });
 
     this->addAction(shortcut_copy_name_action);
+
+    connect(Trans_Sender::instance(), &Trans_Sender::Trans_sig, this, [=]
+    {
+        if (m_model)
+        {
+            m_model->setHorizontalHeaderLabels(QStringList() << tr("名称") << tr("大小") << tr("类型") << tr("修改日期"));
+        }
+    });
+}
+void Zip_TreeView::set_tree_view_style()
+{
+    setStyleSheet(QString("QTreeView{background:rgba(255,255,255,0);color:rgb(60,60,60);selection-background-color:rgba(0,0,0,0);}"
+                          "QTreeView::item:first{color:rgb(0,0,0)}"
+                          "QTreeView::item:selected{color:rgb(255,255,255);border: 0px solid rgba(255,255,255,0)}"
+                          "QToolTip {color:rgb(60,60,60); background: rgba(%1,%2,%3,175); }")
+                            .arg(hover_color.red()).arg(hover_color.green()).arg(hover_color.blue()));
 }
 Zip_TreeView::~Zip_TreeView()
 {
@@ -445,7 +637,7 @@ void Zip_TreeView::parseZipOutput(const QByteArray &output)
             }
             continue;
         }
-        if (lines[i].trimmed().startsWith("---") || lines[i].contains("file"))//尾部
+        if (lines[i].trimmed().startsWith("---") /*|| lines[i].contains("file")*/)//尾部//TM的把正常文件都过滤了  尾部不为4项,过不了
         {
             continue;
         }
@@ -500,8 +692,9 @@ void Zip_TreeView::buildTreeModel(const QList<Paths_File_Info> &paths)
         delete m_model;
         m_model = nullptr;
     }
-    m_model = new QStandardItemModel(this);
+    m_model = new Zip_View_Model(this);
     buildTreeModelFromPaths(m_model, paths);
+    save_info_list = paths;
     proxyModel->setSourceModel(m_model);
     setModel(proxyModel);
 
@@ -537,6 +730,8 @@ void Zip_TreeView::buildTreeModel(const QList<Paths_File_Info> &paths)
 
     expandToDepth(0);
     updateStatusBar();
+
+    connect(Trans_Sender::instance(), &Trans_Sender::Trans_sig, this, [=]{refreshTreeModel(m_model, save_info_list);});
 }
 Zip_TreeView::Paths_File_Info::Paths_File_Info(QString m_name, QString m_date, QString m_time, QString m_length)
     :name(m_name)
@@ -628,6 +823,7 @@ void Zip_TreeView::contextMenuEvent(QContextMenuEvent *event)
             return;
         }
         hover_color = colorDialog.currentColor();
+        set_tree_view_style();
     }
     else if (know_what == set_select_color)
     {
@@ -641,6 +837,7 @@ void Zip_TreeView::contextMenuEvent(QContextMenuEvent *event)
             return;
         }
         select_color = colorDialog.currentColor();
+        set_tree_view_style();
     }
     else if (know_what == set_select_radius)
     {
@@ -676,19 +873,68 @@ Zip_TreeView_Carrier::Zip_TreeView_Carrier(QWidget *parent)
     :QWidget(parent)
 {
     hide();
+    m_searchEdit->setPlaceholderText(tr("搜索"));
+    m_searchEdit->setStyleSheet(
+        "QLineEdit{"
+        "    border: 0px solid rgba(0,170,255,255);"
+        "    border-radius:10px;"
+        "    background:rgba(0,0,0,25);"
+        "    font-size:15px;"
+        "    color:rgb(40,40,40);"
+        "    padding: 5px 10px;"
+        "}"
+        "QLineEdit:hover{"
+        "    border: 1px solid rgba(0,170,255,255);"
+        "}"
+    );
+    m_searchEdit->setFixedHeight(40);
+    m_searchEdit->addAction(m_searchImgAction, QLineEdit::LeadingPosition);
+    connect(m_searchDelAction, &QAction::triggered, this, [=]()
+    {
+        m_searchEdit->clear();
+    });
+    connect(m_searchEdit, &QLineEdit::textChanged, this, [=](const QString &text)
+    {
+        if (m_zip_treeview->proxyModel)
+        {
+            m_zip_treeview->proxyModel->setFilterFixedString(text);
+        }
+        if (text.isEmpty())
+        {
+            m_searchEdit->removeAction(m_searchDelAction);
+        }
+        else
+        {
+            m_searchEdit->addAction(m_searchDelAction, QLineEdit::TrailingPosition);
+        }
+    });
     setStyleSheet("background:rgba(0,0,0,0);color:rgb(230,230,230)");
     m_zip_treeview->show();
     connect(m_zip_treeview, &Zip_TreeView::loadingFinished, this, [=](bool success)
     {
         emit loadingFinished(success);
     });
+    connect(Trans_Sender::instance(), &Trans_Sender::Trans_sig, this, [=]
+    {
+        m_searchEdit->setPlaceholderText(tr("搜索"));
+    });
 }
 void Zip_TreeView_Carrier::setupTar(const QFileInfo &info)
 {
+    if (m_searchEdit)
+    {
+        m_searchEdit->clear();
+        m_searchEdit->setEnabled(true);
+    }
     m_zip_treeview->setupTar(info);
 }
 void Zip_TreeView_Carrier::clear()
 {
+    if (m_searchEdit)
+    {
+        m_searchEdit->clear();
+        m_searchEdit->setEnabled(false);
+    }
     m_zip_treeview->clear();
 }
 void Zip_TreeView_Carrier::load(QSettings *settings, QString Token)
@@ -713,52 +959,10 @@ void Zip_TreeView_Carrier::wheelEvent(QWheelEvent *event)
 }
 void Zip_TreeView_Carrier::resizeEvent(QResizeEvent *event)
 {
-    m_zip_treeview->resize(event->size());
-}
-Zip_TreeView_ProxyModel::Zip_TreeView_ProxyModel(QObject *parent)
-    :QSortFilterProxyModel(parent)
-{}
-bool Zip_TreeView_ProxyModel::lessThan(const QModelIndex &left, const QModelIndex &right) const
-{
-    QVariant leftData = left.data(Qt::UserRole);
-    QVariant rightData = right.data(Qt::UserRole);
-    bool hasUserData = leftData.isValid() && rightData.isValid();
-    if (!hasUserData)
-    {
-        return QSortFilterProxyModel::lessThan(left, right);
-    }
-
-    QList<QVariant> leftList = leftData.toList();
-    QList<QVariant> rightList = rightData.toList();
-
-    if (leftList.first().toString() != rightList.first().toString())
-    {
-        return QSortFilterProxyModel::lessThan(left, right);
-    }
-
-    if (leftList.first().toString() == "name")
-    {
-        if (leftList[1].toBool() != rightList[1].toBool())
-        {
-            return leftList[1].toBool();
-        }
-    }
-    else if (leftList.first().toString() == "size")
-    {
-        return leftList[1].toLongLong() < rightList[1].toLongLong();//这里不用慌,文件夹是0
-    }
-    else if (leftList.first().toString() == "type")
-    {
-        if (leftList[1].toBool() != rightList[1].toBool())
-        {
-            return leftList[1].toBool();
-        }
-    }
-    else if (leftList.first().toString() == "date")
-    {
-        return leftList[1].toDateTime() < rightList[1].toDateTime();
-    }
-    return QSortFilterProxyModel::lessThan(left, right);
+    (void)event;
+    m_searchEdit->setGeometry(5, 5, width() - 10, 40);
+    int top = m_searchEdit ? m_searchEdit->y() + m_searchEdit->height() + 5 : 5;
+    m_zip_treeview->setGeometry(5, top, width() - 10, height() - top - 5);
 }
 void Zip_TreeView::mousePressEvent(QMouseEvent *event)
 {

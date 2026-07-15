@@ -1,6 +1,7 @@
 #include "file_tree.h"
 #include "core/tools/file_control.h"
 #include <QtConcurrent/QtConcurrent>
+#include "core/tools/trans_sender.h"
 My_Tree_View * My_Tree_View::catch_ptr;
 void File_Tree::set_icon(QString checked_icon_path)
 {
@@ -354,8 +355,7 @@ File_Tree::File_Tree(QWidget *parent)
                 for (int i = 0; i < selectedList.count(); i += 4)
                 {
                     QModelIndex proxyIndex = selectedList[i];
-                    QModelIndex sourceIndex = proxyModel->mapToSource(proxyIndex);
-                    model->setData(sourceIndex, name_list[i / 4], Qt::EditRole);
+                    proxyModel->Rename_File(proxyIndex, name_list[i / 4]);
                 }
                 model->setReadOnly(true);
             }
@@ -381,10 +381,15 @@ File_Tree::File_Tree(QWidget *parent)
     deeply_search_button->setStyleSheet("QPushButton{border-radius:10px 10px;background:rgba(0,0,0,25);color:rgb(0,0,0)}"
                                         "QPushButton:hover{border-radius:10px 10px;background:rgba(0,0,0,50)}"
                                         "QPushButton:pressed{border-radius:10px 10px;background:rgba(0,0,0,25)}");
+    flat_search_button->resize(70, 40);
+    flat_search_button->setStyleSheet("QPushButton{border-radius:10px 10px;background:rgba(0,0,0,25);color:rgb(0,0,0)}"
+                                      "QPushButton:hover{border-radius:10px 10px;background:rgba(0,0,0,50)}"
+                                      "QPushButton:pressed{border-radius:10px 10px;background:rgba(0,0,0,25)}");
     treeView->setAlternatingRowColors(true);
     treeView->setLayoutDirection(Qt::LeftToRight);
     treeView->setSelectionMode(QAbstractItemView::SelectionMode::ExtendedSelection);
     treeView->setItemDelegate(my_delegate);
+
     set_tree_view_style();
     treeView->verticalScrollBar()->setStyleSheet("QScrollBar:vertical{border:none;background:rgba(0,0,0,0);width:8px;margin:0px0px0px0px;}"
                                                  "QScrollBar::handle:vertical{background:rgba(0,0,0,75);border-radius:4px;min-height:20px;}"
@@ -429,8 +434,14 @@ File_Tree::File_Tree(QWidget *parent)
         }
         if (search_edit->text().isEmpty())
         {
+            proxyModel->setSearchPattern("", 0);
+            if (treeView->model() != proxyModel)
+            {
+                treeView->setModel(proxyModel);
+                treeView->setRootIndex(proxyModel->mapFromSource(model->index(root_path)));
+                setupSelectionConnections();
+            }
             search_edit->removeAction(search_del_action);
-            proxyModel->setSearchPattern("");
         }
         else
         {
@@ -450,11 +461,26 @@ File_Tree::File_Tree(QWidget *parent)
         }
         proxyModel->setSearchPattern(search_edit->text(), true);
     });
+    connect(flat_search_button, &QPushButton::pressed, this, [=]
+    {
+        if (search_edit->text().isEmpty())
+        {
+            return;
+        }
+        proxyModel->setSearchPattern(search_edit->text(), 2);
+        FlatFileListModel *flat = proxyModel->flatModel();
+        if (flat)
+        {
+            treeView->setModel(flat);
+            setupSelectionConnections();
+        }
+    });
     connect(this, &Basic_Widget::size_changed, this, [=](QSize size)
     {
         carrier_widget->resize(size - QSize(20, 20));
-        search_edit->resize(size.width() - 20 - 80, 40);
+        search_edit->resize(size.width() - 20 - 160, 40);
         deeply_search_button->move(size.width() - 95, 5);
+        flat_search_button->move(size.width() - 170, 5);
         treeView->resize(size - QSize(20, 70));
     });
     connect(this->treeView, &QTreeView::clicked, this, [=]
@@ -471,36 +497,57 @@ File_Tree::File_Tree(QWidget *parent)
             Pressed();
         }
     });
-    connect(this->treeView->selectionModel(), &QItemSelectionModel::selectionChanged, this, [=]
+    setupSelectionConnections();
+    connect(Trans_Sender::instance(), &Trans_Sender::Trans_sig, this, [=]
     {
-        this->treeView->updateStatusBar();
-        if (treeView->selectionModel())
-        {
-            QModelIndexList selectedList = treeView->selectionModel()->selectedIndexes();
-            QStringList filelist = {};
-            for (int i = 0; i < selectedList.count(); i += 4)
-            {
-                filelist << model->filePath(proxyModel->mapToSource(selectedList[i]));
-            }
-            preview_file_widget->updatePreview(filelist, root_path);
-        }
-    });
-    connect(this->treeView->selectionModel(), &QItemSelectionModel::currentChanged, this, [=]
-    {
-        this->treeView->updateStatusBar();
-        if (treeView->selectionModel())
-        {
-            QModelIndexList selectedList = treeView->selectionModel()->selectedIndexes();
-            QStringList filelist = {};
-            for (int i = 0; i < selectedList.count(); i += 4)
-            {
-                filelist << model->filePath(proxyModel->mapToSource(selectedList[i]));
-            }
-            preview_file_widget->updatePreview(filelist, root_path);
-        }
+        search_edit->setPlaceholderText(tr("搜索"));
+        model->refreshAll();
+        proxyModel->refreshAll();
     });
     resize(600, 300);
     show();
+}
+void File_Tree::setupSelectionConnections()
+{
+    if (m_selectionChangedConn)
+    {
+        disconnect(m_selectionChangedConn);
+        m_selectionChangedConn = QMetaObject::Connection();
+    }
+    if (m_currentChangedConn)
+    {
+        disconnect(m_currentChangedConn);
+        m_currentChangedConn = QMetaObject::Connection();
+    }
+
+    if (!treeView->selectionModel())
+    {
+        return;
+    }
+
+    this->treeView->updateStatusBar();
+    preview_file_widget->updatePreview({}, root_path);
+
+    auto updateFunc = [this]()
+    {
+        this->treeView->updateStatusBar();
+        if (treeView->selectionModel())
+        {
+            QModelIndexList selectedList = treeView->selectionModel()->selectedIndexes();
+            QStringList filelist = {};
+            for (int i = 0; i < selectedList.count(); i += 4)
+            {
+                QString filePath = model->filePath(proxyModel->mapToSource(selectedList[i]));
+                filelist << filePath;
+                model->refreshFile(filePath);//Table没有refreshFile,因为Table不在乎
+                proxyModel->refreshFile(filePath);
+            }
+            preview_file_widget->updatePreview(filelist, root_path);
+        }
+    };
+
+    m_selectionChangedConn = connect(treeView->selectionModel(), &QItemSelectionModel::selectionChanged, this, updateFunc);
+    m_currentChangedConn = connect(treeView->selectionModel(), &QItemSelectionModel::currentChanged, this, updateFunc);
 }
 void File_Tree::Pressed(bool from_key)
 {
@@ -619,11 +666,17 @@ void File_Tree::set_tree_view_style()
 {
     treeView->setStyleSheet(QString("QTreeView{background:rgba(255,255,255,0);color:rgb(60,60,60);selection-background-color:rgba(0,0,0,0);}"
                                     "QTreeView::item:first{color:rgb(0,0,0)}"
-                                    "QTreeView::item:selected{color:rgb(255,255,255);border: 0px solid rgba(255,255,255,0)}"));
+                                    "QTreeView::item:selected{color:rgb(255,255,255);border: 0px solid rgba(255,255,255,0)}"
+                                    "QToolTip { background: rgba(%1,%2,%3,175); }")
+                            .arg(hover_color.red()).arg(hover_color.green()).arg(hover_color.blue()));
 }
 File_Tree::~File_Tree()
 {
-    m_dialog->deleteLater();
+    if (m_dialog)
+    {
+        m_dialog->deleteLater();
+        m_dialog = nullptr;
+    }
     delete icon_provider;
     if (preview_file_widget)
     {
@@ -947,7 +1000,13 @@ void File_Tree::contextMenuEvent(QContextMenuEvent *event)
                     fileinfo = QFileInfo(fileinfo.dir().path());
                 }
                 root_path = fileinfo.filePath();
+                proxyModel->setSearchPattern(search_edit->text());
+                if (treeView->model() != proxyModel)
+                {
+                    treeView->setModel(proxyModel);
+                }
                 treeView->setRootIndex(proxyModel->mapFromSource(model->index(root_path)));
+                setupSelectionConnections();
                 if (treeView->selectionModel())
                 {
                     treeView->selectionModel()->clear();
@@ -964,7 +1023,13 @@ void File_Tree::contextMenuEvent(QContextMenuEvent *event)
             if (m_dir.cdUp())
             {
                 root_path = m_dir.absolutePath();
+                proxyModel->setSearchPattern(search_edit->text());
+                if (treeView->model() != proxyModel)
+                {
+                    treeView->setModel(proxyModel);
+                }
                 treeView->setRootIndex(proxyModel->mapFromSource(model->index(root_path)));
+                setupSelectionConnections();
                 if (treeView->selectionModel())
                 {
                     treeView->selectionModel()->clear();
@@ -1232,18 +1297,19 @@ void File_Tree::contextMenuEvent(QContextMenuEvent *event)
     }
     else if (know_what == refresh_action)
     {
-        treeView->reset();
+        proxyModel->setSearchPattern(search_edit->text());
+        if (treeView->model() != proxyModel)
+        {
+            treeView->setModel(proxyModel);
+        }
         treeView->setRootIndex(proxyModel->mapFromSource(model->index(root_path)));
+        setupSelectionConnections();
         if (treeView->selectionModel())
         {
             treeView->selectionModel()->clear();
         }
-        QModelIndex idx = proxyModel->mapFromSource(model->index(root_path));
-        if (idx.isValid())
-        {
-            model->data(idx, Qt::DisplayRole);
-            treeView->update(idx);
-        }
+        model->refreshAll();//Table不在乎
+        proxyModel->refreshAll();
     }
     else if (know_what == cut_action)
     {
@@ -1386,8 +1452,7 @@ void File_Tree::contextMenuEvent(QContextMenuEvent *event)
                 for (int i = 0; i < selectedList.count(); i += 4)
                 {
                     QModelIndex proxyIndex = selectedList[i];
-                    QModelIndex sourceIndex = proxyModel->mapToSource(proxyIndex);
-                    model->setData(sourceIndex, name_list[i / 4], Qt::EditRole);
+                    proxyModel->Rename_File(proxyIndex, name_list[i / 4]);
                 }
                 model->setReadOnly(true);
             }
@@ -1465,7 +1530,13 @@ void File_Tree::contextMenuEvent(QContextMenuEvent *event)
             return;
         }
         root_path = filename;
+        proxyModel->setSearchPattern(search_edit->text());
+        if (treeView->model() != proxyModel)
+        {
+            treeView->setModel(proxyModel);
+        }
         treeView->setRootIndex(proxyModel->mapFromSource(model->index(root_path)));
+        setupSelectionConnections();
         if (treeView->selectionModel())
         {
             treeView->selectionModel()->clear();
@@ -1581,7 +1652,13 @@ void File_Tree::dropEvent(QDropEvent *event)
                 return;
             }
             root_path = filename;
+            proxyModel->setSearchPattern(search_edit->text());
+            if (treeView->model() != proxyModel)
+            {
+                treeView->setModel(proxyModel);
+            }
             treeView->setRootIndex(proxyModel->mapFromSource(model->index(root_path)));
+            setupSelectionConnections();
             if (treeView->selectionModel())
             {
                 treeView->selectionModel()->clear();
@@ -1754,8 +1831,9 @@ void File_Tree::load(QSettings *settings)
 }
 My_Tree_View::My_Tree_View(QWidget *parent, QString *m_root_path_ptr)
     :QTreeView(parent)
-    ,root_path_ptr(m_root_path_ptr)
+    ,Tree_View_Root_Interface()
 {
+    root_path_ptr = m_root_path_ptr;
     setDragDropMode(QAbstractItemView::NoDragDrop);
     setMouseTracking(true);
     setTabletTracking(true);
@@ -1886,7 +1964,7 @@ void My_Tree_View::mouseMoveEvent(QMouseEvent *event)
                 mimeData->setUrls(urls);
                 QDrag *drag = new QDrag(this);
                 drag->setMimeData(mimeData);
-                drag->setPixmap(F_model->fileIcon(proxyModel->mapToSource(selectedList[0])).pixmap(50, 50));
+                drag->setPixmap(proxyModel->getIcon(selectedList[0]).pixmap(50, 50));
                 drag->setHotSpot(QPoint(25,25));
                 drag->exec(Qt::MoveAction | Qt::CopyAction, Qt::CopyAction);
             }
@@ -2134,213 +2212,41 @@ QString My_Tree_View::formatSize(qint64 bytes)
 }
 void My_Tree_View::recurseStat(const QModelIndex proxyParent, qint64 &outFileCount, qint64 &outFileSize, qint64 &outFolderCount)
 {
-    QDir root_dir(F_model->filePath(proxyModel->mapToSource(proxyParent)));
-    auto file_list = root_dir.entryList(QDir::Files | QDir::Dirs | QDir::NoDotAndDotDot | QDir::Hidden);
-    for (int r = 0; r < file_list.count(); ++r)
+    if (model() == proxyModel)
     {
-        QFileInfo info(root_dir.filePath(file_list[r]));
-        if (info.isDir())
+        QDir root_dir(F_model->filePath(proxyModel->mapToSource(proxyParent)));
+        auto file_list = root_dir.entryList(QDir::Files | QDir::Dirs | QDir::NoDotAndDotDot | QDir::Hidden);
+        for (int r = 0; r < file_list.count(); ++r)
         {
-            ++outFolderCount;
-        }
-        else
-        {
-            ++outFileCount;
-            outFileSize += info.size();
-        }
-    }
-}
-My_ProxyModel::My_ProxyModel(QObject *parent, My_Tree_View *m_root, QFileSystemModel *m_fsModel)
-    :QSortFilterProxyModel(parent)
-    ,root(m_root)
-    ,fsModel(m_fsModel)
-{}
-void My_ProxyModel::setSearchPattern(const QString &pattern, bool deeply_search)
-{
-    m_pattern = pattern;
-    m_deeply_search = deeply_search;
-    invalidateFilter();
-}
-void My_ProxyModel::setShowHidden(bool show)
-{
-    if (m_showHidden != show)
-    {
-        m_showHidden = show;
-        invalidateFilter();
-    }
-}
-bool My_ProxyModel::hasMatchInSubtree(const QModelIndex &sourceIndex) const
-{
-    if (!sourceIndex.isValid())
-    {
-        return false;
-    }
-    QString name = fsModel->fileName(sourceIndex);
-    QFileInfo info = fsModel->fileInfo(sourceIndex);
-    if (name.contains(m_pattern, Qt::CaseInsensitive))
-    {
-        return true;
-    }
-    if (!info.isDir())
-    {
-        return false;
-    }
-    QDirIterator::IteratorFlags flags = QDirIterator::Subdirectories | QDirIterator::FollowSymlinks;
-    QDirIterator it(info.filePath(), QDir::Files | QDir::Dirs | QDir::NoDotAndDotDot | (m_showHidden ? QDir::Hidden : QDir::NoDot), flags);
-    while (it.hasNext())
-    {
-        it.next();
-        QString path = it.filePath();
-        QString name = it.fileName();
-        if (name.contains(m_pattern, Qt::CaseInsensitive))
-        {
-            return true;
-        }
-    }
-    return false;
-}
-void My_ProxyModel::onMatchCheckFinished(const QString &dirPath, bool hasMatch) const
-{
-    if (hasMatch)
-    {
-        QMutexLocker locker(&m_cacheMutex);
-        m_matchedDirsCache.insert(dirPath);
-    }
-
-    //新作用域
-    {
-        QMutexLocker locker(&m_pendingMutex);
-        m_pendingDirs.remove(dirPath);
-    }
-    const_cast<My_ProxyModel *>(this)->invalidateFilter();//刷新
-    root->backToPath();
-}
-bool My_ProxyModel::filterAcceptsRow(int sourceRow, const QModelIndex &sourceParent) const
-{
-    QModelIndex sourceIndex = sourceModel()->index(sourceRow, 0, sourceParent);
-    if (!sourceIndex.isValid())
-    {
-        return false;
-    }
-    QFileInfo fileInfo = fsModel->fileInfo(sourceIndex);
-    if (fileInfo.isHidden() && !m_showHidden)
-    {
-        return false;
-    }
-    if (m_pattern.isEmpty())
-    {
-        return true;
-    }
-    if (m_deeply_search)
-    {
-        if (!fileInfo.isDir())
-        {
-            return fileInfo.fileName().contains(m_pattern, Qt::CaseInsensitive);
-        }
-        else
-        {
-            QString dirPath = fileInfo.absoluteFilePath();
+            QFileInfo info(root_dir.filePath(file_list[r]));
+            if (info.isDir())
             {
-                QMutexLocker locker(&m_cacheMutex);
-                if (m_matchedDirsCache.contains(dirPath))
-                {
-                    return true;
-                }
+                ++outFolderCount;
             }
-            bool shouldStartTask = false;
+            else
             {
-                QMutexLocker locker(&m_pendingMutex);
-                if (!m_pendingDirs.contains(dirPath))
-                {
-                    m_pendingDirs.insert(dirPath);
-                    shouldStartTask = true;
-                }
+                ++outFileCount;
+                outFileSize += info.size();
             }
-            if (shouldStartTask)
-            {
-                QFuture<bool> future = hasMatchInSubtreeAsync(sourceIndex);
-                QFutureWatcher<bool> *watcher = new QFutureWatcher<bool>();
-
-                connect(watcher, &QFutureWatcher<bool>::finished, this, [=]()
-                {
-                    bool result = watcher->result();
-                    watcher->deleteLater();
-
-                    //需要在主进程中运行,不然会出现许多奇怪的行为
-                    QMetaObject::invokeMethod(const_cast<My_ProxyModel *>(this),[this, dirPath, result]()
-                    {
-                        this->onMatchCheckFinished(dirPath, result);
-                    });
-                });
-                watcher->setFuture(future);
-            }
-            return false;//先不显示,其他算出来在说
         }
     }
     else
     {
-        if (fileInfo.isDir())
+        auto file_list = proxyModel->flatModel()->file_list();
+        for (int r = 0; r < file_list.count(); ++r)
         {
-            return true;
-        }
-        else
-        {
-            return fileInfo.fileName().contains(m_pattern, Qt::CaseInsensitive);
-        }
-    }
-    return QSortFilterProxyModel::filterAcceptsRow(sourceRow, sourceParent);
-}
-void My_ProxyModel::sort(int column, Qt::SortOrder order)
-{
-    fsModel->sort(column, order);
-    invalidate();
-}
-QFuture<bool> My_ProxyModel::hasMatchInSubtreeAsync(const QModelIndex &sourceIndex) const
-{
-    if (!sourceIndex.isValid())
-    {
-        return QtConcurrent::run([]() -> bool
-        {
-            return false;
-        });
-    }
-
-    QString rootPath = fsModel->filePath(sourceIndex);
-    QFileInfo rootInfo = fsModel->fileInfo(sourceIndex);
-    QString pattern = m_pattern;
-    bool showHidden = m_showHidden;
-
-    if (!rootInfo.isDir())
-    {
-        bool immediateMatch = rootInfo.fileName().contains(pattern, Qt::CaseInsensitive);
-        return QtConcurrent::run([immediateMatch]() -> bool
-        {
-            return immediateMatch;
-        });
-    }
-
-    char func_m_padding[7] = {};
-
-    return QtConcurrent::run([rootPath, pattern, showHidden, func_m_padding]() -> bool
-    {
-        (void) func_m_padding;
-        QFileInfo rootInfo(rootPath);
-        if (rootInfo.fileName().contains(pattern, Qt::CaseInsensitive))
-        {
-            return true;
-        }
-        QDirIterator::IteratorFlags flags = QDirIterator::Subdirectories | QDirIterator::FollowSymlinks;
-        QDirIterator it(rootPath, QDir::Files | QDir::Dirs | QDir::NoDotAndDotDot | (showHidden ? QDir::Hidden : QDir::NoDot), flags);
-        while (it.hasNext())
-        {
-            it.next();
-            if (it.fileName().contains(pattern, Qt::CaseInsensitive))
+            QFileInfo info(file_list[r]);
+            if (info.isDir())
             {
-                return true;
+                ++outFolderCount;
+            }
+            else
+            {
+                ++outFileCount;
+                outFileSize += info.size();
             }
         }
-        return false;
-    });
+    }
 }
 void File_Tree::update_style(QColor theme_color, QColor theme_background_color, QColor theme_text_color, QColor select_text_color, QColor disabled_text_color, QString checked_icon_path)
 {

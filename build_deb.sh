@@ -3,7 +3,7 @@ set -e
 
 # ========== 配置 ==========
 PRO_FILE="Easy_Desktop.pro"
-VERSION="1.1.0 (AKA d26.7.4)"
+VERSION="1.1.0-AKA-d26.7.15"
 MAINTAINER="3084793958 <3084793958@qq.com>"
 DESCRIPTION="Easy Desktop - a desktop"
 SECTION="utils"
@@ -14,6 +14,7 @@ BASE_BUILD_DIR="${SOURCE_DIR}/build"
 OUTPUT_DIR="${BASE_BUILD_DIR}/debs"
 RELEASE_DIR="${BASE_BUILD_DIR}/releases"
 mkdir -p "$OUTPUT_DIR"
+mkdir -p "$RELEASE_DIR"
 
 VARIANTS=(
     "empty:0:0:0"

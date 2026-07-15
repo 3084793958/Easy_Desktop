@@ -2,6 +2,7 @@
 #define MY_CLOCK_H
 #include "basic_widget.h"
 #include <QDateTime>
+#include "core/module/out_line_label.h"
 class My_Clock : public Basic_Widget
 {
     Q_OBJECT

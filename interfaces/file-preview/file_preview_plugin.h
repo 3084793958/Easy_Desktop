@@ -18,7 +18,7 @@ public:
     const QString Ext_Spec = "";
     //ADD
 
-    P_Version Plugin_Version{0, 0, 2};//不使用const,用于欺骗Easy_Desktop
+    P_Version Plugin_Version{0, 0, 3};//不使用const,用于欺骗Easy_Desktop
 
     ///
     /// \brief inited
@@ -134,6 +134,24 @@ public:
         (void) ptr;
     }
     //0.0.2
+
+    //0.0.3
+    ///
+    /// \brief init_V_0_0_3
+    /// 用于V0.0.3版本的拓展,给你一个V0.0.3的Interface,可调用V0.0.3支持的函数.
+    /// \param ptr
+    ///
+    virtual void init_V_0_0_3(Preview_File_Interface_V_0_0_3 *ptr)
+    {
+        (void) ptr;
+    }
+    ///
+    /// \brief Trans_Update
+    /// 告诉插件:翻译动态更新了
+    ///
+    virtual void Trans_Update()
+    {}
+    //0.0.3
 };
 
 QT_BEGIN_NAMESPACE

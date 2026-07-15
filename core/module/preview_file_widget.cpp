@@ -4,7 +4,8 @@
 #include <QPdfPageNavigation>
 #endif
 #include <QtConcurrent/QtConcurrent>
-#include <core/tools/my_rsvg_support.h>
+#include "core/tools/my_rsvg_support.h"
+#include "core/tools/trans_sender.h"
 Preview_File_Widget::Preview_File_Widget(QWidget *parent, QAction *m_preview_action)
     :Basic_Widget(parent)
     ,preview_action(m_preview_action)
@@ -61,6 +62,37 @@ Preview_File_Widget::Preview_File_Widget(QWidget *parent, QAction *m_preview_act
     menu->addAction(stop_action);
     play_action->setEnabled(false);
     stop_action->setEnabled(false);
+
+    menu->addSeparator();
+
+    audio_wave_Mode_Unknown->setIcon(QIcon(":/base/this.svg"));
+    audio_wave_Mode_Unknown->setIconVisibleInMenu(true);
+    audio_wave_View_Mode_Menu->addAction(audio_wave_Mode_Unknown);
+    audio_wave_Mode_RMS->setIcon(QIcon(":/base/this.svg"));
+    audio_wave_Mode_RMS->setIconVisibleInMenu(false);
+    audio_wave_View_Mode_Menu->addAction(audio_wave_Mode_RMS);
+    audio_wave_Mode_dB->setIcon(QIcon(":/base/this.svg"));
+    audio_wave_Mode_dB->setIconVisibleInMenu(false);
+    audio_wave_View_Mode_Menu->addAction(audio_wave_Mode_dB);
+    audio_wave_Mode_peaks->setIcon(QIcon(":/base/this.svg"));
+    audio_wave_Mode_peaks->setIconVisibleInMenu(false);
+    audio_wave_View_Mode_Menu->addAction(audio_wave_Mode_peaks);
+
+    audio_wave_View_Mode_Menu->addSeparator();
+
+    audio_wave_View_Mode_Menu->addAction(set_audio_wave_size_factor);
+
+    audio_wave_View_Mode_Menu->addSeparator();
+
+    audio_wave_View_Mode_Menu->addAction(set_audio_wave_left_color);
+    audio_wave_View_Mode_Menu->addAction(set_audio_wave_right_color);
+    audio_wave_View_Mode_Menu->addAction(set_audio_wave_currentPos_color);
+
+    menu->addMenu(audio_wave_View_Mode_Menu);
+
+    audio_wave_View_Mode_Menu->setEnabled(false);
+    m_audio_wave_ModeCombo->setEnabled(false);
+
     menu->addAction(media_control_action);
     media_control_action->setEnabled(false);
     Basic_Widget::basic_context(menu);
@@ -79,6 +111,8 @@ Preview_File_Widget::Preview_File_Widget(QWidget *parent, QAction *m_preview_act
         prevPageButton->move(nextPageButton->x() - 5 - prevPageButton->width(), 5);
         stopButton->move(prevButton->x() - 5 - stopButton->width(), 5);
         playButton->move(stopButton->x() - 5 - playButton->width(), 5);
+        m_audio_wave_ModeCombo->move(playButton->x() - 5 - m_audio_wave_ModeCombo->width(), 7);
+        m_audio_wave_ModeCombo->resize(m_audio_wave_ModeCombo->width(), 30);
         m_textEdit->resize(size - QSize(10, 150));
         m_imageViewer->resize(size - QSize(10, 150));
 #ifdef USE_PDF
@@ -86,6 +120,7 @@ Preview_File_Widget::Preview_File_Widget(QWidget *parent, QAction *m_preview_act
 #endif
         m_videoViewer->resize(size - QSize(10, 150));
         m_zip_treeview->resize(size - QSize(10, 150));
+        m_audio_wave_widget->resize(size - QSize(10, 150));
         for (int i = 0; i < preview_file_plugin_list.count(); ++i)
         {
             if (preview_file_plugin_list[i])
@@ -159,6 +194,15 @@ Preview_File_Widget::Preview_File_Widget(QWidget *parent, QAction *m_preview_act
 #endif
     m_videoViewer->move(5, 145);
     m_zip_treeview->move(5, 145);
+    m_audio_wave_widget->move(5, 145);
+
+    m_audio_wave_ModeCombo->addItem(tr("不显示波"));
+    m_audio_wave_ModeCombo->addItem(tr("RMS图"));
+    m_audio_wave_ModeCombo->addItem(tr("dB图"));
+    m_audio_wave_ModeCombo->addItem(tr("峰值图"));
+    m_audio_wave_ModeCombo->setCurrentIndex(0);
+    m_audio_wave_ModeCombo->hide();
+
     clearCurrentPreview();
 
     connect(prevButton, &QPushButton::clicked, this, &Preview_File_Widget::onPrevClicked);
@@ -188,8 +232,21 @@ Preview_File_Widget::Preview_File_Widget(QWidget *parent, QAction *m_preview_act
     });
     connect(m_textModeCombo, QOverload<int>::of(&QComboBox::currentIndexChanged), this, [=]
     {
+        textEdit_Mode_TEXT->setIconVisibleInMenu(m_textModeCombo->currentIndex() == 0);
+        textEdit_Mode_HTML->setIconVisibleInMenu(m_textModeCombo->currentIndex() == 1);
+        textEdit_Mode_MARKDOWN->setIconVisibleInMenu(m_textModeCombo->currentIndex() == 2);
+        textEdit_Mode_SVG->setIconVisibleInMenu(m_textModeCombo->currentIndex() == 3);
+        textEdit_Mode_HEX->setIconVisibleInMenu(m_textModeCombo->currentIndex() == 4);
         clearCurrentPreview();
         setupTextPreview(currentFileInfos[currentIndex]);
+    });
+    connect(m_audio_wave_ModeCombo, QOverload<int>::of(&QComboBox::currentIndexChanged), this, [=]
+    {
+        audio_wave_Mode_Unknown->setIconVisibleInMenu(m_audio_wave_ModeCombo->currentIndex() == 0);
+        audio_wave_Mode_RMS->setIconVisibleInMenu(m_audio_wave_ModeCombo->currentIndex() == 1);
+        audio_wave_Mode_dB->setIconVisibleInMenu(m_audio_wave_ModeCombo->currentIndex() == 2);
+        audio_wave_Mode_peaks->setIconVisibleInMenu(m_audio_wave_ModeCombo->currentIndex() == 3);
+        m_audio_wave_widget->setType(m_audio_wave_ModeCombo->currentIndex(), currentFileInfos[currentIndex]);
     });
     connect(media_control_action, &Media_WidgetAction::change_signals_P, this, [=](int value)
     {
@@ -237,6 +294,55 @@ Preview_File_Widget::Preview_File_Widget(QWidget *parent, QAction *m_preview_act
         {
             m_textEdit->setPlainText(tr("加载失败"));
         }
+    });
+    connect(Trans_Sender::instance(), &Trans_Sender::Trans_sig, this, [=]
+    {
+        m_textModeCombo->setItemText(0, tr("纯文本"));
+        m_textModeCombo->setItemText(1, tr("HTML"));
+        m_textModeCombo->setItemText(2, tr("Markdown"));
+        m_textModeCombo->setItemText(3, tr("查看svg"));
+        m_textModeCombo->setItemText(4, tr("十六进制"));
+
+        m_audio_wave_ModeCombo->setItemText(0, tr("不显示波"));
+        m_audio_wave_ModeCombo->setItemText(1, tr("RMS图"));
+        m_audio_wave_ModeCombo->setItemText(2, tr("dB图"));
+        m_audio_wave_ModeCombo->setItemText(3, tr("峰值图"));
+
+        if (!currentFileInfos.isEmpty())
+        {
+            if (currentIndex < 0 || currentIndex >= currentFileInfos.size()) return;
+            if (previewing_file_info != currentFileInfos[currentIndex])
+            {
+                previewing_file_info = currentFileInfos[currentIndex];
+            }
+            m_infoWidget->Set_Data(previewing_file_info);
+        }
+        else
+        {
+            QFileInfo dirInfo(m_parent_dir);
+            m_infoWidget->Set_Data(dirInfo);
+        }
+
+        for (int i = 0; i < preview_file_plugin_list.count(); ++i)
+        {
+            if (preview_file_plugin_list[i])
+            {
+                if (preview_file_plugin_list[i]->Plugin_Version >= P_Version{0, 0, 3})
+                {
+                    if (preview_file_plugin_list[i]->inited)
+                    {
+                        preview_file_plugin_list[i]->Trans_Update();
+                    }
+                }
+            }
+        }
+
+    });
+
+    connect(m_textEdit, &Basic_TextEdit::window_contextmenu, this, [=](QPoint pos)
+    {
+        QAction *know_what = menu->exec(pos);
+        contextMenuFunc(know_what);
     });
     resize(350, 400);
 }
@@ -304,6 +410,7 @@ void Preview_File_Widget::save(QSettings *settings, QString Token)
     Basic_Widget::save(settings, Token);
     m_textEdit->H_save_no_text(settings, Token + "preview_textedit_");
     m_zip_treeview->save(settings, Token + "preview_zip_treeview_");
+    m_audio_wave_widget->save(settings, Token + "preview_audio_wave_view_");
     settings->setValue("auto_play_action", auto_play_action->isIconVisibleInMenu());
     QStringList plugin_path_list = {};
     for (int i = 0; i < preview_file_plugin_list.count(); ++i)
@@ -326,6 +433,7 @@ void Preview_File_Widget::load(QSettings *settings, QString Token)
     Basic_Widget::load(settings, Token);
     m_textEdit->H_load_no_text(settings, Token + "preview_textedit_");
     m_zip_treeview->load(settings, Token + "preview_zip_treeview_");
+    m_audio_wave_widget->load(settings, Token + "preview_audio_wave_view_");
     auto_play_action->setIconVisibleInMenu(settings->value("auto_play_action", false).toBool());
     QStringList plugin_path_list = settings->value("plugin_path_list").toStringList();
     for (int i = 0; i < plugin_path_list.count(); ++i)
@@ -342,6 +450,12 @@ void Preview_File_Widget::set_icon(QString checked_icon_path)
     textEdit_Mode_SVG->setIcon(QIcon(checked_icon_path));
     textEdit_Mode_HEX->setIcon(QIcon(checked_icon_path));
     auto_play_action->setIcon(QIcon(checked_icon_path));
+
+    audio_wave_Mode_Unknown->setIcon(QIcon(checked_icon_path));
+    audio_wave_Mode_RMS->setIcon(QIcon(checked_icon_path));
+    audio_wave_Mode_dB->setIcon(QIcon(checked_icon_path));
+    audio_wave_Mode_peaks->setIcon(QIcon(checked_icon_path));
+
     m_textEdit->set_icon(checked_icon_path);
     m_zip_treeview->set_icon(checked_icon_path);
 }
@@ -472,6 +586,9 @@ void Preview_File_Widget::clearCurrentPreview()
     m_textEdit->clear();
     m_textModeCombo->hide();
     //此处本应将m_textModeCombo的currentIndex设为0,但考虑到连续性,故先在此放置标记
+
+    m_audio_wave_ModeCombo->hide();
+
     m_imageViewer->hide();
     m_imageViewer->clear();
 #ifdef USE_PDF
@@ -488,14 +605,20 @@ void Preview_File_Widget::clearCurrentPreview()
     playButton->hide();
     stopButton->hide();
     m_mediaPlayer->stop();
-    m_mediaPlayer->setMedia(nullptr);
+    m_mediaPlayer->setMedia(QMediaContent());
     m_mediaPlayer->disconnect();
 
-    m_videoViewer->hide();
     m_videoViewer->clear();
+    m_videoViewer->hide();
 
     m_zip_treeview->clear();
     m_zip_treeview->hide();
+
+    m_audio_wave_widget->clear();
+    m_audio_wave_widget->hide();
+
+    audio_wave_View_Mode_Menu->setEnabled(false);
+    m_audio_wave_ModeCombo->setEnabled(false);
 
     force_read_Button->setEnabled(false);
     force_read_action->setEnabled(false);
@@ -693,7 +816,7 @@ void Preview_File_Widget::setupVideoPreview(const QFileInfo &info)
     stopButton->show();
     media_control_action->setEnabled(true);
     m_mediaPlayer->stop();
-    m_mediaPlayer->setMedia(nullptr);
+    m_mediaPlayer->setMedia(QMediaContent());
     m_mediaPlayer->setMedia(QUrl::fromLocalFile(info.filePath()));
     auto video_item = new QGraphicsVideoItem;
     m_mediaPlayer->setVideoOutput(video_item);
@@ -756,10 +879,13 @@ void Preview_File_Widget::setupAudioPreview(const QFileInfo &info)
     playButton->show();
     stopButton->show();
     media_control_action->setEnabled(true);
+    audio_wave_View_Mode_Menu->setEnabled(true);
+    m_audio_wave_ModeCombo->setEnabled(true);
     m_mediaPlayer->stop();
     m_mediaPlayer->setMedia(QUrl::fromLocalFile(info.filePath()));
     connect(m_mediaPlayer, &QMediaPlayer::positionChanged, this, [=](qint64 position)
     {
+        m_audio_wave_widget->setPosition(position);
         qint64 all_position = m_mediaPlayer->duration();
         if (all_position <= 0)
         {
@@ -787,6 +913,10 @@ void Preview_File_Widget::setupAudioPreview(const QFileInfo &info)
     {
         m_mediaPlayer->play();
     }
+    m_audio_wave_ModeCombo->show();
+    m_audio_wave_widget->setType(m_audio_wave_ModeCombo->currentIndex(), currentFileInfos[currentIndex]);
+    m_audio_wave_widget->setFileInfo(info);
+    m_audio_wave_widget->show();
 }
 void Preview_File_Widget::setupSvgPreview(const QFileInfo &info)
 {
@@ -905,6 +1035,10 @@ void Preview_File_Widget::hideEvent(QHideEvent *event)
 void Preview_File_Widget::contextMenuEvent(QContextMenuEvent *event)
 {
     QAction *know_what = menu->exec(mapToGlobal(event->pos()));
+    contextMenuFunc(know_what);
+}
+void Preview_File_Widget::contextMenuFunc(QAction *know_what)
+{
     if (know_what == prevAction)
     {
         onPrevClicked();
@@ -968,6 +1102,95 @@ void Preview_File_Widget::contextMenuEvent(QContextMenuEvent *event)
         clearCurrentPreview();
         setupTextPreview(currentFileInfos[currentIndex]);
     }
+    else if (know_what == audio_wave_Mode_Unknown)
+    {
+        audio_wave_Mode_Unknown->setIconVisibleInMenu(true);
+        audio_wave_Mode_RMS->setIconVisibleInMenu(false);
+        audio_wave_Mode_dB->setIconVisibleInMenu(false);
+        audio_wave_Mode_peaks->setIconVisibleInMenu(false);
+        m_audio_wave_ModeCombo->setCurrentIndex(0);
+        m_audio_wave_widget->setType(0, currentFileInfos[currentIndex]);
+    }
+    else if (know_what == audio_wave_Mode_RMS)
+    {
+        audio_wave_Mode_Unknown->setIconVisibleInMenu(false);
+        audio_wave_Mode_RMS->setIconVisibleInMenu(true);
+        audio_wave_Mode_dB->setIconVisibleInMenu(false);
+        audio_wave_Mode_peaks->setIconVisibleInMenu(false);
+        m_audio_wave_ModeCombo->setCurrentIndex(1);
+        m_audio_wave_widget->setType(1, currentFileInfos[currentIndex]);
+    }
+    else if (know_what == audio_wave_Mode_Unknown)
+    {
+        audio_wave_Mode_Unknown->setIconVisibleInMenu(false);
+        audio_wave_Mode_RMS->setIconVisibleInMenu(false);
+        audio_wave_Mode_dB->setIconVisibleInMenu(false);
+        audio_wave_Mode_peaks->setIconVisibleInMenu(true);
+        m_audio_wave_ModeCombo->setCurrentIndex(2);
+        m_audio_wave_widget->setType(2, currentFileInfos[currentIndex]);
+    }
+    else if (know_what == audio_wave_Mode_Unknown)
+    {
+        audio_wave_Mode_Unknown->setIconVisibleInMenu(false);
+        audio_wave_Mode_RMS->setIconVisibleInMenu(false);
+        audio_wave_Mode_dB->setIconVisibleInMenu(false);
+        audio_wave_Mode_peaks->setIconVisibleInMenu(true);
+        m_audio_wave_ModeCombo->setCurrentIndex(3);
+        m_audio_wave_widget->setType(3, currentFileInfos[currentIndex]);
+    }
+    else if (know_what == set_audio_wave_left_color)
+    {
+        QColorDialog colorDialog;
+        colorDialog.setOption(QColorDialog::ShowAlphaChannel);
+        colorDialog.setCurrentColor(m_audio_wave_widget->left_color);
+        colorDialog.setParent(nullptr);
+        colorDialog.setWindowTitle(tr("获取颜色"));
+        if (colorDialog.exec() != QDialog::Accepted)
+        {
+            return;
+        }
+        m_audio_wave_widget->left_color = colorDialog.currentColor();
+        m_audio_wave_widget->force_update();
+    }
+    else if (know_what == set_audio_wave_right_color)
+    {
+        QColorDialog colorDialog;
+        colorDialog.setOption(QColorDialog::ShowAlphaChannel);
+        colorDialog.setCurrentColor(m_audio_wave_widget->right_color);
+        colorDialog.setParent(nullptr);
+        colorDialog.setWindowTitle(tr("获取颜色"));
+        if (colorDialog.exec() != QDialog::Accepted)
+        {
+            return;
+        }
+        m_audio_wave_widget->right_color = colorDialog.currentColor();
+        m_audio_wave_widget->force_update();
+    }
+    else if (know_what == set_audio_wave_size_factor)
+    {
+        bool ok = false;
+        double out_line_width = QInputDialog::getDouble(nullptr, tr("获取数值"), tr("最大波数据大小:(MiB)"), m_audio_wave_widget->max_samples_size_factor, 0.0, 2147483647.0, 1.0, &ok);
+        if (!ok)
+        {
+            return;
+        }
+        m_audio_wave_widget->max_samples_size_factor = out_line_width;
+        m_audio_wave_widget->setFileInfo(currentFileInfos[currentIndex]);
+    }
+    else if (know_what == set_audio_wave_currentPos_color)
+    {
+        QColorDialog colorDialog;
+        colorDialog.setOption(QColorDialog::ShowAlphaChannel);
+        colorDialog.setCurrentColor(m_audio_wave_widget->currentPos_color);
+        colorDialog.setParent(nullptr);
+        colorDialog.setWindowTitle(tr("获取颜色"));
+        if (colorDialog.exec() != QDialog::Accepted)
+        {
+            return;
+        }
+        m_audio_wave_widget->currentPos_color = colorDialog.currentColor();
+        m_audio_wave_widget->update();
+    }
     else if (know_what == prevPage)
     {
         prevPdfPage();
@@ -997,6 +1220,10 @@ void Preview_File_Widget::contextMenuEvent(QContextMenuEvent *event)
         if (m_imageViewer->isVisible())
         {
             m_imageViewer->resetZoom();
+        }
+        else if (m_audio_wave_widget->isVisible())
+        {
+            m_audio_wave_widget->resetZoom();
         }
 #ifdef USE_PDF
         else if (m_pdfViewer->isVisible())
@@ -1375,6 +1602,9 @@ void Preview_File_Widget::update_style(QColor theme_color, QColor theme_backgrou
                                                    "QScrollBar::add-line:horizontal,QScrollBar::sub-line:horizontal{width:0px;}"
                                                    "QScrollBar::add-page:horizontal,QScrollBar::sub-page:horizontal{background:none;}");
     m_textModeCombo->setStyleSheet(QString("QComboBox{background:rgba(255,255,255,200);color:rgba(0,0,0,255);border-radius:10px 10px;}"
+                                           "QComboBox QAbstractItemView{background:rgba(0,0,0,0);}"
+                                           "QComboBox QAbstractItemView::item:hover{background:rgba(0,0,0,0);}"));
+    m_audio_wave_ModeCombo->setStyleSheet(QString("QComboBox{background:rgba(255,255,255,200);color:rgba(0,0,0,255);border-radius:10px 10px;}"
                                            "QComboBox QAbstractItemView{background:rgba(0,0,0,0);}"
                                            "QComboBox QAbstractItemView::item:hover{background:rgba(0,0,0,0);}"));
     m_imageViewer->verticalScrollBar()->setStyleSheet("QScrollBar:vertical{border:none;background:rgba(0,0,0,0);width:8px;margin:0px0px0px0px;}"
@@ -2093,6 +2323,10 @@ void Preview_File_Widget::load_plugin(QString filepath)
                     {
                         plugin_interface->init_V_0_0_2(this);
                     }
+                    if (plugin_interface->Plugin_Version >= P_Version{0, 0, 3})
+                    {
+                        plugin_interface->init_V_0_0_3(this);
+                    }
                     plugin_interface->your_plugin_loader = plugin_loader;
                     plugin_interface->plugin_path = filepath;
                     plugin_interface->inited = true;
@@ -2122,6 +2356,54 @@ Zip_TreeView_Carrier_Interface *Preview_File_Widget::get_m_zip_treeview()
 QWidget *Preview_File_Widget::get_m_zip_treeview_as_QWidget()
 {
     return m_zip_treeview;
+}
+QMenu *Preview_File_Widget::get_audio_wave_View_Mode_Menu()
+{
+    return audio_wave_View_Mode_Menu;
+}
+QAction *Preview_File_Widget::get_audio_wave_Mode_Unknown()
+{
+    return audio_wave_Mode_Unknown;
+}
+QAction *Preview_File_Widget::get_audio_wave_Mode_RMS()
+{
+    return audio_wave_Mode_RMS;
+}
+QAction *Preview_File_Widget::get_audio_wave_Mode_dB()
+{
+    return audio_wave_Mode_dB;
+}
+QAction *Preview_File_Widget::get_audio_wave_Mode_peaks()
+{
+    return audio_wave_Mode_peaks;
+}
+QAction *Preview_File_Widget::get_set_audio_wave_left_color()
+{
+    return set_audio_wave_left_color;
+}
+QAction *Preview_File_Widget::get_set_audio_wave_right_color()
+{
+    return set_audio_wave_right_color;
+}
+QComboBox *Preview_File_Widget::get_m_audio_wave_ModeCombo()
+{
+    return m_audio_wave_ModeCombo;
+}
+Audio_Wave_Widget_Interface *Preview_File_Widget::get_m_audio_wave_widget()
+{
+    return m_audio_wave_widget;
+}
+QWidget *Preview_File_Widget::get_m_audio_wave_widget_as_QWidget()
+{
+    return m_audio_wave_widget;
+}
+QAction *Preview_File_Widget::get_set_audio_wave_size_factor()
+{
+    return set_audio_wave_size_factor;
+}
+QAction *Preview_File_Widget::get_set_audio_wave_currentPos_color()
+{
+    return set_audio_wave_currentPos_color;
 }
 bool Preview_File_Widget::Contains_Ext_Plugin(QString Ext_name, QString plugin_controller_name)
 {

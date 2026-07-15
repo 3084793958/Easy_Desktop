@@ -120,3 +120,37 @@ void My_TreeView_Delegate::paint(QPainter *painter, const QStyleOptionViewItem &
     }
     QStyledItemDelegate::paint(painter, opt, index);
 }
+My_TableView_Delegate::My_TableView_Delegate(QObject *parent, QColor *m_hover_color, QColor *m_select_color, int *m_radius)
+    :QStyledItemDelegate(parent)
+    ,hover_color(m_hover_color)
+    ,select_color(m_select_color)
+    ,radius(m_radius)
+{}
+void My_TableView_Delegate::paint(QPainter *painter, const QStyleOptionViewItem &option, const QModelIndex &index) const
+{
+    QStyleOptionViewItem opt = option;
+    bool isHover = opt.state & QStyle::State_MouseOver;
+    bool isSelected = opt.state & QStyle::State_Selected;
+    if (isHover || isSelected)
+    {
+        painter->save();
+        painter->setRenderHint(QPainter::Antialiasing);
+        QColor fillColor;
+        if (isSelected)
+        {
+            fillColor = select_color ? *select_color : QColor(0, 170, 255, 255);
+        }
+        else
+        {
+            fillColor = hover_color ? *hover_color : QColor(227, 242, 253, 255);
+        }
+        int r = radius ? *radius : 10;
+        QRectF rect = opt.rect;
+        QPainterPath path;
+        path.addRoundedRect(rect, r, r);
+        painter->fillPath(path, fillColor);
+        opt.backgroundBrush = Qt::NoBrush;
+        painter->restore();
+    }
+    QStyledItemDelegate::paint(painter, opt, index);
+}

@@ -22,6 +22,7 @@
 #include "interfaces/file-preview/file_preview_plugin.h"
 
 #include "core/module/zip_treeview.h"
+#include "core/module/audio_wave_preview.h"
 
 class Preview_File_Widget;
 class GraphicsViewer : public QGraphicsView, public GraphicsViewer_Interface
@@ -100,7 +101,7 @@ private slots:
     void updateFolderSize();
     void onSizeCalculated();
 };
-class Preview_File_Widget : public Basic_Widget, public Preview_File_Interface, public Preview_File_Interface_V_0_0_2
+class Preview_File_Widget : public Basic_Widget, public Preview_File_Interface, public Preview_File_Interface_V_0_0_2, public Preview_File_Interface_V_0_0_3
 {
     Q_OBJECT
 public:
@@ -133,6 +134,8 @@ protected:
     void showEvent(QShowEvent *event) override;
     void hideEvent(QHideEvent *event) override;
     void contextMenuEvent(QContextMenuEvent *event) override;
+private:
+    void contextMenuFunc(QAction *);
 private slots:
     void onPrevClicked() override;
     void onNextClicked() override;
@@ -180,6 +183,20 @@ private:
     QPushButton *nextPageButton = new Trans_PushButton(tr("下一页"), "下一页", this->metaObject()->className(), this->get_self());
     QPushButton *playButton = new Trans_PushButton(tr("播放"), "播放", this->metaObject()->className(), this->get_self());
     QPushButton *stopButton = new Trans_PushButton(tr("暂停"), "暂停", this->metaObject()->className(), this->get_self());
+
+    QMenu *audio_wave_View_Mode_Menu = new Trans_Menu(tr("音频示波图"), "音频示波图", this->metaObject()->className(), this);
+    QAction *audio_wave_Mode_Unknown = new Trans_Action(tr("不显示波"), "不显示波", this->metaObject()->className(), this);
+    QAction *audio_wave_Mode_RMS = new Trans_Action(tr("RMS图"), "RMS图", this->metaObject()->className(), this);
+    QAction *audio_wave_Mode_dB = new Trans_Action(tr("dB图"), "dB图", this->metaObject()->className(), this);
+    QAction *audio_wave_Mode_peaks = new Trans_Action(tr("峰值图"), "峰值图", this->metaObject()->className(), this);
+
+    QAction *set_audio_wave_size_factor = new Trans_Action(tr("设置最大波数据大小"), "设置最大波数据大小", this->metaObject()->className(), this);
+    QAction *set_audio_wave_left_color = new Trans_Action(tr("设置左波颜色"), "设置左波颜色", this->metaObject()->className(), this);
+    QAction *set_audio_wave_right_color = new Trans_Action(tr("设置右波颜色"), "设置右波颜色", this->metaObject()->className(), this);
+    QAction *set_audio_wave_currentPos_color = new Trans_Action(tr("设置标线颜色"), "设置标线颜色", this->metaObject()->className(), this);
+
+    QComboBox *m_audio_wave_ModeCombo = new QComboBox(this->get_self());
+
     QPushButton *force_read_Button = new Trans_PushButton(tr("强制文本读取"), "强制文本读取", this->metaObject()->className(), this->get_self());
     QList<QFileInfo> currentFileInfos = {};
     QString m_parent_dir = "";
@@ -203,6 +220,8 @@ private:
     Info_Widget *m_infoWidget = new Info_Widget(this->get_self());
 
     Zip_TreeView_Carrier *m_zip_treeview = new Zip_TreeView_Carrier(this->get_self());
+
+    Audio_Wave_Widget *m_audio_wave_widget = new Audio_Wave_Widget(this->get_self());
 private:
     QTimer *holding_pos_timer = new QTimer(this);
     int holding_time = 0;
@@ -274,6 +293,21 @@ public:
      virtual Zip_TreeView_Carrier_Interface *get_m_zip_treeview() override;
      virtual QWidget *get_m_zip_treeview_as_QWidget() override;
      //V_0_0_2
+public:
+     //V_0_0_3
+     virtual QMenu                       *get_audio_wave_View_Mode_Menu      () override;
+     virtual QAction                     *get_audio_wave_Mode_Unknown        () override;
+     virtual QAction                     *get_audio_wave_Mode_RMS            () override;
+     virtual QAction                     *get_audio_wave_Mode_dB             () override;
+     virtual QAction                     *get_audio_wave_Mode_peaks          () override;
+     virtual QAction                     *get_set_audio_wave_left_color      () override;
+     virtual QAction                     *get_set_audio_wave_right_color     () override;
+     virtual QComboBox                   *get_m_audio_wave_ModeCombo         () override;
+     virtual Audio_Wave_Widget_Interface *get_m_audio_wave_widget            () override;
+     virtual QWidget                     *get_m_audio_wave_widget_as_QWidget () override;
+     virtual QAction                     *get_set_audio_wave_size_factor     () override;
+     virtual QAction                     *get_set_audio_wave_currentPos_color() override;
+     //V_0_0_3
 };
 
 #endif // PREVIEW_FILE_WIDGET_H

@@ -16,9 +16,11 @@
 
 [https://github.com/3084793958/Easy_Desktop/releases/latest](https://github.com/3084793958/Easy_Desktop/releases/latest)
 
-命名标准:Easy_Desktop_ + 支持名称(小写) 如:Easy_Desktop_chart_pdf,有折线图与pdf支持
+命名标准:Easy_Desktop_ + 支持名称(小写) 如:Easy_Desktop_chart_pdf,有折线图(QtChart驱动)与pdf支持
 
-chart:折线图(用于数据可视化)
+注:1.1.0 (AKA d26.7.15)版本及以后,Easy_Desktop支持一个虚拟的折线图,这是QPaintEvent驱动的,效果与QtChart相似,但图例是纵向的,在无chart标签的版本可使用(当然,chart标签下也是可以使用这个虚拟折线图的)
+
+chart:折线图(QtChart驱动)(用于数据可视化)
 
 pdf:pdf预览
 
@@ -74,12 +76,15 @@ sudo apt install libqt5pdfwidgets5
 | `-always_refresh, -A_R <布尔值>` | 是否持续刷新空间结构 (true/false) |
 | `-Geometry, -G <x y width height>` | 设置空间结构 (设置后 `-always_refresh` 自动为 false) |
 | `-send_dbus, -S_D <dbus_id> <方法> [参数]` | 发送 DBus 消息 |
+| `-help, -H, --help` | 获取帮助 |
+| `-version, -V` | 获取版本信息 |
 | | |
 | **DBus 方法** | |
 | `save` | 储存 |
 | `load` | 读取 |
 | `exit` | 退出 |
 | `config <路径>` | 设置配置文件路径 (不自动加载) |
+| `-translation <路径>` | 设置自定义翻译文件路径 |
 | `workspace <索引>` | 切换工作空间 |
 | `geometry <值>` | 设置空间结构或刷新模式|
 | | 格式1: `x y width height` (禁用自动刷新) |

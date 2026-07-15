@@ -125,4 +125,38 @@ public:
     virtual QWidget *get_m_zip_treeview_as_QWidget() = 0;
 };
 
+class Audio_Wave_Widget_Interface
+{
+public:
+    virtual ~Audio_Wave_Widget_Interface() {}
+    virtual void   resetZoom()                                  = 0;
+    virtual void   setFileInfo(const QFileInfo &fileinfo)       = 0;
+    virtual void   setPosition(long long int position)          = 0;
+    virtual void   clear()                                      = 0;
+    virtual void   setType(int type, const QFileInfo &fileinfo) = 0;
+    virtual void   force_update()                               = 0;
+    virtual QColor get_left_color()                             = 0;
+    virtual QColor get_right_color()                            = 0;
+    virtual double get_max_samples_size_factor()                = 0;
+    virtual QColor get_currentPos_color()                       = 0;
+};
+
+class Preview_File_Interface_V_0_0_3
+{
+public:
+    virtual ~Preview_File_Interface_V_0_0_3() {}
+    virtual QMenu                       *get_audio_wave_View_Mode_Menu      () = 0;
+    virtual QAction                     *get_audio_wave_Mode_Unknown        () = 0;
+    virtual QAction                     *get_audio_wave_Mode_RMS            () = 0;
+    virtual QAction                     *get_audio_wave_Mode_dB             () = 0;
+    virtual QAction                     *get_audio_wave_Mode_peaks          () = 0;
+    virtual QAction                     *get_set_audio_wave_left_color      () = 0;
+    virtual QAction                     *get_set_audio_wave_right_color     () = 0;
+    virtual QComboBox                   *get_m_audio_wave_ModeCombo         () = 0;
+    virtual Audio_Wave_Widget_Interface *get_m_audio_wave_widget            () = 0;
+    virtual QWidget                     *get_m_audio_wave_widget_as_QWidget () = 0;
+    virtual QAction                     *get_set_audio_wave_size_factor     () = 0;
+    virtual QAction                     *get_set_audio_wave_currentPos_color() = 0;
+};
+
 #endif // PREVIEW_FILE_INTERFACE_H

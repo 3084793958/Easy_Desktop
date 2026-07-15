@@ -13,7 +13,7 @@ public:
     virtual void load(QSettings *settings);
     virtual void set_icon(QString checked_icon_path);
 private:
-    QLineSeries *sec_series = new QLineSeries;
+    My_QLineSeries *sec_series = new My_QLineSeries(this);
     void get_disk_data();
     unsigned long long last_Tra = 0, last_Rec = 0;
     unsigned long long new_Tra = 0, new_Rec = 0;

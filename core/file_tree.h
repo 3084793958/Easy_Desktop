@@ -8,37 +8,8 @@
 #include "core/module/my_icon_provider.h"
 #include "core/module/my_treeview_delegate.h"
 #include "core/module/asyncfilesystemmodel.h"
-class My_Tree_View;
-class My_ProxyModel : public QSortFilterProxyModel
-{
-    Q_OBJECT
-public:
-    explicit My_ProxyModel(QObject *parent = nullptr, My_Tree_View *m_root = nullptr, QFileSystemModel *m_fsModel = nullptr);
-    void setSearchPattern(const QString &pattern, bool deeply_search = false);
-    void setShowHidden(bool show);
-protected:
-    virtual bool filterAcceptsRow(int sourceRow, const QModelIndex &sourceParent) const override;
-    virtual void sort(int column, Qt::SortOrder order = Qt::AscendingOrder) override;
-private:
-    My_Tree_View *root = nullptr;
-    QFileSystemModel *fsModel = nullptr;
-    QString m_pattern;
-    bool m_showHidden = false;
-    bool m_deeply_search = false;
-    char my_padding[6];
-
-private:
-    QFuture<bool> hasMatchInSubtreeAsync(const QModelIndex &sourceIndex) const;
-
-    mutable QSet<QString> m_matchedDirsCache;//给const函数用
-    mutable QMutex m_cacheMutex;
-    mutable QSet<QString> m_pendingDirs;
-    mutable QMutex m_pendingMutex;
-    bool hasMatchInSubtree(const QModelIndex &sourceIndex) const;
-private slots:
-    void onMatchCheckFinished(const QString &dirPath, bool hasMatch) const;
-};
-class My_Tree_View : public QTreeView
+#include "core/module/basic_my_proxymodel.h"
+class My_Tree_View : public QTreeView, public Tree_View_Root_Interface
 {
     Q_OBJECT
 public:
@@ -48,9 +19,8 @@ public:
     void p_load(QSettings *settings);
     QFileSystemModel *F_model = nullptr;
     My_ProxyModel *proxyModel = nullptr;
-    QString *root_path_ptr = nullptr;
     static My_Tree_View * catch_ptr;
-    void backToPath();
+    virtual void backToPath() override;
 protected:
     void dropEvent(QDropEvent *event) override;
     void dragMoveEvent(QDragMoveEvent *event) override;
@@ -99,6 +69,10 @@ public:
     virtual void save(QSettings *settings);
     virtual void load(QSettings *settings);
     virtual void set_icon(QString checked_icon_path);
+private:
+    QMetaObject::Connection m_selectionChangedConn;
+    QMetaObject::Connection m_currentChangedConn;
+    void setupSelectionConnections();
 public:
     QString *file_open_way_process = nullptr;
     QString *file_open_path_process = nullptr;
@@ -124,6 +98,7 @@ protected:
     My_Icon_Provider *icon_provider = new My_Icon_Provider;
     QLineEdit *search_edit = new QLineEdit(carrier_widget);
     QPushButton *deeply_search_button = new Trans_PushButton(tr("深层搜索"), "深层搜索", this->metaObject()->className(), carrier_widget);
+    QPushButton *flat_search_button = new Trans_PushButton(tr("平铺搜索"), "平铺搜索", this->metaObject()->className(), carrier_widget);
     QAction *search_img_action = new QAction(this);
     QAction *search_del_action = new QAction(this);
     QMenu *menu = new QMenu(this);

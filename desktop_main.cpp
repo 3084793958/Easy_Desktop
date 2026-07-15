@@ -484,6 +484,14 @@ Desktop_Main::Desktop_Main(QWidget *parent)
     my_chart_menu->addAction(pulseaudio_chart_action);
     background_Add_Action->addMenu(my_chart_menu);
 #endif
+
+    visual_my_chart_menu->addAction(visual_cpu_chart_action);
+    visual_my_chart_menu->addAction(visual_ram_chart_action);
+    visual_my_chart_menu->addAction(visual_net_chart_action);
+    visual_my_chart_menu->addAction(visual_disk_chart_action);
+    visual_my_chart_menu->addAction(visual_pulseaudio_chart_action);
+    background_Add_Action->addMenu(visual_my_chart_menu);
+
     menu->addMenu(background_Add_Action);
     desktop_control_action->addAction(lock_desktop);
     desktop_control_action->addAction(unlock_desktop);
@@ -560,83 +568,129 @@ void Desktop_Main::contextMenuEvent(QContextMenuEvent *event)
     }
     else if (know_what == Quit_Action)
     {
-        int count = file_widget_list.count();
-        for (int i = 0; i < count; i++)
+        while (file_widget_list.count() != 0)
         {
-            file_widget_list[0]->~File_Widget();
+            auto *ptr = file_widget_list.last();
+            file_widget_list.removeLast();
+            ptr->deleteLater();
         }
-        count = my_clock_list.count();
-        for (int i = 0; i < count; i++)
+        while (my_clock_list.count() != 0)
         {
-            my_clock_list[0]->~My_Clock();
+            auto *ptr = my_clock_list.last();
+            my_clock_list.removeLast();
+            ptr->deleteLater();
         }
-        count = my_label_list.count();
-        for (int i = 0; i < count; i++)
+        while (my_label_list.count() != 0)
         {
-            my_label_list[0]->~My_Label();
+            auto *ptr = my_label_list.last();
+            my_label_list.removeLast();
+            ptr->deleteLater();
         }
-        count = my_lineedit_list.count();
-        for (int i = 0; i < count; i++)
+        while (my_lineedit_list.count() != 0)
         {
-            my_lineedit_list[0]->~My_LineEdit();
+            auto *ptr = my_lineedit_list.last();
+            my_lineedit_list.removeLast();
+            ptr->deleteLater();
         }
-        count = my_process_carrier_list.count();
-        for (int i = 0; i < count; i++)
+        while (my_process_carrier_list.count() != 0)
         {
-            my_process_carrier_list[0]->~My_Process_Carrier();
+            auto *ptr = my_process_carrier_list.last();
+            my_process_carrier_list.removeLast();
+            ptr->deleteLater();
         }
-        count = my_program_container_list.count();
-        for (int i = 0; i < count; i++)
+        while (my_program_container_list.count() != 0)
         {
-            my_program_container_list[0]->break_out_con();
-            my_program_container_list[0]->~My_Program_Container();
+            auto *ptr = my_program_container_list.last();
+            my_program_container_list.removeLast();
+            ptr->deleteLater();
         }
-        count = process_widget_list.count();
-        for (int i = 0; i < count; i++)
+        while (process_widget_list.count() != 0)
         {
-            process_widget_list[0]->~Process_Widget();
+            auto *ptr = process_widget_list.last();
+            process_widget_list.removeLast();
+            ptr->deleteLater();
         }
 #ifdef USE_CHART
-        count = cpu_chart_list.count();
-        for (int i = 0; i < count; i++)
+        while (cpu_chart_list.count() != 0)
         {
-            cpu_chart_list[0]->~CPU_Chart();
+            auto *ptr = cpu_chart_list.last();
+            cpu_chart_list.removeLast();
+            ptr->deleteLater();
         }
-        count = ram_chart_list.count();
-        for (int i = 0; i < count; i++)
+        while (ram_chart_list.count() != 0)
         {
-            ram_chart_list[0]->~RAM_Chart();
+            auto *ptr = ram_chart_list.last();
+            ram_chart_list.removeLast();
+            ptr->deleteLater();
         }
-        count = net_chart_list.count();
-        for (int i = 0; i < count; i++)
+        while (net_chart_list.count() != 0)
         {
-            net_chart_list[0]->~NET_Chart();
+            auto *ptr = net_chart_list.last();
+            net_chart_list.removeLast();
+            ptr->deleteLater();
         }
-        count = disk_chart_list.count();
-        for (int i = 0; i < count; i++)
+        while (disk_chart_list.count() != 0)
         {
-            disk_chart_list[0]->~DISK_Chart();
+            auto *ptr = disk_chart_list.last();
+            disk_chart_list.removeLast();
+            ptr->deleteLater();
         }
-        count = pulseaudio_chart_list.count();
-        for (int i = 0; i < count; i++)
+        while (pulseaudio_chart_list.count() != 0)
         {
-            pulseaudio_chart_list[0]->~PulseAudio_Chart();
+            auto *ptr = pulseaudio_chart_list.last();
+            pulseaudio_chart_list.removeLast();
+            ptr->deleteLater();
         }
 #endif
-        count = file_tree_list.count();
-        for (int i = 0; i < count; i++)
+
+        while (visual_cpu_chart_list.count() != 0)
         {
-            file_tree_list[0]->~File_Tree();
+            auto *ptr = visual_cpu_chart_list.last();
+            visual_cpu_chart_list.removeLast();
+            ptr->deleteLater();
         }
-        count = plugin_root_list.count();
-        for (int i = 0; i < count; i++)
+        while (visual_ram_chart_list.count() != 0)
         {
-            plugin_root_list[0]->~Plugin_Root();
+            auto *ptr = visual_ram_chart_list.last();
+            visual_ram_chart_list.removeLast();
+            ptr->deleteLater();
         }
-        count = file_table_list.count();
-        for (int i = 0; i < count; i++)
+        while (visual_net_chart_list.count() != 0)
         {
-            file_table_list[0]->~File_Table();
+            auto *ptr = visual_net_chart_list.last();
+            visual_net_chart_list.removeLast();
+            ptr->deleteLater();
+        }
+        while (visual_disk_chart_list.count() != 0)
+        {
+            auto *ptr = visual_disk_chart_list.last();
+            visual_disk_chart_list.removeLast();
+            ptr->deleteLater();
+        }
+        while (visual_pulseaudio_chart_list.count() != 0)
+        {
+            auto *ptr = visual_pulseaudio_chart_list.last();
+            visual_pulseaudio_chart_list.removeLast();
+            ptr->deleteLater();
+        }
+
+        while (file_tree_list.count() != 0)
+        {
+            auto *ptr = file_tree_list.last();
+            file_tree_list.removeLast();
+            ptr->deleteLater();
+        }
+        while (plugin_root_list.count() != 0)
+        {
+            auto *ptr = plugin_root_list.last();
+            plugin_root_list.removeLast();
+            ptr->deleteLater();
+        }
+        while (file_table_list.count() != 0)
+        {
+            auto *ptr = file_table_list.last();
+            file_table_list.removeLast();
+            ptr->deleteLater();
         }
         QApplication::quit();
     }
@@ -892,6 +946,58 @@ void Desktop_Main::contextMenuEvent(QContextMenuEvent *event)
         pulseaudio_chart->pulseaudio_chart_list = &pulseaudio_chart_list;
     }
 #endif
+
+    else if (know_what == visual_cpu_chart_action)
+    {
+        Visual_CPU_Chart *cpu_chart = new Visual_CPU_Chart(desktop_core_dock_list[now_page]);
+        cpu_chart->set_now_page(&now_page);
+        cpu_chart->set_desktop_number(&Desktop_NUmber);
+        cpu_chart->set_basic_list(reinterpret_cast<QList<QWidget *> *>(&desktop_core_dock_list));
+        cpu_chart->move(event->globalPos() - basic_pos);
+        visual_cpu_chart_list.append(cpu_chart);
+        cpu_chart->visual_cpu_chart_list = &visual_cpu_chart_list;
+    }
+    else if (know_what == visual_ram_chart_action)
+    {
+        Visual_RAM_Chart *ram_chart = new Visual_RAM_Chart(desktop_core_dock_list[now_page]);
+        ram_chart->set_now_page(&now_page);
+        ram_chart->set_desktop_number(&Desktop_NUmber);
+        ram_chart->set_basic_list(reinterpret_cast<QList<QWidget *> *>(&desktop_core_dock_list));
+        ram_chart->move(event->globalPos() - basic_pos);
+        visual_ram_chart_list.append(ram_chart);
+        ram_chart->visual_ram_chart_list = &visual_ram_chart_list;
+    }
+    else if (know_what == visual_net_chart_action)
+    {
+        Visual_NET_Chart *net_chart = new Visual_NET_Chart(desktop_core_dock_list[now_page]);
+        net_chart->set_now_page(&now_page);
+        net_chart->set_desktop_number(&Desktop_NUmber);
+        net_chart->set_basic_list(reinterpret_cast<QList<QWidget *> *>(&desktop_core_dock_list));
+        net_chart->move(event->globalPos() - basic_pos);
+        visual_net_chart_list.append(net_chart);
+        net_chart->visual_net_chart_list = &visual_net_chart_list;
+    }
+    else if (know_what == visual_disk_chart_action)
+    {
+        Visual_DISK_Chart *disk_chart = new Visual_DISK_Chart(desktop_core_dock_list[now_page]);
+        disk_chart->set_now_page(&now_page);
+        disk_chart->set_desktop_number(&Desktop_NUmber);
+        disk_chart->set_basic_list(reinterpret_cast<QList<QWidget *> *>(&desktop_core_dock_list));
+        disk_chart->move(event->globalPos() - basic_pos);
+        visual_disk_chart_list.append(disk_chart);
+        disk_chart->visual_disk_chart_list = &visual_disk_chart_list;
+    }
+    else if (know_what == visual_pulseaudio_chart_action)
+    {
+        Visual_PulseAudio_Chart *pulseaudio_chart = new Visual_PulseAudio_Chart(desktop_core_dock_list[now_page]);
+        pulseaudio_chart->set_now_page(&now_page);
+        pulseaudio_chart->set_desktop_number(&Desktop_NUmber);
+        pulseaudio_chart->set_basic_list(reinterpret_cast<QList<QWidget *> *>(&desktop_core_dock_list));
+        pulseaudio_chart->move(event->globalPos() - basic_pos);
+        visual_pulseaudio_chart_list.append(pulseaudio_chart);
+        pulseaudio_chart->visual_pulseaudio_chart_list = &visual_pulseaudio_chart_list;
+    }
+
     else if (know_what == file_tree_action)
     {
         File_Tree *file_tree = new File_Tree(desktop_core_dock_list[now_page]);
@@ -1089,6 +1195,7 @@ void Desktop_Main::mouseMoveEvent(QMouseEvent *event)
     }
     QWidget::mouseMoveEvent(event);
 }
+
 void Desktop_Main::select_mousePressEvent(QMouseEvent *event, Basic_Widget *sender)
 {
     for (int i = 0; i < select_basic_widget_list.count(); ++i)
@@ -1122,6 +1229,121 @@ void Desktop_Main::select_mouseMoveEvent(QMouseEvent *event, Basic_Widget *sende
         select_basic_widget_list[i]->sig_mouseMoveEvent(event);
     }
 }
+void Desktop_Main::select_closeEvent(Basic_Widget *sender, bool &send)
+{
+    select_basic_widget_list.removeOne(sender);
+    sender->set_select(false);
+    if (send)
+    {
+        while (select_basic_widget_list.count() != 0)
+        {
+            auto *ptr = select_basic_widget_list.last();
+            select_basic_widget_list.removeLast();//这里特殊,要把自己移走,不然一直引用着,delete不掉
+            sender->set_select(false);
+            ptr->sig_closeEvent();
+        }
+    }
+}
+void Desktop_Main::select_moveToPage(int &page, Basic_Widget *sender)
+{
+    for (int i = 0; i < select_basic_widget_list.count(); ++i)
+    {
+        if (sender == select_basic_widget_list[i])
+        {
+            continue;
+        }
+        select_basic_widget_list[i]->sig_moveToPage(page);
+    }
+}
+void Desktop_Main::select_setRadius(int &radius, Basic_Widget *sender)
+{
+    for (int i = 0; i < select_basic_widget_list.count(); ++i)
+    {
+        if (sender == select_basic_widget_list[i])
+        {
+            continue;
+        }
+        select_basic_widget_list[i]->sig_setRadius(radius);
+    }
+}
+void Desktop_Main::select_setBackgroundColor(QList<QColor> colors, Basic_Widget *sender)
+{
+    for (int i = 0; i < select_basic_widget_list.count(); ++i)
+    {
+        if (sender == select_basic_widget_list[i])
+        {
+            continue;
+        }
+        select_basic_widget_list[i]->sig_setBackgroundColor(colors);
+    }
+}
+void Desktop_Main::select_setShowCloseButton(bool &show, Basic_Widget *sender)
+{
+    for (int i = 0; i < select_basic_widget_list.count(); ++i)
+    {
+        if (sender == select_basic_widget_list[i])
+        {
+            continue;
+        }
+        select_basic_widget_list[i]->sig_setShowCloseButton(show);
+    }
+}
+void Desktop_Main::select_setCloseButtonPos(Button_Pos &pos, Basic_Widget *sender)
+{
+    for (int i = 0; i < select_basic_widget_list.count(); ++i)
+    {
+        if (sender == select_basic_widget_list[i])
+        {
+            continue;
+        }
+        select_basic_widget_list[i]->sig_setCloseButtonPos(pos);
+    }
+}
+void Desktop_Main::select_setAllowSelectButton(Basic_Widget *sender)
+{
+    for (int i = 0; i < select_basic_widget_list.count(); ++i)
+    {
+        if (sender == select_basic_widget_list[i])
+        {
+            continue;
+        }
+        select_basic_widget_list[i]->sig_setAllowSelectButton();
+    }
+}
+void Desktop_Main::select_setSelectButtonPos(Button_Pos &pos, Basic_Widget *sender)
+{
+    for (int i = 0; i < select_basic_widget_list.count(); ++i)
+    {
+        if (sender == select_basic_widget_list[i])
+        {
+            continue;
+        }
+        select_basic_widget_list[i]->sig_setSelectButtonPos(pos);
+    }
+}
+void Desktop_Main::select_setPos(QPoint &pos, Basic_Widget *sender)
+{
+    for (int i = 0; i < select_basic_widget_list.count(); ++i)
+    {
+        if (sender == select_basic_widget_list[i])
+        {
+            continue;
+        }
+        select_basic_widget_list[i]->sig_setPos(pos);
+    }
+}
+void Desktop_Main::select_setSize(QRect &old_geometry, QRect &new_geometry, Basic_Widget *sender)
+{
+    for (int i = 0; i < select_basic_widget_list.count(); ++i)
+    {
+        if (sender == select_basic_widget_list[i])
+        {
+            continue;
+        }
+        select_basic_widget_list[i]->sig_setSize(old_geometry, new_geometry);
+    }
+}
+
 void Desktop_Main::set_Desktop_Size(int d_width, int d_height)
 {
     desktop_width = d_width;
@@ -1220,6 +1442,28 @@ void Desktop_Main::update_for_lineedit(QColor m_theme_color, QColor m_theme_back
         item->set_icon(m_checked_icon_path);
     }
 #endif
+
+    for (auto *item : visual_cpu_chart_list)
+    {
+        item->set_icon(m_checked_icon_path);
+    }
+    for (auto *item : visual_ram_chart_list)
+    {
+        item->set_icon(m_checked_icon_path);
+    }
+    for (auto *item : visual_net_chart_list)
+    {
+        item->set_icon(m_checked_icon_path);
+    }
+    for (auto *item : visual_disk_chart_list)
+    {
+        item->set_icon(m_checked_icon_path);
+    }
+    for (auto *item : visual_pulseaudio_chart_list)
+    {
+        item->set_icon(m_checked_icon_path);
+    }
+
     for (auto *item : plugin_root_list)
     {
         item->set_icon(m_checked_icon_path);
@@ -1435,6 +1679,13 @@ void Desktop_Main::save(QString path)
     settings.setValue("disk_chart_list_count", disk_chart_list.count());
     settings.setValue("pulseaudio_chart_list_count", pulseaudio_chart_list.count());
 #endif
+
+    settings.setValue("visual_cpu_chart_list_count", visual_cpu_chart_list.count());
+    settings.setValue("visual_ram_chart_list_count", visual_ram_chart_list.count());
+    settings.setValue("visual_net_chart_list_count", visual_net_chart_list.count());
+    settings.setValue("visual_disk_chart_list_count", visual_disk_chart_list.count());
+    settings.setValue("visual_pulseaudio_chart_list_count", visual_pulseaudio_chart_list.count());
+
     settings.setValue("file_tree_list_count", file_tree_list.count());
     settings.setValue("file_table_list_count", file_table_list.count());
     settings.setValue("plugin_root_list_count", plugin_root_list.count());
@@ -1546,6 +1797,43 @@ void Desktop_Main::save(QString path)
         settings.endGroup();
     }
 #endif
+
+    count = visual_cpu_chart_list.count();
+    for (int i = 0; i < count; i++)
+    {
+        settings.beginGroup(QString("visual_cpu_chart%1").arg(i));
+        visual_cpu_chart_list[i]->save(&settings);
+        settings.endGroup();
+    }
+    count = visual_ram_chart_list.count();
+    for (int i = 0; i < count; i++)
+    {
+        settings.beginGroup(QString("visual_ram_chart%1").arg(i));
+        visual_ram_chart_list[i]->save(&settings);
+        settings.endGroup();
+    }
+    count = visual_net_chart_list.count();
+    for (int i = 0; i < count; i++)
+    {
+        settings.beginGroup(QString("visual_net_chart%1").arg(i));
+        visual_net_chart_list[i]->save(&settings);
+        settings.endGroup();
+    }
+    count = visual_disk_chart_list.count();
+    for (int i = 0; i < count; i++)
+    {
+        settings.beginGroup(QString("visual_disk_chart%1").arg(i));
+        visual_disk_chart_list[i]->save(&settings);
+        settings.endGroup();
+    }
+    count = visual_pulseaudio_chart_list.count();
+    for (int i = 0; i < count; i++)
+    {
+        settings.beginGroup(QString("visual_pulseaudio_chart%1").arg(i));
+        visual_pulseaudio_chart_list[i]->save(&settings);
+        settings.endGroup();
+    }
+
     count = file_tree_list.count();
     for (int i = 0; i < count; i++)
     {
@@ -1680,6 +1968,13 @@ void Desktop_Main::load()
     int disk_chart_list_count = settings.value("disk_chart_list_count", 0).toInt();
     int pulseaudio_chart_list_count = settings.value("pulseaudio_chart_list_count", 0).toInt();
 #endif
+
+    int visual_cpu_chart_list_count = settings.value("visual_cpu_chart_list_count", 0).toInt();
+    int visual_ram_chart_list_count = settings.value("visual_ram_chart_list_count", 0).toInt();
+    int visual_net_chart_list_count = settings.value("visual_net_chart_list_count", 0).toInt();
+    int visual_disk_chart_list_count = settings.value("visual_disk_chart_list_count", 0).toInt();
+    int visual_pulseaudio_chart_list_count = settings.value("visual_pulseaudio_chart_list_count", 0).toInt();
+
     int process_widget_list_count = settings.value("process_widget_list_count", 0).toInt();
     int file_tree_list_count = settings.value("file_tree_list_count", 0).toInt();
     int file_table_list_count = settings.value("file_table_list_count", 0).toInt();
@@ -1702,6 +1997,13 @@ void Desktop_Main::load()
     disk_chart_list.clear();
     pulseaudio_chart_list.clear();
 #endif
+
+    visual_cpu_chart_list.clear();
+    visual_ram_chart_list.clear();
+    visual_net_chart_list.clear();
+    visual_disk_chart_list.clear();
+    visual_pulseaudio_chart_list.clear();
+
     plugin_root_list.clear();
     for (int i = 0; i < my_clock_list_count; i++)
     {
@@ -1950,6 +2252,78 @@ void Desktop_Main::load()
         pulseaudio_chart->show();
     }
 #endif
+
+    for (int i = 0; i < visual_cpu_chart_list_count; i++)
+    {
+        Visual_CPU_Chart *cpu_chart = new Visual_CPU_Chart(desktop_core_dock_list[now_page]);
+        cpu_chart->set_now_page(&now_page);
+        cpu_chart->set_desktop_number(&Desktop_NUmber);
+        cpu_chart->set_basic_list(reinterpret_cast<QList<QWidget *> *>(&desktop_core_dock_list));
+        cpu_chart->move(0, 0);
+        visual_cpu_chart_list.append(cpu_chart);
+        cpu_chart->visual_cpu_chart_list = &visual_cpu_chart_list;
+        settings.beginGroup(QString("visual_cpu_chart%1").arg(i));
+        cpu_chart->load(&settings);
+        settings.endGroup();
+        cpu_chart->show();
+    }
+    for (int i = 0; i < visual_ram_chart_list_count; i++)
+    {
+        Visual_RAM_Chart *ram_chart = new Visual_RAM_Chart(desktop_core_dock_list[now_page]);
+        ram_chart->set_now_page(&now_page);
+        ram_chart->set_desktop_number(&Desktop_NUmber);
+        ram_chart->set_basic_list(reinterpret_cast<QList<QWidget *> *>(&desktop_core_dock_list));
+        ram_chart->move(0, 0);
+        visual_ram_chart_list.append(ram_chart);
+        ram_chart->visual_ram_chart_list = &visual_ram_chart_list;
+        settings.beginGroup(QString("visual_ram_chart%1").arg(i));
+        ram_chart->load(&settings);
+        settings.endGroup();
+        ram_chart->show();
+    }
+    for (int i = 0; i < visual_net_chart_list_count; i++)
+    {
+        Visual_NET_Chart *net_chart = new Visual_NET_Chart(desktop_core_dock_list[now_page]);
+        net_chart->set_now_page(&now_page);
+        net_chart->set_desktop_number(&Desktop_NUmber);
+        net_chart->set_basic_list(reinterpret_cast<QList<QWidget *> *>(&desktop_core_dock_list));
+        net_chart->move(0, 0);
+        visual_net_chart_list.append(net_chart);
+        net_chart->visual_net_chart_list = &visual_net_chart_list;
+        settings.beginGroup(QString("visual_net_chart%1").arg(i));
+        net_chart->load(&settings);
+        settings.endGroup();
+        net_chart->show();
+    }
+    for (int i = 0; i < visual_disk_chart_list_count; i++)
+    {
+        Visual_DISK_Chart *disk_chart = new Visual_DISK_Chart(desktop_core_dock_list[now_page]);
+        disk_chart->set_now_page(&now_page);
+        disk_chart->set_desktop_number(&Desktop_NUmber);
+        disk_chart->set_basic_list(reinterpret_cast<QList<QWidget *> *>(&desktop_core_dock_list));
+        disk_chart->move(0, 0);
+        visual_disk_chart_list.append(disk_chart);
+        disk_chart->visual_disk_chart_list = &visual_disk_chart_list;
+        settings.beginGroup(QString("visual_disk_chart%1").arg(i));
+        disk_chart->load(&settings);
+        settings.endGroup();
+        disk_chart->show();
+    }
+    for (int i = 0; i < visual_pulseaudio_chart_list_count; i++)
+    {
+        Visual_PulseAudio_Chart *pulseaudio_chart = new Visual_PulseAudio_Chart(desktop_core_dock_list[now_page]);
+        pulseaudio_chart->set_now_page(&now_page);
+        pulseaudio_chart->set_desktop_number(&Desktop_NUmber);
+        pulseaudio_chart->set_basic_list(reinterpret_cast<QList<QWidget *> *>(&desktop_core_dock_list));
+        pulseaudio_chart->move(0, 0);
+        visual_pulseaudio_chart_list.append(pulseaudio_chart);
+        pulseaudio_chart->visual_pulseaudio_chart_list = &visual_pulseaudio_chart_list;
+        settings.beginGroup(QString("visual_pulseaudio_chart%1").arg(i));
+        pulseaudio_chart->load(&settings);
+        settings.endGroup();
+        pulseaudio_chart->show();
+    }
+
     for (int i = 0; i < file_tree_list_count; i++)
     {
         File_Tree *file_tree = new File_Tree(desktop_core_dock_list[now_page]);

@@ -121,9 +121,20 @@ private:
     void mouseReleaseEvent(QMouseEvent *event);
     void mouseMoveEvent(QMouseEvent *event);
     QList<Basic_Widget *> select_basic_widget_list = {};
+private:
     virtual void select_mousePressEvent(QMouseEvent *event, Basic_Widget *sender);
     virtual void select_mouseReleaseEvent(QMouseEvent *event, Basic_Widget *sender);
     virtual void select_mouseMoveEvent(QMouseEvent *event, Basic_Widget *sender);
+    virtual void select_closeEvent(Basic_Widget *sender, bool &send);
+    virtual void select_moveToPage(int &page, Basic_Widget *sender);
+    virtual void select_setRadius(int &radius, Basic_Widget *sender);
+    virtual void select_setBackgroundColor(QList<QColor> colors, Basic_Widget *sender);
+    virtual void select_setShowCloseButton(bool &show, Basic_Widget *sender);
+    virtual void select_setCloseButtonPos(Button_Pos &pos, Basic_Widget *sender);
+    virtual void select_setAllowSelectButton(Basic_Widget *sender);
+    virtual void select_setSelectButtonPos(Button_Pos &pos, Basic_Widget *sender);
+    virtual void select_setPos(QPoint &pos, Basic_Widget *sender);
+    virtual void select_setSize(QRect &old_geometry, QRect &new_geometry, Basic_Widget *sender);
 };
 
 #endif // MY_PROCESS_CARRIER_H

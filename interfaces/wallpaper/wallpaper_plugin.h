@@ -17,7 +17,7 @@ public:
     const QString Ext_Spec = "";
     //ADD
 
-    P_Version Plugin_Version{0, 0, 1};//不使用const,用于欺骗Easy_Desktop
+    P_Version Plugin_Version{0, 0, 2};//不使用const,用于欺骗Easy_Desktop
 
     ///
     /// \brief inited
@@ -137,6 +137,13 @@ public:
     /// \return
     ///
     virtual QWidget *wallpaperItem() = 0;
+
+    ///
+    /// \brief Trans_Update
+    /// 告诉插件:翻译动态更新了
+    ///
+    virtual void Trans_Update()
+    {}
 };
 
 QT_BEGIN_NAMESPACE

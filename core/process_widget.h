@@ -1,6 +1,7 @@
 #ifndef PROCESS_WIDGET_H
 #define PROCESS_WIDGET_H
 #include "basic_widget.h"
+#include "core/module/out_line_label.h"
 class Process_Widget : public Basic_Widget
 {
     Q_OBJECT
@@ -11,6 +12,7 @@ public:
     virtual void save(QSettings *settings);
     virtual void load(QSettings *settings);
     virtual void set_icon(QString checked_icon_path);
+    virtual void sig_setBackgroundColor(QList<QColor> colors);
 signals:
     void Pressed();
     void move_To_Desktop_Sig(QPoint pos_);

@@ -21,6 +21,7 @@
 /*************************************************************************/
 #include <QApplication>
 #include "all_control.h"
+#include "core/tools/trans_sender.h"
 #include <stdio.h>
 #include <unistd.h>
 #include <QDBusConnection>
@@ -102,7 +103,7 @@ int main(int argc, char* argv[])
             std::cout << "示例: ./Easy_Desktop -G 0 0 1440 900" << std::endl;
             std::cout << "选项:" << std::endl;
             std::cout << "  -help, -H, --help                          获取帮助" << std::endl;
-            std::cout << "  -version, -V,                              获取版本信息" << std::endl;
+            std::cout << "  -version, -V                               获取版本信息" << std::endl;
             std::cout << "  -config, -C <路径>                          指定配置文件路径" << std::endl;
             std::cout << "  -translation, -T <路径>                     设置自定义翻译文件路径" << std::endl;
             std::cout << "                                             使用'|'分隔不同的翻译文件" << std::endl;
@@ -150,7 +151,7 @@ int main(int argc, char* argv[])
         }
         else if (strcmp(argv[i], "-version") == 0 || strcmp(argv[i], "-V") == 0)
         {
-            std::cout << "1.1.0 (AKA d26.7.4)" << std::endl;
+            std::cout << "1.1.0 (AKA d26.7.15)" << std::endl;
             return 0;
         }
         else
@@ -194,6 +195,9 @@ int main(int argc, char* argv[])
     }
     app.setQuitOnLastWindowClosed(false);
     app.setApplicationName("Easy_Desktop");
+
+    Trans_Sender::instance();
+    QObject::connect(&app, &QCoreApplication::aboutToQuit, Trans_Sender::cleanup);
 
     All_Control *all_control = new All_Control(nullptr, &app, load_path, translation_path, workspace, dbus_id, always_refresh_screen_size, screen_geometry);
     std::cout<<"Easy_Desktop: "<<">(O^<)<~GET!"<<std::endl;

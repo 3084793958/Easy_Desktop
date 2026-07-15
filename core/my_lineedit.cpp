@@ -94,7 +94,10 @@ Basic_TextEdit::Basic_TextEdit(QWidget *parent)
     m_statusBar->addPermanentWidget(statusLabel, 1);
     updateStatusBar();
     connect(this, &QTextEdit::textChanged, this, &Basic_TextEdit::updateLineNumberAreaWidth);
-    connect(document(), &QTextDocument::blockCountChanged, this, &Basic_TextEdit::updateLineNumberAreaWidth);
+    connect(document(), &QTextDocument::blockCountChanged, this, [=]
+    {
+        Basic_TextEdit::updateLineNumberAreaWidth();
+    });
     connect(verticalScrollBar(), &QScrollBar::valueChanged, this, [=]
     {
         if (lineNumberArea->isVisible())
@@ -161,6 +164,10 @@ void Basic_TextEdit::updateLineNumberAreaWidth()
     else
     {
         lineNumberArea->setGeometry(QRect(this->width() - space, 0, space, height() - (m_statusBar->height() + 5) * m_statusBar->isVisible()));
+    }
+    if (lineNumberArea->isVisible())
+    {
+        lineNumberArea->update();
     }
 }
 void Basic_TextEdit::lineNumberAreaPaintEvent(QPaintEvent *event)
@@ -2179,7 +2186,7 @@ void Basic_TextEdit::H_load(QSettings *settings, QString Token)
     this->verticalScrollBar()->setValue(settings->value(Token + "V_SValue", 0).toInt());
     selection_color = QColor::fromRgba(settings->value(Token + "selection_color", QColor(0, 100, 255, 80).rgba()).toUInt());
     bool insert_mode = settings->value(Token + "insert_mode_action", false).toBool();
-    insert_mode_action->setIconVisibleInMenu(center_paste);
+    insert_mode_action->setIconVisibleInMenu(insert_mode);
     setCursorWidth(insert_mode ? 8 : 2);
     search_color = QColor::fromRgba(settings->value(Token + "search_color", QColor(255, 255, 0, 255).rgba()).toUInt());
     search_and_select_color = QColor::fromRgba(settings->value(Token + "search_and_select_color", QColor(0, 129, 255, 255).rgba()).toUInt());
@@ -2240,7 +2247,7 @@ void Basic_TextEdit::H_load_no_text(QSettings *settings, QString Token)
     wheel_change_size_action->setIconVisibleInMenu(settings->value(Token + "wheel_change_size", true).toBool());
     selection_color = QColor::fromRgba(settings->value(Token + "selection_color", QColor(0, 100, 255, 80).rgba()).toUInt());
     bool insert_mode = settings->value(Token + "insert_mode_action", false).toBool();
-    insert_mode_action->setIconVisibleInMenu(center_paste);
+    insert_mode_action->setIconVisibleInMenu(insert_mode);//之前传错值了!
     setCursorWidth(insert_mode ? 8 : 2);
     search_color = QColor::fromRgba(settings->value(Token + "search_color", QColor(255, 255, 0, 255).rgba()).toUInt());
     search_and_select_color = QColor::fromRgba(settings->value(Token + "search_and_select_color", QColor(0, 129, 255, 255).rgba()).toUInt());

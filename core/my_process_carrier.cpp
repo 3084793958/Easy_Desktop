@@ -152,6 +152,121 @@ void My_Process_Carrier::select_mouseMoveEvent(QMouseEvent *event, Basic_Widget 
         select_basic_widget_list[i]->sig_mouseMoveEvent(event);
     }
 }
+void My_Process_Carrier::select_closeEvent(Basic_Widget *sender, bool &send)
+{
+    select_basic_widget_list.removeOne(sender);
+    sender->set_select(false);
+    if (send)
+    {
+        while (select_basic_widget_list.count() != 0)
+        {
+            auto *ptr = select_basic_widget_list.last();
+            select_basic_widget_list.removeLast();//这里特殊,要把自己移走,不然一直引用着,delete不掉
+            sender->set_select(false);
+            ptr->sig_closeEvent();
+        }
+    }
+}
+void My_Process_Carrier::select_moveToPage(int &page, Basic_Widget *sender)
+{
+    for (int i = 0; i < select_basic_widget_list.count(); ++i)
+    {
+        if (sender == select_basic_widget_list[i])
+        {
+            continue;
+        }
+        select_basic_widget_list[i]->sig_moveToPage(page);
+    }
+}
+void My_Process_Carrier::select_setRadius(int &radius, Basic_Widget *sender)
+{
+    for (int i = 0; i < select_basic_widget_list.count(); ++i)
+    {
+        if (sender == select_basic_widget_list[i])
+        {
+            continue;
+        }
+        select_basic_widget_list[i]->sig_setRadius(radius);
+    }
+}
+void My_Process_Carrier::select_setBackgroundColor(QList<QColor> colors, Basic_Widget *sender)
+{
+    for (int i = 0; i < select_basic_widget_list.count(); ++i)
+    {
+        if (sender == select_basic_widget_list[i])
+        {
+            continue;
+        }
+        select_basic_widget_list[i]->sig_setBackgroundColor(colors);
+    }
+}
+void My_Process_Carrier::select_setShowCloseButton(bool &show, Basic_Widget *sender)
+{
+    for (int i = 0; i < select_basic_widget_list.count(); ++i)
+    {
+        if (sender == select_basic_widget_list[i])
+        {
+            continue;
+        }
+        select_basic_widget_list[i]->sig_setShowCloseButton(show);
+    }
+}
+void My_Process_Carrier::select_setCloseButtonPos(Button_Pos &pos, Basic_Widget *sender)
+{
+    for (int i = 0; i < select_basic_widget_list.count(); ++i)
+    {
+        if (sender == select_basic_widget_list[i])
+        {
+            continue;
+        }
+        select_basic_widget_list[i]->sig_setCloseButtonPos(pos);
+    }
+}
+void My_Process_Carrier::select_setAllowSelectButton(Basic_Widget *sender)
+{
+    for (int i = 0; i < select_basic_widget_list.count(); ++i)
+    {
+        if (sender == select_basic_widget_list[i])
+        {
+            continue;
+        }
+        select_basic_widget_list[i]->sig_setAllowSelectButton();
+    }
+}
+void My_Process_Carrier::select_setSelectButtonPos(Button_Pos &pos, Basic_Widget *sender)
+{
+    for (int i = 0; i < select_basic_widget_list.count(); ++i)
+    {
+        if (sender == select_basic_widget_list[i])
+        {
+            continue;
+        }
+        select_basic_widget_list[i]->sig_setSelectButtonPos(pos);
+    }
+}
+void My_Process_Carrier::select_setPos(QPoint &pos, Basic_Widget *sender)
+{
+    for (int i = 0; i < select_basic_widget_list.count(); ++i)
+    {
+        if (sender == select_basic_widget_list[i])
+        {
+            continue;
+        }
+        select_basic_widget_list[i]->sig_setPos(pos);
+    }
+}
+void My_Process_Carrier::select_setSize(QRect &old_geometry, QRect &new_geometry, Basic_Widget *sender)
+{
+    for (int i = 0; i < select_basic_widget_list.count(); ++i)
+    {
+        if (sender == select_basic_widget_list[i])
+        {
+            continue;
+        }
+        select_basic_widget_list[i]->sig_setSize(old_geometry, new_geometry);
+    }
+}
+
 My_Process_Carrier::~My_Process_Carrier()
 {
     if (my_process_carrier_list)

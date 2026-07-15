@@ -21,17 +21,26 @@
 #undef QT_HAD_MAX
 #endif
 #include <core/basic_widget.h>
+
+class My_QLineSeries : public QLineSeries
+{
+    Q_OBJECT
+public:
+    explicit My_QLineSeries(QWidget *parent = nullptr);
+};
+
 class Basic_Chart : public Basic_Widget
 {
     Q_OBJECT
 public:
     explicit Basic_Chart(QWidget *parent = nullptr);
+    ~Basic_Chart();
 protected:
     QChartView *chartView = new QChartView(this->get_self());
     QChart *chart = new QChart();
-    QLineSeries *series = new QLineSeries();
-    QValueAxis *axisX = new QValueAxis;
-    QValueAxis *axisY = new QValueAxis;
+    My_QLineSeries *series = new My_QLineSeries(this);
+    QValueAxis *axisX = new QValueAxis(this);
+    QValueAxis *axisY = new QValueAxis(this);
     QVector<double> m_data;
     double Y_max = 100;
     double Y_min = 0;

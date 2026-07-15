@@ -3,6 +3,7 @@ void PulseAudio_Chart::set_icon(QString checked_icon_path)
 {
     use_rms_action->setIcon(QIcon(checked_icon_path));
     use_dB_action->setIcon(QIcon(checked_icon_path));
+    use_peaks_action->setIcon(QIcon(checked_icon_path));
     output_action->setIcon(QIcon(checked_icon_path));
     input_action->setIcon(QIcon(checked_icon_path));
     Basic_Widget::set_icon(checked_icon_path);
@@ -21,11 +22,25 @@ PulseAudio_Chart::PulseAudio_Chart(QWidget *parent)
     pa_init();
     this->background_color = QColor(255,255,255,50);
     Update_Background();
+    chart->addSeries(left_min_series);
+    left_min_series->hide();
     chart->addSeries(sec_series);
     sec_series->attachAxis(axisX);
     sec_series->attachAxis(axisY);//STAR
     series->setColor(line1_color);
     sec_series->setColor(line2_color);
+
+    left_min_series->setColor(line3_color);
+    right_min_series->setColor(line4_color);
+
+
+    chart->addSeries(right_min_series);
+    right_min_series->hide();
+    left_min_series->attachAxis(axisX);
+    left_min_series->attachAxis(axisY);
+    right_min_series->attachAxis(axisX);
+    right_min_series->attachAxis(axisY);
+
     update_data_size();
     menu->addAction(start_monitor);
     menu->addAction(stop_monitor);
@@ -39,6 +54,9 @@ PulseAudio_Chart::PulseAudio_Chart(QWidget *parent)
     use_dB_action->setIcon(QIcon(":/base/this.svg"));
     use_dB_action->setIconVisibleInMenu(false);
     set_use_rms->addAction(use_dB_action);
+    use_peaks_action->setIcon(QIcon(":/base/this.svg"));
+    use_peaks_action->setIconVisibleInMenu(false);
+    set_use_rms->addAction(use_peaks_action);
     menu->addMenu(set_use_rms);
     output_action->setIcon(QIcon(":/base/this.svg"));
     output_action->setIconVisibleInMenu(true);
@@ -228,8 +246,8 @@ void PulseAudio_Chart::stream_main_read_callback(pa_stream *p, size_t nbytes, vo
     {
         const int16_t *samples_ptr = static_cast<const int16_t *>(buffer);
         size_t sample_index = 0;
-        sample_count = samples / channels;
         // 提取声道
+        sample_count = samples / channels;
         for (size_t i = 0; i < samples; i += channels)
         {
             if (sample_index >= 1024)
@@ -274,44 +292,91 @@ void PulseAudio_Chart::stream_main_read_callback(pa_stream *p, size_t nbytes, vo
     default:
         break;
     }
+
     // 处理数据
-    float left_rms = 0.0f, right_rms = 0.0f;
+
     if (sample_count >= 1024) sample_count = 1023;
-    for (size_t i = 0; i < sample_count; i++)
+    bool can_use_peaks = pulseaudio_chart->use_peaks && pulseaudio_chart->left_min_series->chart() == pulseaudio_chart->chart;
+    if (can_use_peaks)
     {
-        left_rms += left_channel[i] * left_channel[i];
-        if (channels >= 2)
+
+        float left_peaks_min = 1.0f, right_peaks_min = 1.0f, left_peaks_max = -1.0f, right_peaks_max = -1.0f;
+        for (size_t i = 0; i < sample_count; ++i)
         {
-            right_rms += right_channel[i] * right_channel[i];
+            left_peaks_max = std::max(left_channel[i], left_peaks_max);
+            left_peaks_min = std::min(left_channel[i], left_peaks_min);
+            if (channels >= 2)
+            {
+                right_peaks_max = std::max(right_channel[i], right_peaks_max);
+                right_peaks_min = std::min(right_channel[i], right_peaks_min);
+            }
         }
-    }
-    left_rms = sqrtf(left_rms / sample_count);
-    if (channels >= 2)
-    {
-        right_rms = sqrtf(right_rms / sample_count);
-    }
-    const float silence_threshold = 1e-6f; // -120 dB
-    if (left_rms < silence_threshold) left_rms = silence_threshold;
-    if (right_rms < silence_threshold) right_rms = silence_threshold;
-    float left_db = 20 * log10f(left_rms);
-    float right_db = 20 * log10f(right_rms);
-    if (std::isinf(left_db) || std::isnan(left_db) || std::isinf(right_db) || std::isnan(right_db))
-    {
-        pa_stream_drop(p);
-        return;
-    }
-    pulseaudio_chart->pa_now_process++;
-    pulseaudio_chart->left_data.erase(pulseaudio_chart->left_data.begin());
-    pulseaudio_chart->right_data.erase(pulseaudio_chart->right_data.begin());
-    if (pulseaudio_chart->use_rms)
-    {
-        pulseaudio_chart->left_data.push_back(left_rms);
-        pulseaudio_chart->right_data.push_back(right_rms);
+        if (std::isinf(left_peaks_max) || std::isnan(left_peaks_max) || std::isinf(right_peaks_max) || std::isnan(right_peaks_max) ||
+                std::isinf(left_peaks_min) || std::isnan(left_peaks_min) || std::isinf(right_peaks_min) || std::isnan(right_peaks_min))
+        {
+            pa_stream_drop(p);
+            return;
+        }
+        if (left_peaks_min >= 1.0f || right_peaks_min >= 1.0f || left_peaks_max <= -1.0f || right_peaks_max <= -1.0f ||
+                left_peaks_max >= 1.0f || right_peaks_max >= 1.0f || left_peaks_min <= -1.0f || right_peaks_min <= -1.0f)
+        {
+            pa_stream_drop(p);
+            return;
+        }
+        pulseaudio_chart->left_data.push_back(left_peaks_max);
+        pulseaudio_chart->right_data.push_back(right_peaks_max);
+        pulseaudio_chart->left_min_data.push_back(left_peaks_min);
+        pulseaudio_chart->right_min_data.push_back(right_peaks_min);
     }
     else
     {
-        pulseaudio_chart->left_data.push_back(left_db);
-        pulseaudio_chart->right_data.push_back(right_db);
+        float left_rms = 0.0f, right_rms = 0.0f;
+        for (size_t i = 0; i < sample_count; i++)
+        {
+            left_rms += left_channel[i] * left_channel[i];
+            if (channels >= 2)
+            {
+                right_rms += right_channel[i] * right_channel[i];
+            }
+        }
+        left_rms = sqrtf(left_rms / sample_count);
+        if (channels >= 2)
+        {
+            right_rms = sqrtf(right_rms / sample_count);
+        }
+        const float silence_threshold = 1e-6f; // -120 dB
+        if (left_rms < silence_threshold) left_rms = silence_threshold;
+        if (right_rms < silence_threshold) right_rms = silence_threshold;
+        if (pulseaudio_chart->use_rms)
+        {
+            if (std::isinf(left_rms) || std::isnan(left_rms) || std::isinf(right_rms) || std::isnan(right_rms))
+            {
+                pa_stream_drop(p);
+                return;
+            }
+            pulseaudio_chart->left_data.push_back(left_rms);
+            pulseaudio_chart->right_data.push_back(right_rms);
+        }
+        else
+        {
+            float left_db = 20 * log10f(left_rms);
+            float right_db = 20 * log10f(right_rms);
+            if (std::isinf(left_db) || std::isnan(left_db) || std::isinf(right_db) || std::isnan(right_db))
+            {
+                pa_stream_drop(p);
+                return;
+            }
+            pulseaudio_chart->left_data.push_back(left_db);
+            pulseaudio_chart->right_data.push_back(right_db);
+        }
+    }
+    pulseaudio_chart->pa_now_process++;
+    pulseaudio_chart->left_data.removeFirst();
+    pulseaudio_chart->right_data.removeFirst();
+    if (can_use_peaks)
+    {
+        pulseaudio_chart->left_min_data.removeFirst();
+        pulseaudio_chart->right_min_data.removeFirst();
     }
     pa_stream_drop(p);
 }
@@ -333,40 +398,76 @@ void PulseAudio_Chart::pa_update()
     }
     series->clear();
     sec_series->clear();
-    if (use_rms)
+    if (use_peaks)
     {
-        axisY->setRange(-1, 1);
-        series->setName(tr("左声道RMS"));
-        sec_series->setName(tr("右声道RMS"));
+        axisY->setRange(-2, 2);
+        series->setName(tr("左声道 峰值"));
+        sec_series->setName(tr("右声道 峰值"));
+        left_min_series->setName(tr("左声道 谷值"));
+        right_min_series->setName(tr("右声道 谷值"));
+        left_min_series->clear();
+        right_min_series->clear();
     }
     else
     {
-        axisY->setRange(-120, 120);
-        series->setName(tr("左声道dB"));
-        sec_series->setName(tr("右声道dB"));
+        if (use_rms)
+        {
+            axisY->setRange(-1, 1);
+            series->setName(tr("左声道RMS"));
+            sec_series->setName(tr("右声道RMS"));
+        }
+        else
+        {
+            axisY->setRange(-120, 120);
+            series->setName(tr("左声道dB"));
+            sec_series->setName(tr("右声道dB"));
+        }
     }
+
     axisX->setRange(0, left_data.size());
     update_data_size();
-    if (use_rms)
+    if (use_peaks)
     {
         for (int i = 0; i < left_data.size(); i++)
         {
-            series->append(i, static_cast<double>(left_data.at(i)));
+            series->append(i, static_cast<double>(left_data.at(i)) + 1);
         }
         for (int i = 0; i < right_data.size(); i++)
         {
-            sec_series->append(i, - static_cast<double>(right_data.at(i)));
+            sec_series->append(i, - static_cast<double>(right_data.at(i)) - 1);
+        }
+        for (int i = 0; i < left_min_data.size(); i++)
+        {
+            left_min_series->append(i, static_cast<double>(left_min_data.at(i)) + 1);
+        }
+        for (int i = 0; i < right_min_data.size(); i++)
+        {
+            right_min_series->append(i, - static_cast<double>(right_min_data.at(i)) - 1);
         }
     }
     else
     {
-        for (int i = 0; i < left_data.size(); i++)
+        if (use_rms)
         {
-            series->append(i, 120.0 + static_cast<double>(left_data.at(i)));
+            for (int i = 0; i < left_data.size(); i++)
+            {
+                series->append(i, static_cast<double>(left_data.at(i)));
+            }
+            for (int i = 0; i < right_data.size(); i++)
+            {
+                sec_series->append(i, - static_cast<double>(right_data.at(i)));
+            }
         }
-        for (int i = 0; i < right_data.size(); i++)
+        else
         {
-            sec_series->append(i, -120 - static_cast<double>(right_data.at(i)));
+            for (int i = 0; i < left_data.size(); i++)
+            {
+                series->append(i, 120.0 + static_cast<double>(left_data.at(i)));
+            }
+            for (int i = 0; i < right_data.size(); i++)
+            {
+                sec_series->append(i, -120 - static_cast<double>(right_data.at(i)));
+            }
         }
     }
 }
@@ -388,17 +489,39 @@ void PulseAudio_Chart::update_data_size()
     {
         right_data.insert(right_data.begin(), vector_long - right_data.size(), -120.0f);
     }
+    if (use_peaks)
+    {
+        if (left_min_data.size() > vector_long)
+        {
+            left_min_data.erase(left_min_data.begin(), left_min_data.begin() + left_min_data.size() - vector_long);
+        }
+        else if (left_min_data.size() < vector_long)
+        {
+            left_min_data.insert(left_min_data.begin(), vector_long - left_min_data.size(), 0.0f);
+        }
+        if (right_min_data.size() > vector_long)
+        {
+            right_min_data.erase(right_min_data.begin(), right_min_data.begin() + right_min_data.size() - vector_long);
+        }
+        else if (right_min_data.size() < vector_long)
+        {
+            right_min_data.insert(right_min_data.begin(), vector_long - right_min_data.size(), 0.0f);
+        }
+    }
 }
 void PulseAudio_Chart::save(QSettings *settings)
 {
     Basic_Widget::save(settings);
     settings->setValue("update_time", update_time);
     settings->setValue("use_rms", use_rms);
+    settings->setValue("use_peaks", use_peaks);
     settings->setValue("get_input", get_input);
     settings->setValue("pa_can_process", pa_can_process);
     settings->setValue("vector_long", vector_long);
     settings->setValue("line1_color", line1_color.rgba());
     settings->setValue("line2_color", line2_color.rgba());
+    settings->setValue("line3_color", line3_color.rgba());
+    settings->setValue("line4_color", line4_color.rgba());
     settings->setValue("font", font);
 }
 void PulseAudio_Chart::load(QSettings *settings)
@@ -407,10 +530,13 @@ void PulseAudio_Chart::load(QSettings *settings)
     update_time = settings->value("update_time", 100).toInt();
     vector_long = settings->value("vector_long", 120).toInt();
     use_rms = settings->value("use_rms", true).toBool();
+    use_peaks = settings->value("use_peaks", false).toBool();
     get_input = settings->value("get_input", false).toBool();
     pa_can_process = settings->value("pa_can_process", 2).toInt();
     line1_color = QColor::fromRgba(settings->value("line1_color", QColor(255, 0, 0, 255).rgba()).toUInt());
     line2_color = QColor::fromRgba(settings->value("line2_color", QColor(0, 0, 255, 255).rgba()).toUInt());
+    line3_color = QColor::fromRgba(settings->value("line3_color", QColor(255, 176, 176, 255).rgba()).toUInt());
+    line4_color = QColor::fromRgba(settings->value("line4_color", QColor(72, 226, 237, 255).rgba()).toUInt());
     font = settings->value("text_font", QFontDatabase::systemFont(QFontDatabase::FixedFont)).value<QFont>();
     series->setColor(line1_color);
     sec_series->setColor(line2_color);
@@ -418,16 +544,34 @@ void PulseAudio_Chart::load(QSettings *settings)
     axisY->setLabelsFont(font);
     update_data_size();
     pa_start_monitor();
-    if (use_rms)
+    if (use_peaks)
     {
-        use_rms_action->setIconVisibleInMenu(true);
+        use_rms_action->setIconVisibleInMenu(false);
         use_dB_action->setIconVisibleInMenu(false);
+        use_peaks_action->setIconVisibleInMenu(true);
+        left_min_series->show();
+        right_min_series->show();
     }
     else
     {
-        use_rms_action->setIconVisibleInMenu(false);
-        use_dB_action->setIconVisibleInMenu(true);
+        left_min_series->hide();
+        right_min_series->hide();
+        left_min_data.clear();
+        right_min_data.clear();
+        if (use_rms)
+        {
+            use_rms_action->setIconVisibleInMenu(true);
+            use_dB_action->setIconVisibleInMenu(false);
+            use_peaks_action->setIconVisibleInMenu(false);
+        }
+        else
+        {
+            use_rms_action->setIconVisibleInMenu(false);
+            use_dB_action->setIconVisibleInMenu(true);
+            use_peaks_action->setIconVisibleInMenu(false);
+        }
     }
+
     if (get_input)
     {
         input_action->setIconVisibleInMenu(true);
@@ -473,14 +617,35 @@ void PulseAudio_Chart::contextMenuEvent(QContextMenuEvent *event)
     else if (know_what == use_rms_action)
     {
         use_rms = true;
+        use_peaks = false;
         use_rms_action->setIconVisibleInMenu(true);
         use_dB_action->setIconVisibleInMenu(false);
+        use_peaks_action->setIconVisibleInMenu(false);
+        left_min_data.clear();
+        right_min_data.clear();
+        left_min_series->hide();
+        right_min_series->hide();
     }
     else if (know_what == use_dB_action)
     {
         use_rms = false;
+        use_peaks = false;
         use_rms_action->setIconVisibleInMenu(false);
         use_dB_action->setIconVisibleInMenu(true);
+        use_peaks_action->setIconVisibleInMenu(false);
+        left_min_data.clear();
+        right_min_data.clear();
+        left_min_series->hide();
+        right_min_series->hide();
+    }
+    else if (know_what == use_peaks_action)
+    {
+        use_peaks = true;
+        use_rms_action->setIconVisibleInMenu(false);
+        use_dB_action->setIconVisibleInMenu(false);
+        use_peaks_action->setIconVisibleInMenu(true);
+        left_min_series->show();
+        right_min_series->show();
     }
     else if (know_what == output_action)
     {
@@ -521,7 +686,7 @@ void PulseAudio_Chart::contextMenuEvent(QContextMenuEvent *event)
     }
     else if (know_what == set_line_color)
     {
-        QMessageBox::information(nullptr, tr("设置左声道颜色"), tr("设置左声道颜色"));
+        QMessageBox::information(nullptr, tr("设置左声道峰值颜色"), tr("设置左声道峰值颜色"));
         QColorDialog colorDialog;
         colorDialog.setOption(QColorDialog::ShowAlphaChannel);
         colorDialog.setCurrentColor(line1_color);
@@ -533,7 +698,7 @@ void PulseAudio_Chart::contextMenuEvent(QContextMenuEvent *event)
         }
         line1_color = colorDialog.currentColor();
         series->setColor(line1_color);
-        QMessageBox::information(nullptr, tr("设置右声道颜色"), tr("设置右声道颜色"));
+        QMessageBox::information(nullptr, tr("设置右声道峰值颜色"), tr("设置右声道峰值颜色"));
         colorDialog.setOption(QColorDialog::ShowAlphaChannel);
         colorDialog.setCurrentColor(line2_color);
         colorDialog.setParent(nullptr);
@@ -544,6 +709,32 @@ void PulseAudio_Chart::contextMenuEvent(QContextMenuEvent *event)
         }
         line2_color = colorDialog.currentColor();
         sec_series->setColor(line2_color);
+        if (use_peaks)
+        {
+            QMessageBox::information(nullptr, tr("设置左声道谷值颜色"), tr("设置左声道谷值颜色"));
+            QColorDialog colorDialog;
+            colorDialog.setOption(QColorDialog::ShowAlphaChannel);
+            colorDialog.setCurrentColor(line3_color);
+            colorDialog.setParent(nullptr);
+            colorDialog.setWindowTitle(tr("获取颜色"));
+            if (colorDialog.exec() != QDialog::Accepted)
+            {
+                return;
+            }
+            line3_color = colorDialog.currentColor();
+            left_min_series->setColor(line3_color);
+            QMessageBox::information(nullptr, tr("设置右声道谷值颜色"), tr("设置右声道谷值颜色"));
+            colorDialog.setOption(QColorDialog::ShowAlphaChannel);
+            colorDialog.setCurrentColor(line4_color);
+            colorDialog.setParent(nullptr);
+            colorDialog.setWindowTitle(tr("获取颜色"));
+            if (colorDialog.exec() != QDialog::Accepted)
+            {
+                return;
+            }
+            line4_color = colorDialog.currentColor();
+            right_min_series->setColor(line4_color);
+        }
     }
     else
     {

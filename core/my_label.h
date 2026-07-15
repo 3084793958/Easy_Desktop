@@ -6,6 +6,7 @@
 #include<QDBusPendingReply>
 #include<QDBusInterface>
 #include<QDBusPendingCallWatcher>
+#include "core/module/out_line_label.h"
 class My_Label : public Basic_Widget
 {
     Q_OBJECT

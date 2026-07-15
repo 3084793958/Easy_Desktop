@@ -5,6 +5,8 @@
 #include "core/module/plugincontroller_v_2_0_0.h"
 #endif
 
+#include "core/tools/trans_sender.h"
+
 namespace CarrierType
 {
     const int Unknown = 0;
@@ -181,6 +183,34 @@ Plugin_Root::Plugin_Root(QWidget *parent)
 #ifdef USE_DTK
     plugin_controller_V_2_0_0 = new PluginController_V_2_0_0(this, this);
 #endif
+
+    connect(Trans_Sender::instance(), &Trans_Sender::Trans_sig, this, [=]
+    {
+        if (isV_2_0_0_Plugin())
+        {
+#ifdef USE_DTK
+            PluginsItemInterface_V_2_0_0 *plugin_interface = this->get_interface_V_2_0_0();
+            if (plugin_interface)
+            {
+                if (plugin_interface->Plugin_Version >= P_Version{0, 0, 2})
+                {
+                    plugin_interface->Trans_Update();
+                }
+            }
+#endif
+        }
+        else
+        {
+            PluginsItemInterface *plugin_interface = this->get_interface();
+            if (plugin_interface)
+            {
+                if (plugin_interface->Plugin_Version >= P_Version{0, 0, 2})
+                {
+                    plugin_interface->Trans_Update();
+                }
+            }
+        }
+    });
 }
 void Plugin_Root::click_call()
 {

@@ -1,7 +1,7 @@
 #ifndef BASIC_WIDGET_H
 #define BASIC_WIDGET_H
 #include <QtWidgets>
-#include "tools/my_x11_libs.h"
+#include "core/tools/my_x11_libs.h"
 #include "core/tools/trans_action.h"
 enum class Towards
 {
@@ -15,6 +15,13 @@ enum class Towards
     Bottom_Left,
     Bottom_Right
 };
+enum class Button_Pos
+{
+    Top_Left,
+    Top_Right,
+    Bottom_Left,
+    Bottom_Right
+};
 class Basic_Widget;
 class Desktop_Main_MouseSig_Event : public QWidget
 {
@@ -22,36 +29,55 @@ class Desktop_Main_MouseSig_Event : public QWidget
 public:
     explicit Desktop_Main_MouseSig_Event(QWidget *parent) : QWidget(parent) {}
     virtual ~Desktop_Main_MouseSig_Event() {}
-    virtual void select_mousePressEvent(QMouseEvent *event, Basic_Widget *sender)
-    {
-        (void) event;
-        (void) sender;
-    }
-    virtual void select_mouseReleaseEvent(QMouseEvent *event, Basic_Widget *sender)
-    {
-        (void) event;
-        (void) sender;
-    }
-    virtual void select_mouseMoveEvent(QMouseEvent *event, Basic_Widget *sender)
-    {
-        (void) event;
-        (void) sender;
-    }
+
+    virtual void select_mousePressEvent(QMouseEvent *, Basic_Widget *) {}
+    virtual void select_mouseReleaseEvent(QMouseEvent *, Basic_Widget *) {}
+    virtual void select_mouseMoveEvent(QMouseEvent *, Basic_Widget *) {}
+    virtual void select_closeEvent(Basic_Widget *, bool &) {}
+
+    virtual void select_moveToPage(int &, Basic_Widget *) {}
+    virtual void select_setRadius(int &, Basic_Widget *) {}
+    virtual void select_setBackgroundColor(QList<QColor>, Basic_Widget *) {}
+    virtual void select_setShowCloseButton(bool &, Basic_Widget *) {}
+    virtual void select_setCloseButtonPos(Button_Pos &, Basic_Widget *) {}
+    virtual void select_setAllowSelectButton(Basic_Widget *) {}
+    virtual void select_setSelectButtonPos(Button_Pos &, Basic_Widget *) {}
+    virtual void select_setPos(QPoint &, Basic_Widget *) {}
+    virtual void select_setSize(QRect &, QRect &, Basic_Widget *) {}
 };
-class Out_line_Label : public QLabel
+class Basic_Widget : public Desktop_Main_MouseSig_Event//这里要给My_ProcessCarrier用
 {
     Q_OBJECT
 public:
-    explicit Out_line_Label(QWidget *parent = nullptr);
-    QColor outlineColor;
-    int outlineWidth;
-    QColor text_color;
-private:
-    void paintEvent(QPaintEvent *event);
-};
-class Basic_Widget : public Desktop_Main_MouseSig_Event
-{
-    Q_OBJECT
+    virtual void sig_mousePressEvent(QMouseEvent *event);
+    virtual void sig_mouseReleaseEvent(QMouseEvent *event);
+    virtual void sig_mouseMoveEvent(QMouseEvent *event);
+    virtual void sig_closeEvent();
+    virtual void sig_moveToPage(int &page);
+    virtual void sig_setRadius(int &radius);
+    virtual void sig_setBackgroundColor(QList<QColor> colors);
+    virtual void sig_setShowCloseButton(bool &show);
+    virtual void sig_setCloseButtonPos(Button_Pos &pos);
+    virtual void sig_setAllowSelectButton();
+    virtual void sig_setSelectButtonPos(Button_Pos &pos);
+    virtual void sig_setPos(QPoint &delta_pos);
+    virtual void sig_setSize(QRect &old_geometry, QRect &new_geometry);
+signals:
+    void sig_select_mousePressEvent(QMouseEvent *event, Basic_Widget *sender);
+    void sig_select_mouseReleaseEvent(QMouseEvent *event, Basic_Widget *sender);
+    void sig_select_mouseMoveEvent(QMouseEvent *event, Basic_Widget *sender);
+    void sig_select_closeEvent(Basic_Widget *sender, bool &send);
+
+    void sig_select_moveToPage(int &page, Basic_Widget *sender);
+    void sig_select_setRadius(int &radius, Basic_Widget *sender);
+    void sig_select_setBackgroundColor(QList<QColor> colors, Basic_Widget *sender);
+    void sig_select_setShowCloseButton(bool &show, Basic_Widget *sender);
+    void sig_select_setCloseButtonPos(Button_Pos &pos, Basic_Widget *sender);
+    void sig_select_setAllowSelectButton(Basic_Widget *sender);
+    void sig_select_setSelectButtonPos(Button_Pos &pos, Basic_Widget *sender);
+    void sig_select_setPos(QPoint &delta_pos, Basic_Widget *sender);
+    void sig_select_setSize(QRect &old_geometry, QRect &new_geometry, Basic_Widget *sender);
+
 public:
     explicit Basic_Widget(QWidget *parent);
     ~Basic_Widget();
@@ -65,26 +91,12 @@ public:
     void set_basic_list(QList<QWidget *> *m_basic_list);
     void Update_Background();
     bool set_select(bool select);
-    void sig_mousePressEvent(QMouseEvent *event);
-    void sig_mouseReleaseEvent(QMouseEvent *event);
-    void sig_mouseMoveEvent(QMouseEvent *event);
-signals:
-    void sig_select_mousePressEvent(QMouseEvent *event, Basic_Widget *sender);
-    void sig_select_mouseReleaseEvent(QMouseEvent *event, Basic_Widget *sender);
-    void sig_select_mouseMoveEvent(QMouseEvent *event, Basic_Widget *sender);
 public:
     virtual void save(QSettings *settings);
     virtual void load(QSettings *settings);
     virtual void save(QSettings *settings, QString Token);//由于很多派生类已经写死了virtual void save(QSettings *settings);,不可能加个QString Token.
     virtual void load(QSettings *settings, QString Token);
     virtual void set_icon(QString checked_icon_path);
-    enum class Button_Pos
-    {
-        Top_Left,
-        Top_Right,
-        Bottom_Left,
-        Bottom_Right
-    };
 signals:
     void close_signals();
     void size_changed(QSize size);

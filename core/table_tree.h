@@ -7,49 +7,9 @@
 #include "core/module/preview_file_widget.h"
 #include "core/module/my_icon_provider.h"
 #include "core/module/asyncfilesystemmodel.h"
-class My_TableView_Delegate : public QStyledItemDelegate
-{
-public:
-    using QStyledItemDelegate::QStyledItemDelegate;
-    explicit My_TableView_Delegate(QObject *parent, QColor *m_hover_color = nullptr, QColor *m_select_color = nullptr, int *m_radius = nullptr);
-    void paint(QPainter *painter, const QStyleOptionViewItem &option, const QModelIndex &index) const override;
-private:
-    QColor *hover_color = nullptr;
-    QColor *select_color = nullptr;
-    int *radius = nullptr;
-};
-class My_Table_View;
-class My_Table_ProxyModel : public QSortFilterProxyModel
-{
-    Q_OBJECT
-public:
-    explicit My_Table_ProxyModel(QObject *parent = nullptr, My_Table_View *m_root = nullptr, int *m_sort_type = nullptr, QFileSystemModel *m_fsModel = nullptr);
-    void setSearchPattern(const QString &pattern, bool deeply_search = false);
-    void setShowHidden(bool show);
-protected:
-    virtual bool filterAcceptsRow(int sourceRow, const QModelIndex &sourceParent) const override;
-    virtual bool lessThan(const QModelIndex &left, const QModelIndex &right) const override;
-private:
-    My_Table_View *root = nullptr;
-    QString m_pattern;
-    bool m_showHidden = false;
-    bool m_deeply_search = false;
-    char my_padding[6];
-    int *sort_type_ptr = nullptr;
-    QFileSystemModel *fsModel = nullptr;
-
-private:
-    QFuture<bool> hasMatchInSubtreeAsync(const QModelIndex &sourceIndex) const;
-
-    mutable QSet<QString> m_matchedDirsCache;//给const函数用
-    mutable QMutex m_cacheMutex;
-    mutable QSet<QString> m_pendingDirs;
-    mutable QMutex m_pendingMutex;
-    bool hasMatchInSubtree(const QModelIndex &sourceIndex) const;
-private slots:
-    void onMatchCheckFinished(const QString &dirPath, bool hasMatch) const;
-};
-class My_Table_View : public QListView
+#include "core/module/basic_my_proxymodel.h"
+#include "core/module/my_treeview_delegate.h"
+class My_Table_View : public QListView, public Tree_View_Root_Interface
 {
     Q_OBJECT
 public:
@@ -60,8 +20,8 @@ public:
     QFileSystemModel *F_model = nullptr;
     My_Table_ProxyModel *proxyModel = nullptr;
     static My_Table_View * catch_ptr;
-    QString *root_path_ptr = nullptr;
-    void backToPath();
+    virtual void backToPath() override;
+    QString getFilePathFromIndex(const QModelIndex &index) const;
 protected:
     void dropEvent(QDropEvent *event) override;
     void dragMoveEvent(QDragMoveEvent *event) override;
@@ -110,6 +70,10 @@ public:
     virtual void save(QSettings *settings);
     virtual void load(QSettings *settings);
     virtual void set_icon(QString checked_icon_path);
+private:
+    QMetaObject::Connection m_selectionChangedConn;
+    QMetaObject::Connection m_currentChangedConn;
+    void setupSelectionConnections();
 public:
     QString *file_open_way_process = nullptr;
     QString *file_open_path_process = nullptr;
@@ -120,6 +84,7 @@ public:
     QString *compressor_7z_process = nullptr;
     bool *m_allow_drop = nullptr;
     QString root_path = QDir::rootPath();
+    QString getFilePathFromIndex(const QModelIndex &index) const;
     void update_style(QColor theme_color, QColor theme_background_color, QColor theme_text_color, QColor select_text_color, QColor disabled_text_color, QString checked_icon_path);
 protected:
     QColor hover_color = QColor(227, 242, 253, 255);
@@ -135,6 +100,7 @@ protected:
     My_Icon_Provider *icon_provider = new My_Icon_Provider;
     QLineEdit *search_edit = new QLineEdit(carrier_widget);
     QPushButton *deeply_search_button = new Trans_PushButton(tr("深层搜索"), "深层搜索", this->metaObject()->className(), carrier_widget);
+    QPushButton *flat_search_button = new Trans_PushButton(tr("平铺搜索"), "平铺搜索", this->metaObject()->className(), carrier_widget);
     QAction *search_img_action = new QAction(this);
     QAction *search_del_action = new QAction(this);
     QMenu *menu = new QMenu(this);

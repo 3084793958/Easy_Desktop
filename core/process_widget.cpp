@@ -34,6 +34,23 @@ void Process_Widget::set_icon(QString checked_icon_path)
     single_press_mode_action->setIcon(QIcon(checked_icon_path));
     Basic_Widget::set_icon(checked_icon_path);
 }
+void Process_Widget::sig_setBackgroundColor(QList<QColor> colors)
+{
+    basic_color = colors[0];
+    if (colors.count() >= 3)
+    {
+        press_color = colors[1];
+        hover_color = colors[2];
+    }
+    if (left_mouse_on_press)
+    {
+        Carrier->setStyleSheet(QString("background:rgba(%1,%2,%3,%4)").arg(press_color.red()).arg(press_color.green()).arg(press_color.blue()).arg(press_color.alpha()));
+    }
+    else
+    {
+        Carrier->setStyleSheet(QString("background:rgba(%1,%2,%3,%4)").arg(basic_color.red()).arg(basic_color.green()).arg(basic_color.blue()).arg(basic_color.alpha()));
+    }
+}
 Process_Widget::Process_Widget(QWidget *parent)
     :Basic_Widget(parent)
 {
@@ -168,18 +185,40 @@ void Process_Widget::updateSig()
     {
         if (save_sig_ptr)
         {
-            disconnect(this, &Basic_Widget::sig_select_mouseMoveEvent, save_sig_ptr, &Desktop_Main_MouseSig_Event::select_mouseMoveEvent);
-            disconnect(this, &Basic_Widget::sig_select_mousePressEvent, save_sig_ptr, &Desktop_Main_MouseSig_Event::select_mousePressEvent);
-            disconnect(this, &Basic_Widget::sig_select_mouseReleaseEvent, save_sig_ptr, &Desktop_Main_MouseSig_Event::select_mouseReleaseEvent);
+            disconnect(this, &Basic_Widget::sig_select_mouseMoveEvent      , save_sig_ptr, &Desktop_Main_MouseSig_Event::select_mouseMoveEvent      );
+            disconnect(this, &Basic_Widget::sig_select_mousePressEvent     , save_sig_ptr, &Desktop_Main_MouseSig_Event::select_mousePressEvent     );
+            disconnect(this, &Basic_Widget::sig_select_mouseReleaseEvent   , save_sig_ptr, &Desktop_Main_MouseSig_Event::select_mouseReleaseEvent   );
+            disconnect(this, &Basic_Widget::sig_select_closeEvent          , save_sig_ptr, &Desktop_Main_MouseSig_Event::select_closeEvent          );
+
+            disconnect(this, &Basic_Widget::sig_select_moveToPage          , save_sig_ptr, &Desktop_Main_MouseSig_Event::select_moveToPage          );
+            disconnect(this, &Basic_Widget::sig_select_setRadius           , save_sig_ptr, &Desktop_Main_MouseSig_Event::select_setRadius           );
+            disconnect(this, &Basic_Widget::sig_select_setBackgroundColor  , save_sig_ptr, &Desktop_Main_MouseSig_Event::select_setBackgroundColor  );
+            disconnect(this, &Basic_Widget::sig_select_setShowCloseButton  , save_sig_ptr, &Desktop_Main_MouseSig_Event::select_setShowCloseButton  );
+            disconnect(this, &Basic_Widget::sig_select_setCloseButtonPos   , save_sig_ptr, &Desktop_Main_MouseSig_Event::select_setCloseButtonPos   );
+            disconnect(this, &Basic_Widget::sig_select_setAllowSelectButton, save_sig_ptr, &Desktop_Main_MouseSig_Event::select_setAllowSelectButton);
+            disconnect(this, &Basic_Widget::sig_select_setSelectButtonPos  , save_sig_ptr, &Desktop_Main_MouseSig_Event::select_setSelectButtonPos  );
+            disconnect(this, &Basic_Widget::sig_select_setPos              , save_sig_ptr, &Desktop_Main_MouseSig_Event::select_setPos              );
+            disconnect(this, &Basic_Widget::sig_select_setSize             , save_sig_ptr, &Desktop_Main_MouseSig_Event::select_setSize             );
         }
         save_sig_ptr = nullptr;
         return;
     }
     if (save_sig_ptr)
     {
-        disconnect(this, &Basic_Widget::sig_select_mouseMoveEvent, save_sig_ptr, &Desktop_Main_MouseSig_Event::select_mouseMoveEvent);
-        disconnect(this, &Basic_Widget::sig_select_mousePressEvent, save_sig_ptr, &Desktop_Main_MouseSig_Event::select_mousePressEvent);
-        disconnect(this, &Basic_Widget::sig_select_mouseReleaseEvent, save_sig_ptr, &Desktop_Main_MouseSig_Event::select_mouseReleaseEvent);
+        disconnect(this, &Basic_Widget::sig_select_mouseMoveEvent      , save_sig_ptr, &Desktop_Main_MouseSig_Event::select_mouseMoveEvent      );
+        disconnect(this, &Basic_Widget::sig_select_mousePressEvent     , save_sig_ptr, &Desktop_Main_MouseSig_Event::select_mousePressEvent     );
+        disconnect(this, &Basic_Widget::sig_select_mouseReleaseEvent   , save_sig_ptr, &Desktop_Main_MouseSig_Event::select_mouseReleaseEvent   );
+        disconnect(this, &Basic_Widget::sig_select_closeEvent          , save_sig_ptr, &Desktop_Main_MouseSig_Event::select_closeEvent          );
+
+        disconnect(this, &Basic_Widget::sig_select_moveToPage          , save_sig_ptr, &Desktop_Main_MouseSig_Event::select_moveToPage          );
+        disconnect(this, &Basic_Widget::sig_select_setRadius           , save_sig_ptr, &Desktop_Main_MouseSig_Event::select_setRadius           );
+        disconnect(this, &Basic_Widget::sig_select_setBackgroundColor  , save_sig_ptr, &Desktop_Main_MouseSig_Event::select_setBackgroundColor  );
+        disconnect(this, &Basic_Widget::sig_select_setShowCloseButton  , save_sig_ptr, &Desktop_Main_MouseSig_Event::select_setShowCloseButton  );
+        disconnect(this, &Basic_Widget::sig_select_setCloseButtonPos   , save_sig_ptr, &Desktop_Main_MouseSig_Event::select_setCloseButtonPos   );
+        disconnect(this, &Basic_Widget::sig_select_setAllowSelectButton, save_sig_ptr, &Desktop_Main_MouseSig_Event::select_setAllowSelectButton);
+        disconnect(this, &Basic_Widget::sig_select_setSelectButtonPos  , save_sig_ptr, &Desktop_Main_MouseSig_Event::select_setSelectButtonPos  );
+        disconnect(this, &Basic_Widget::sig_select_setPos              , save_sig_ptr, &Desktop_Main_MouseSig_Event::select_setPos              );
+        disconnect(this, &Basic_Widget::sig_select_setSize             , save_sig_ptr, &Desktop_Main_MouseSig_Event::select_setSize             );
     }
     if (in_carrier)
     {
@@ -191,9 +230,20 @@ void Process_Widget::updateSig()
     }
     if (save_sig_ptr)
     {
-        connect(this, &Basic_Widget::sig_select_mouseMoveEvent, save_sig_ptr, &Desktop_Main_MouseSig_Event::select_mouseMoveEvent);
-        connect(this, &Basic_Widget::sig_select_mousePressEvent, save_sig_ptr, &Desktop_Main_MouseSig_Event::select_mousePressEvent);
-        connect(this, &Basic_Widget::sig_select_mouseReleaseEvent, save_sig_ptr, &Desktop_Main_MouseSig_Event::select_mouseReleaseEvent);
+        connect(this, &Basic_Widget::sig_select_mouseMoveEvent      , save_sig_ptr, &Desktop_Main_MouseSig_Event::select_mouseMoveEvent      );
+        connect(this, &Basic_Widget::sig_select_mousePressEvent     , save_sig_ptr, &Desktop_Main_MouseSig_Event::select_mousePressEvent     );
+        connect(this, &Basic_Widget::sig_select_mouseReleaseEvent   , save_sig_ptr, &Desktop_Main_MouseSig_Event::select_mouseReleaseEvent   );
+        connect(this, &Basic_Widget::sig_select_closeEvent          , save_sig_ptr, &Desktop_Main_MouseSig_Event::select_closeEvent          );
+
+        connect(this, &Basic_Widget::sig_select_moveToPage          , save_sig_ptr, &Desktop_Main_MouseSig_Event::select_moveToPage          );
+        connect(this, &Basic_Widget::sig_select_setRadius           , save_sig_ptr, &Desktop_Main_MouseSig_Event::select_setRadius           );
+        connect(this, &Basic_Widget::sig_select_setBackgroundColor  , save_sig_ptr, &Desktop_Main_MouseSig_Event::select_setBackgroundColor  );
+        connect(this, &Basic_Widget::sig_select_setShowCloseButton  , save_sig_ptr, &Desktop_Main_MouseSig_Event::select_setShowCloseButton  );
+        connect(this, &Basic_Widget::sig_select_setCloseButtonPos   , save_sig_ptr, &Desktop_Main_MouseSig_Event::select_setCloseButtonPos   );
+        connect(this, &Basic_Widget::sig_select_setAllowSelectButton, save_sig_ptr, &Desktop_Main_MouseSig_Event::select_setAllowSelectButton);
+        connect(this, &Basic_Widget::sig_select_setSelectButtonPos  , save_sig_ptr, &Desktop_Main_MouseSig_Event::select_setSelectButtonPos  );
+        connect(this, &Basic_Widget::sig_select_setPos              , save_sig_ptr, &Desktop_Main_MouseSig_Event::select_setPos              );
+        connect(this, &Basic_Widget::sig_select_setSize             , save_sig_ptr, &Desktop_Main_MouseSig_Event::select_setSize             );
     }
 }
 void Process_Widget::mousePressEvent(QMouseEvent *event)
@@ -470,6 +520,7 @@ void Process_Widget::context_solution(QAction *know_what)
         {
             Carrier->setStyleSheet(QString("background:rgba(%1,%2,%3,%4)").arg(basic_color.red()).arg(basic_color.green()).arg(basic_color.blue()).arg(basic_color.alpha()));
         }
+        if (select_tags) emit sig_select_setBackgroundColor({basic_color, press_color, hover_color}, this);
     }
     else if (know_what == set_auto_resize)
     {

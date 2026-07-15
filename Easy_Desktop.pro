@@ -75,7 +75,23 @@ SOURCES += \
     core/module/asynciconloader.cpp \
     core/module/asyncfilesystemmodel.cpp \
     core/tools/trans_action.cpp \
-    core/module/audio_wave_preview.cpp
+    core/module/audio_wave_preview.cpp \
+    core/tools/trans_sender.cpp \
+    core/module/flatfilelistmodel.cpp \
+    core/module/basic_my_proxymodel.cpp \
+    core/module/zip_view_model.cpp \
+    core/module/zip_treeview_proxymodel.cpp \
+    core/module/out_line_label.cpp \
+    core/visual_chart/visual_basic_chart.cpp \
+    core/visual_chart/visual_module/visual_chartview.cpp \
+    core/visual_chart/visual_module/visual_chart.cpp \
+    core/visual_chart/visual_module/visual_qlineseries.cpp \
+    core/visual_chart/visual_module/visual_valueaxis.cpp \
+    core/visual_chart/visual_cpu_chart.cpp \
+    core/visual_chart/visual_ram_chart.cpp \
+    core/visual_chart/visual_pulseaudio_chart.cpp \
+    core/visual_chart/visual_net_chart.cpp \
+    core/visual_chart/visual_disk_chart.cpp
 
 contains(DEFINES, USE_CHART) {
     SOURCES += \
@@ -133,7 +149,23 @@ HEADERS += \
     core/module/asyncfilesystemmodel.h \
     core/tools/trans_object.h \
     core/tools/trans_action.h \
-    core/module/audio_wave_preview.h
+    core/module/audio_wave_preview.h \
+    core/tools/trans_sender.h \
+    core/module/flatfilelistmodel.h \
+    core/module/basic_my_proxymodel.h \
+    core/module/zip_view_model.h \
+    core/module/zip_treeview_proxymodel.h \
+    core/module/out_line_label.h \
+    core/visual_chart/visual_basic_chart.h \
+    core/visual_chart/visual_module/visual_chartview.h \
+    core/visual_chart/visual_module/visual_chart.h \
+    core/visual_chart/visual_module/visual_qlineseries.h \
+    core/visual_chart/visual_module/visual_valueaxis.h \
+    core/visual_chart/visual_cpu_chart.h \
+    core/visual_chart/visual_ram_chart.h \
+    core/visual_chart/visual_pulseaudio_chart.h \
+    core/visual_chart/visual_net_chart.h \
+    core/visual_chart/visual_disk_chart.h
 
 contains(DEFINES, USE_CHART) {
     HEADERS += \

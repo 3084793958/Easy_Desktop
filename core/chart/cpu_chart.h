@@ -14,6 +14,7 @@ private:
     void get_cpu_data();
     QVector<double> each_cpu_data;
     QList<QVector<double> *> send_cpu_data_list;
+    QVector<My_QLineSeries *> series_list;
     QList<QPair<unsigned long long, unsigned long long>> last_data;
     QList<QPair<unsigned long long, unsigned long long>> new_data;
     QTimer *updateTimer = new QTimer(this);

@@ -165,6 +165,13 @@ private:
     QList<DISK_Chart *> disk_chart_list;
     QList<PulseAudio_Chart *> pulseaudio_chart_list;
 #endif
+
+    QList<Visual_CPU_Chart *> visual_cpu_chart_list;
+    QList<Visual_RAM_Chart *> visual_ram_chart_list;
+    QList<Visual_NET_Chart *> visual_net_chart_list;
+    QList<Visual_DISK_Chart *> visual_disk_chart_list;
+    QList<Visual_PulseAudio_Chart *> visual_pulseaudio_chart_list;
+
     QList<Plugin_Root *> plugin_root_list;
     //ACTION
     QMenu *menu=new QMenu(this);
@@ -190,6 +197,14 @@ private:
     QAction *disk_chart_action = new Trans_Action(tr("磁盘"), "磁盘", this->metaObject()->className(), this);
     QAction *pulseaudio_chart_action = new Trans_Action(tr("声音服务"), "声音服务", this->metaObject()->className(), this);
 #endif
+
+    QMenu *visual_my_chart_menu = new Trans_Menu(tr("虚拟可视化图表"), "虚拟可视化图表", this->metaObject()->className(), this);
+    QAction *visual_cpu_chart_action = new Trans_Action(tr("CPU"), "CPU", this->metaObject()->className(), this);
+    QAction *visual_ram_chart_action = new Trans_Action(tr("内存"), "内存", this->metaObject()->className(), this);
+    QAction *visual_net_chart_action = new Trans_Action(tr("网络"), "网络", this->metaObject()->className(), this);
+    QAction *visual_disk_chart_action = new Trans_Action(tr("磁盘"), "磁盘", this->metaObject()->className(), this);
+    QAction *visual_pulseaudio_chart_action = new Trans_Action(tr("声音服务"), "声音服务", this->metaObject()->className(), this);
+
     QMenu *desktop_control_action = new Trans_Menu(tr("桌面控制"), "桌面控制", this->metaObject()->className(), this);
     QAction *lock_desktop = new Trans_Action(tr("锚定桌面"), "锚定桌面", this->metaObject()->className(), this);
     QAction *unlock_desktop = new Trans_Action(tr("取消锚定"), "取消锚定", this->metaObject()->className(), this);
@@ -241,9 +256,21 @@ private:
     void mouseReleaseEvent(QMouseEvent *event);
     void mouseMoveEvent(QMouseEvent *event);
     QList<Basic_Widget *> select_basic_widget_list = {};
+private:
     virtual void select_mousePressEvent(QMouseEvent *event, Basic_Widget *sender);
     virtual void select_mouseReleaseEvent(QMouseEvent *event, Basic_Widget *sender);
     virtual void select_mouseMoveEvent(QMouseEvent *event, Basic_Widget *sender);
+    virtual void select_closeEvent(Basic_Widget *sender, bool &send);
+
+    virtual void select_moveToPage(int &page, Basic_Widget *sender);
+    virtual void select_setRadius(int &radius, Basic_Widget *sender);
+    virtual void select_setBackgroundColor(QList<QColor> colors, Basic_Widget *sender);
+    virtual void select_setShowCloseButton(bool &show, Basic_Widget *sender);
+    virtual void select_setCloseButtonPos(Button_Pos &pos, Basic_Widget *sender);
+    virtual void select_setAllowSelectButton(Basic_Widget *sender);
+    virtual void select_setSelectButtonPos(Button_Pos &pos, Basic_Widget *sender);
+    virtual void select_setPos(QPoint &pos, Basic_Widget *sender);
+    virtual void select_setSize(QRect &old_geometry, QRect &new_geometry, Basic_Widget *sender);
 };
 
 #endif // DESKTOP_MAIN_H

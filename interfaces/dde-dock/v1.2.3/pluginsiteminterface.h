@@ -36,7 +36,7 @@ public:
     //ADD
 
     //for Easy_Desktop
-    P_Version Plugin_Version{0, 0, 1};//不使用const,用于欺骗Easy_Desktop
+    P_Version Plugin_Version{0, 0, 2};//不使用const,用于欺骗Easy_Desktop
     //最低版本号:0.0.1
     //for Easy_Desktop
 
@@ -362,6 +362,15 @@ public:
     }
     //for Easy_Desktop 0.0.1
     //不会修改PluginProxyInterface,无法控制插件怎么调用,只能控制Easy_Desktop怎么调用,至于插件主动更新,用P_Sender
+
+    //V_0.0.2
+    ///
+    /// \brief Trans_Update
+    /// 告诉插件:翻译动态更新了
+    ///
+    virtual void Trans_Update()
+    {}
+    //V_0.0.2
 
 protected:
     ///

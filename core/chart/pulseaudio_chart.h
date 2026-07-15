@@ -2,13 +2,6 @@
 #define PULSEAUDIO_CHART_H
 #include "basic_chart.h"
 #include <pulse/pulseaudio.h>
-struct AudioLevel
-{
-    double left_level;
-    double right_level;
-    double peak_level;
-    double rms_level;
-};
 class PulseAudio_Chart : public Basic_Chart
 {
     Q_OBJECT
@@ -21,14 +14,21 @@ public:
     virtual void set_icon(QString checked_icon_path);
 private:
     QTimer *pa_timer = new QTimer(this);
-    QLineSeries *sec_series = new QLineSeries;
+    My_QLineSeries *sec_series = new My_QLineSeries(this);
+    My_QLineSeries *left_min_series = new My_QLineSeries(this);
+    My_QLineSeries *right_min_series = new My_QLineSeries(this);
     int update_time = 100;
     bool use_rms = true;
+    bool use_peaks = false;
     int vector_long = 120;
     QVector<float> left_data;
     QVector<float> right_data;
+    QVector<float> left_min_data;
+    QVector<float> right_min_data;
     QColor line1_color = QColor(255, 0, 0, 255);
     QColor line2_color = QColor(0, 0, 255, 255);
+    QColor line3_color = QColor(255, 176, 176, 255);
+    QColor line4_color = QColor(72, 226, 237, 255);
     QFont font = QFontDatabase::systemFont(QFontDatabase::FixedFont);
     void update_data_size();
     void contextMenuEvent(QContextMenuEvent *event);
@@ -39,6 +39,7 @@ private:
     QMenu *set_use_rms = new Trans_Menu(tr("设置侦测格式"), "设置侦测格式", this->metaObject()->className(), this);
     QAction *use_rms_action = new Trans_Action(tr("RMS"), "RMS", this->metaObject()->className(), this);
     QAction *use_dB_action = new Trans_Action(tr("dB"), "dB", this->metaObject()->className(), this);
+    QAction *use_peaks_action = new Trans_Action(tr("峰值"), "峰值", this->metaObject()->className(), this);
     QMenu *set_monitor_type = new Trans_Menu(tr("设置侦测模式"), "设置侦测模式", this->metaObject()->className(), this);
     QAction *output_action = new Trans_Action(tr("扬声器"), "扬声器", this->metaObject()->className(), this);
     QAction *input_action = new Trans_Action(tr("麦克风"), "麦克风", this->metaObject()->className(), this);

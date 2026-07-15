@@ -1,45 +1,4 @@
 #include "basic_widget.h"
-Out_line_Label::Out_line_Label(QWidget *parent)
-    :QLabel(parent)
-{}
-void Out_line_Label::paintEvent(QPaintEvent *event)
-{
-    if (text().isEmpty())
-    {
-        QLabel::paintEvent(event);
-        return;
-    }
-    QPainter painter(this);
-    painter.setRenderHint(QPainter::Antialiasing);
-    painter.setRenderHint(QPainter::TextAntialiasing);
-    QFont font = this->font();
-    QFontMetrics fm(font);
-    QStringList lines = text().split("\n");
-    int totalHeight = lines.size() * fm.height();
-    int maxWidth = 0;
-    for (int i = 0; i < lines.size(); i++)
-    {
-        maxWidth = qMax(maxWidth, fm.horizontalAdvance(lines[i]));
-    }
-    int startY = (height() - totalHeight) / 2 + fm.ascent();
-    for (int i = 0; i < lines.size(); i++)
-    {
-        const int textWidth = fm.horizontalAdvance(lines[i]);
-        const int textX = (width() - textWidth) / 2;
-        const int textY = startY + i * fm.height();
-        QPainterPath path;
-        path.addText(textX, textY, font, lines[i]);
-        if (outlineWidth != 0)
-        {
-            painter.setPen(QPen(outlineColor, outlineWidth, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
-            painter.setBrush(Qt::NoBrush);
-            painter.drawPath(path);
-        }
-        painter.setPen(Qt::NoPen);
-        painter.setBrush(text_color);
-        painter.drawPath(path);
-    }
-}
 Basic_Widget::Basic_Widget(QWidget *parent)
     :Desktop_Main_MouseSig_Event(parent)
 {
@@ -101,6 +60,12 @@ Basic_Widget::Basic_Widget(QWidget *parent)
     Update_Background();
     connect(close_button, &QPushButton::released, this, [=]
     {
+        if (select_tags)
+        {
+            QMessageBox::StandardButton name_ans = QMessageBox::question(nullptr, tr("确认信息"), tr("是否批量关闭窗口"));
+            bool ok = name_ans == QMessageBox::Yes;
+            emit sig_select_closeEvent(this, ok);
+        }
         hide();
         emit close_signals();
         if (auto_close)
@@ -155,9 +120,20 @@ void Basic_Widget::setParent(QWidget *parent)
     {
         if (save_sig_ptr)
         {
-            disconnect(this, &Basic_Widget::sig_select_mouseMoveEvent, save_sig_ptr, &Desktop_Main_MouseSig_Event::select_mouseMoveEvent);
-            disconnect(this, &Basic_Widget::sig_select_mousePressEvent, save_sig_ptr, &Desktop_Main_MouseSig_Event::select_mousePressEvent);
-            disconnect(this, &Basic_Widget::sig_select_mouseReleaseEvent, save_sig_ptr, &Desktop_Main_MouseSig_Event::select_mouseReleaseEvent);
+            disconnect(this, &Basic_Widget::sig_select_mouseMoveEvent      , save_sig_ptr, &Desktop_Main_MouseSig_Event::select_mouseMoveEvent      );
+            disconnect(this, &Basic_Widget::sig_select_mousePressEvent     , save_sig_ptr, &Desktop_Main_MouseSig_Event::select_mousePressEvent     );
+            disconnect(this, &Basic_Widget::sig_select_mouseReleaseEvent   , save_sig_ptr, &Desktop_Main_MouseSig_Event::select_mouseReleaseEvent   );
+            disconnect(this, &Basic_Widget::sig_select_closeEvent          , save_sig_ptr, &Desktop_Main_MouseSig_Event::select_closeEvent          );
+
+            disconnect(this, &Basic_Widget::sig_select_moveToPage          , save_sig_ptr, &Desktop_Main_MouseSig_Event::select_moveToPage          );
+            disconnect(this, &Basic_Widget::sig_select_setRadius           , save_sig_ptr, &Desktop_Main_MouseSig_Event::select_setRadius           );
+            disconnect(this, &Basic_Widget::sig_select_setBackgroundColor  , save_sig_ptr, &Desktop_Main_MouseSig_Event::select_setBackgroundColor  );
+            disconnect(this, &Basic_Widget::sig_select_setShowCloseButton  , save_sig_ptr, &Desktop_Main_MouseSig_Event::select_setShowCloseButton  );
+            disconnect(this, &Basic_Widget::sig_select_setCloseButtonPos   , save_sig_ptr, &Desktop_Main_MouseSig_Event::select_setCloseButtonPos   );
+            disconnect(this, &Basic_Widget::sig_select_setAllowSelectButton, save_sig_ptr, &Desktop_Main_MouseSig_Event::select_setAllowSelectButton);
+            disconnect(this, &Basic_Widget::sig_select_setSelectButtonPos  , save_sig_ptr, &Desktop_Main_MouseSig_Event::select_setSelectButtonPos  );
+            disconnect(this, &Basic_Widget::sig_select_setPos              , save_sig_ptr, &Desktop_Main_MouseSig_Event::select_setPos              );
+            disconnect(this, &Basic_Widget::sig_select_setSize             , save_sig_ptr, &Desktop_Main_MouseSig_Event::select_setSize             );
         }
         save_sig_ptr = nullptr;
         return;
@@ -166,16 +142,38 @@ void Basic_Widget::setParent(QWidget *parent)
     {
         if (save_sig_ptr)
         {
-            disconnect(this, &Basic_Widget::sig_select_mouseMoveEvent, save_sig_ptr, &Desktop_Main_MouseSig_Event::select_mouseMoveEvent);
-            disconnect(this, &Basic_Widget::sig_select_mousePressEvent, save_sig_ptr, &Desktop_Main_MouseSig_Event::select_mousePressEvent);
-            disconnect(this, &Basic_Widget::sig_select_mouseReleaseEvent, save_sig_ptr, &Desktop_Main_MouseSig_Event::select_mouseReleaseEvent);
+            disconnect(this, &Basic_Widget::sig_select_mouseMoveEvent      , save_sig_ptr, &Desktop_Main_MouseSig_Event::select_mouseMoveEvent      );
+            disconnect(this, &Basic_Widget::sig_select_mousePressEvent     , save_sig_ptr, &Desktop_Main_MouseSig_Event::select_mousePressEvent     );
+            disconnect(this, &Basic_Widget::sig_select_mouseReleaseEvent   , save_sig_ptr, &Desktop_Main_MouseSig_Event::select_mouseReleaseEvent   );
+            disconnect(this, &Basic_Widget::sig_select_closeEvent          , save_sig_ptr, &Desktop_Main_MouseSig_Event::select_closeEvent          );
+
+            disconnect(this, &Basic_Widget::sig_select_moveToPage          , save_sig_ptr, &Desktop_Main_MouseSig_Event::select_moveToPage          );
+            disconnect(this, &Basic_Widget::sig_select_setRadius           , save_sig_ptr, &Desktop_Main_MouseSig_Event::select_setRadius           );
+            disconnect(this, &Basic_Widget::sig_select_setBackgroundColor  , save_sig_ptr, &Desktop_Main_MouseSig_Event::select_setBackgroundColor  );
+            disconnect(this, &Basic_Widget::sig_select_setShowCloseButton  , save_sig_ptr, &Desktop_Main_MouseSig_Event::select_setShowCloseButton  );
+            disconnect(this, &Basic_Widget::sig_select_setCloseButtonPos   , save_sig_ptr, &Desktop_Main_MouseSig_Event::select_setCloseButtonPos   );
+            disconnect(this, &Basic_Widget::sig_select_setAllowSelectButton, save_sig_ptr, &Desktop_Main_MouseSig_Event::select_setAllowSelectButton);
+            disconnect(this, &Basic_Widget::sig_select_setSelectButtonPos  , save_sig_ptr, &Desktop_Main_MouseSig_Event::select_setSelectButtonPos  );
+            disconnect(this, &Basic_Widget::sig_select_setPos              , save_sig_ptr, &Desktop_Main_MouseSig_Event::select_setPos              );
+            disconnect(this, &Basic_Widget::sig_select_setSize             , save_sig_ptr, &Desktop_Main_MouseSig_Event::select_setSize             );
         }
         save_sig_ptr = reinterpret_cast<Desktop_Main_MouseSig_Event *>(this->parent()->parent());
         if (save_sig_ptr)
         {
-            connect(this, &Basic_Widget::sig_select_mouseMoveEvent, save_sig_ptr, &Desktop_Main_MouseSig_Event::select_mouseMoveEvent);
-            connect(this, &Basic_Widget::sig_select_mousePressEvent, save_sig_ptr, &Desktop_Main_MouseSig_Event::select_mousePressEvent);
-            connect(this, &Basic_Widget::sig_select_mouseReleaseEvent, save_sig_ptr, &Desktop_Main_MouseSig_Event::select_mouseReleaseEvent);
+            connect(this, &Basic_Widget::sig_select_mouseMoveEvent      , save_sig_ptr, &Desktop_Main_MouseSig_Event::select_mouseMoveEvent      );
+            connect(this, &Basic_Widget::sig_select_mousePressEvent     , save_sig_ptr, &Desktop_Main_MouseSig_Event::select_mousePressEvent     );
+            connect(this, &Basic_Widget::sig_select_mouseReleaseEvent   , save_sig_ptr, &Desktop_Main_MouseSig_Event::select_mouseReleaseEvent   );
+            connect(this, &Basic_Widget::sig_select_closeEvent          , save_sig_ptr, &Desktop_Main_MouseSig_Event::select_closeEvent          );
+
+            connect(this, &Basic_Widget::sig_select_moveToPage          , save_sig_ptr, &Desktop_Main_MouseSig_Event::select_moveToPage          );
+            connect(this, &Basic_Widget::sig_select_setRadius           , save_sig_ptr, &Desktop_Main_MouseSig_Event::select_setRadius           );
+            connect(this, &Basic_Widget::sig_select_setBackgroundColor  , save_sig_ptr, &Desktop_Main_MouseSig_Event::select_setBackgroundColor  );
+            connect(this, &Basic_Widget::sig_select_setShowCloseButton  , save_sig_ptr, &Desktop_Main_MouseSig_Event::select_setShowCloseButton  );
+            connect(this, &Basic_Widget::sig_select_setCloseButtonPos   , save_sig_ptr, &Desktop_Main_MouseSig_Event::select_setCloseButtonPos   );
+            connect(this, &Basic_Widget::sig_select_setAllowSelectButton, save_sig_ptr, &Desktop_Main_MouseSig_Event::select_setAllowSelectButton);
+            connect(this, &Basic_Widget::sig_select_setSelectButtonPos  , save_sig_ptr, &Desktop_Main_MouseSig_Event::select_setSelectButtonPos  );
+            connect(this, &Basic_Widget::sig_select_setPos              , save_sig_ptr, &Desktop_Main_MouseSig_Event::select_setPos              );
+            connect(this, &Basic_Widget::sig_select_setSize             , save_sig_ptr, &Desktop_Main_MouseSig_Event::select_setSize             );
         }
     }
 }
@@ -323,7 +321,9 @@ void Basic_Widget::mouseMoveEvent(QMouseEvent *event)
                 new_rect.setY(this->geometry().y());
                 new_rect.setHeight(50);
             }
+            QRect old_geometry = this->geometry();
             this->setGeometry(new_rect);
+            if (select_tags) emit sig_select_setSize(old_geometry, new_rect, this);
         }
         else
         {
@@ -422,6 +422,73 @@ void Basic_Widget::sig_mouseMoveEvent(QMouseEvent *event)
         setCursor(Qt::CursorShape::SizeAllCursor);
     }
 }
+void Basic_Widget::sig_closeEvent()
+{
+    hide();
+    emit close_signals();
+    if (auto_close)
+    {
+        this->deleteLater();
+    }
+}
+
+void Basic_Widget::sig_moveToPage(int &page)
+{
+    moveToDesktop(page);
+}
+void Basic_Widget::sig_setRadius(int &radius)
+{
+    background_radius = radius;
+    background->setStyleSheet(QString("border-radius: %1px %1px;background:rgba(%2,%3,%4,%5)").arg(background_radius).arg(background_color.red()).arg(background_color.green()).arg(background_color.blue()).arg(background_color.alpha()));
+}
+void Basic_Widget::sig_setBackgroundColor(QList<QColor> colors)
+{
+    background_color = colors[0];
+    background->setStyleSheet(QString("border-radius: %1px %1px;background:rgba(%2,%3,%4,%5)").arg(background_radius).arg(background_color.red()).arg(background_color.green()).arg(background_color.blue()).arg(background_color.alpha()));
+}
+void Basic_Widget::sig_setShowCloseButton(bool &show)
+{
+    show_close_button->setIconVisibleInMenu(show);
+    close_button->setVisible(show);
+}
+void Basic_Widget::sig_setCloseButtonPos(Button_Pos &pos)
+{
+    close_button_pos = pos;
+    update_close_button_pos();
+}
+void Basic_Widget::sig_setAllowSelectButton()//这里一定是false
+{
+    show_select_button->setIconVisibleInMenu(false);
+    set_select(false);
+}
+void Basic_Widget::sig_setSelectButtonPos(Button_Pos &pos)
+{
+    select_button_pos = pos;
+    update_close_button_pos();
+}
+void Basic_Widget::sig_setPos(QPoint &delta_pos)//这是delta哦
+{
+    QWidget::move(delta_pos + this->pos());//有污染
+}
+void Basic_Widget::sig_setSize(QRect &old_geometry, QRect &new_geometry)
+{
+    if (old_geometry.width() == 0 || old_geometry.height() == 0)
+    {
+        return;
+    }
+
+    double k_width = static_cast<double>(new_geometry.width()) / old_geometry.width();
+    double k_height = static_cast<double>(new_geometry.height()) / old_geometry.height();
+    QPoint delta_top_left = this->geometry().topLeft() - old_geometry.topLeft();
+    QPoint delta_bottom_right = this->geometry().bottomRight() - old_geometry.bottomRight();
+
+    delta_top_left.setX(qRound(delta_top_left.x() * k_width));
+    delta_top_left.setY(qRound(delta_top_left.y() * k_height));
+    delta_bottom_right.setX(qRound(delta_bottom_right.x() * k_width));
+    delta_bottom_right.setY(qRound(delta_bottom_right.y() * k_height));
+    setGeometry(QRect(new_geometry.topLeft() + delta_top_left, new_geometry.bottomRight() + delta_bottom_right));
+}
+
 Towards Basic_Widget::get_towards(QPoint point, QRect rect)
 {
     Towards result = Towards::No;
@@ -537,6 +604,7 @@ void Basic_Widget::basic_action_func(QAction *action)
             return;
         }
         new_index--;
+        if (select_tags) emit sig_select_moveToPage(new_index, this);//这里会setParnet(),先发包
         moveToDesktop(new_index);
     }
     else if (action == set_background_radius)
@@ -549,6 +617,7 @@ void Basic_Widget::basic_action_func(QAction *action)
         }
         background_radius = new_radius;
         background->setStyleSheet(QString("border-radius: %1px %1px;background:rgba(%2,%3,%4,%5)").arg(background_radius).arg(background_color.red()).arg(background_color.green()).arg(background_color.blue()).arg(background_color.alpha()));
+        if (select_tags) emit sig_select_setRadius(background_radius, this);
     }
     else if (action == set_background_color)
     {
@@ -564,11 +633,14 @@ void Basic_Widget::basic_action_func(QAction *action)
         QColor new_color = colorDialog.currentColor();
         background_color = new_color;
         background->setStyleSheet(QString("border-radius: %1px %1px;background:rgba(%2,%3,%4,%5)").arg(background_radius).arg(background_color.red()).arg(background_color.green()).arg(background_color.blue()).arg(background_color.alpha()));
+        if (select_tags) emit sig_select_setBackgroundColor({background_color}, this);
     }
     else if (action == show_close_button)
     {
         show_close_button->setIconVisibleInMenu(!show_close_button->isIconVisibleInMenu());
-        close_button->setVisible(show_close_button->isIconVisibleInMenu());
+        bool ok = show_close_button->isIconVisibleInMenu();
+        close_button->setVisible(ok);
+        if (select_tags) emit sig_select_setShowCloseButton(ok, this);
     }
     else if (action == set_pos_action)
     {
@@ -584,7 +656,10 @@ void Basic_Widget::basic_action_func(QAction *action)
         {
             return;
         }
+        QPoint old_pos = this->pos();
         move(new_X, new_Y);
+        QPoint delta_pos = this->pos() - old_pos;
+        if (select_tags) emit sig_select_setPos(delta_pos, this);
     }
     else if (action == set_size_action)
     {
@@ -600,10 +675,19 @@ void Basic_Widget::basic_action_func(QAction *action)
         {
             return;
         }
+        QRect old_geometry = this->geometry();
         resize(new_X, new_Y);
+        QRect new_geometry = this->geometry();
+        if (select_tags) emit sig_select_setSize(old_geometry, new_geometry, this);
     }
     else if (action == close_action)
     {
+        if (select_tags)
+        {
+            QMessageBox::StandardButton name_ans = QMessageBox::question(nullptr, tr("确认信息"), tr("是否批量关闭窗口"));
+            bool ok = name_ans == QMessageBox::Yes;
+            emit sig_select_closeEvent(this, ok);
+        }
         hide();
         emit close_signals();
         if (auto_close)
@@ -615,21 +699,25 @@ void Basic_Widget::basic_action_func(QAction *action)
     {
         close_button_pos = Button_Pos::Top_Left;
         update_close_button_pos();
+        if (select_tags) emit sig_select_setCloseButtonPos(close_button_pos, this);
     }
     else if (action == close_button_pos_top_right)
     {
         close_button_pos = Button_Pos::Top_Right;
         update_close_button_pos();
+        if (select_tags) emit sig_select_setCloseButtonPos(close_button_pos, this);
     }
     else if (action == close_button_pos_bottom_left)
     {
         close_button_pos = Button_Pos::Bottom_Left;
         update_close_button_pos();
+        if (select_tags) emit sig_select_setCloseButtonPos(close_button_pos, this);
     }
     else if (action == close_button_pos_bottom_right)
     {
         close_button_pos = Button_Pos::Bottom_Right;
         update_close_button_pos();
+        if (select_tags) emit sig_select_setCloseButtonPos(close_button_pos, this);
     }
     else if (action == show_select_button)
     {
@@ -640,26 +728,31 @@ void Basic_Widget::basic_action_func(QAction *action)
             select_button->setVisible(false);
             select_button->raise();
         }
+        if (select_tags) emit sig_select_setAllowSelectButton(this);
     }
     else if (action == select_button_pos_top_left)
     {
         select_button_pos = Button_Pos::Top_Left;
         update_close_button_pos();
+        if (select_tags) emit sig_select_setSelectButtonPos(select_button_pos, this);
     }
     else if (action == select_button_pos_top_right)
     {
         select_button_pos = Button_Pos::Top_Right;
         update_close_button_pos();
+        if (select_tags) emit sig_select_setSelectButtonPos(select_button_pos, this);
     }
     else if (action == select_button_pos_bottom_left)
     {
         select_button_pos = Button_Pos::Bottom_Left;
         update_close_button_pos();
+        if (select_tags) emit sig_select_setSelectButtonPos(select_button_pos, this);
     }
     else if (action == select_button_pos_bottom_right)
     {
         select_button_pos = Button_Pos::Bottom_Right;
         update_close_button_pos();
+        if (select_tags) emit sig_select_setSelectButtonPos(select_button_pos, this);
     }
 }
 void Basic_Widget::save(QSettings *settings)

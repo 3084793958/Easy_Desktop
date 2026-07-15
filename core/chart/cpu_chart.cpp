@@ -62,6 +62,46 @@ void CPU_Chart::timeout_slot()
         data_ptr->erase(data_ptr->begin());
         data_ptr->push_back(each_cpu_data.at(i));
     }
+
+    if (channel == -1)
+    {
+        if (send_cpu_data_list.count() - 2 < series_list.count())
+        {
+            while (send_cpu_data_list.count() - 2 < series_list.count())
+            {
+                auto *ptr = series_list.last();
+                series_list.removeLast();
+                chart->removeSeries(ptr);
+                ptr->deleteLater();
+            }
+        }
+
+        else if (send_cpu_data_list.count() - 2 > series_list.count())
+        {
+            while (send_cpu_data_list.count() - 2 > series_list.count())
+            {
+                My_QLineSeries *new_series = new My_QLineSeries(this);
+                chart->addSeries(new_series);
+                new_series->attachAxis(axisX);
+                new_series->attachAxis(axisY);
+
+                new_series->setColor(line_color);
+
+                series_list << new_series;
+            }
+        }
+    }
+    else
+    {
+        while (series_list.count() != 0)
+        {
+            auto *ptr = series_list.last();
+            series_list.removeLast();
+            chart->removeSeries(ptr);
+            ptr->deleteLater();
+        }
+    }
+
     if (channel < send_cpu_data_list.count() && channel >= 0)
     {
         m_data = *(send_cpu_data_list[channel]);
@@ -73,6 +113,27 @@ void CPU_Chart::timeout_slot()
         else
         {
             series->setName(tr("CPU") + QString(":%1%").arg(res));
+        }
+    }
+    else if (channel == -1)
+    {
+        if (send_cpu_data_list.count() == 0)
+        {
+            return;
+        }
+        m_data = *(send_cpu_data_list[1]);
+        double res = std::round(m_data.back() * 100) / 100;
+        series->setName(tr("CPU") + QString("%1:%2%").arg(1).arg(res));
+
+        for (int i = 2; i < send_cpu_data_list.count(); ++i)
+        {
+            double res = std::round(send_cpu_data_list[i]->back() * 100) / 100;
+            series_list[i - 2]->setName(tr("CPU") + QString("%1:%2%").arg(i).arg(res));
+            series_list[i - 2]->clear();
+            for (int j = 0; j < send_cpu_data_list[i]->size(); ++j)
+            {
+                series_list[i - 2]->append(j, send_cpu_data_list[i]->at(j));
+            }
         }
     }
     update_data();
@@ -92,6 +153,13 @@ void CPU_Chart::save(QSettings *settings)
     settings->setValue("vector_long", vector_long);
     settings->setValue("line_color", line_color.rgba());
     settings->setValue("font", font);
+
+    QVariantList rgbaList;
+    for (int i = 0; i < series_list.count(); ++i)
+    {
+        rgbaList.append(static_cast<uint>(series_list[i]->color().rgba()));
+    }
+    settings->setValue("series_Colors", rgbaList);
 }
 void CPU_Chart::load(QSettings *settings)
 {
@@ -104,6 +172,21 @@ void CPU_Chart::load(QSettings *settings)
     series->setColor(line_color);
     axisX->setLabelsFont(font);
     axisY->setLabelsFont(font);
+
+    QVariantList rgbaList = settings->value("series_Colors", {}).toList();
+    for (const QVariant &v : rgbaList)
+    {
+        uint rgba = v.toUInt();
+        My_QLineSeries *new_series = new My_QLineSeries(this);
+        chart->addSeries(new_series);
+        new_series->attachAxis(axisX);
+        new_series->attachAxis(axisY);
+
+        new_series->setColor(QColor::fromRgba(rgba));
+
+        series_list << new_series;
+    }
+
     timeout_slot();
 }
 void CPU_Chart::get_cpu_data()
@@ -194,7 +277,7 @@ void CPU_Chart::contextMenuEvent(QContextMenuEvent *event)
     else if (know_what == set_channel)
     {
         bool ok = false;
-        int time = QInputDialog::getInt(nullptr, tr("获取数值"), tr("侦测频道"), channel, 0, 2147483647, 1, &ok);
+        int time = QInputDialog::getInt(nullptr, tr("获取数值"), tr("侦测频道(-1为全频道,0为平均值)"), channel, -1, 2147483647, 1, &ok);
         if (!ok)
         {
             return;
@@ -213,7 +296,6 @@ void CPU_Chart::contextMenuEvent(QContextMenuEvent *event)
         font = g_font;
         axisX->setLabelsFont(font);
         axisY->setLabelsFont(font);
-
     }
     else if (know_what == set_line_color)
     {
@@ -221,13 +303,26 @@ void CPU_Chart::contextMenuEvent(QContextMenuEvent *event)
         colorDialog.setOption(QColorDialog::ShowAlphaChannel);
         colorDialog.setCurrentColor(line_color);
         colorDialog.setParent(nullptr);
-        colorDialog.setWindowTitle(tr("获取颜色"));
+        colorDialog.setWindowTitle(tr("获取颜色0号线"));
         if (colorDialog.exec() != QDialog::Accepted)
         {
             return;
         }
         line_color = colorDialog.currentColor();
         series->setColor(line_color);
+        for (int i = 0; i < series_list.count(); ++i)
+        {
+            QColorDialog colorDialog;
+            colorDialog.setOption(QColorDialog::ShowAlphaChannel);
+            colorDialog.setCurrentColor(line_color);
+            colorDialog.setParent(nullptr);
+            colorDialog.setWindowTitle(QString(tr("获取颜色%1号线")).arg(i + 1));
+            if (colorDialog.exec() != QDialog::Accepted)
+            {
+                return;
+            }
+            series_list[i]->setColor(colorDialog.currentColor());
+        }
     }
     else
     {

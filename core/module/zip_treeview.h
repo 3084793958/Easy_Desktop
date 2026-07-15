@@ -7,11 +7,13 @@
 #include <QPointer>
 #include <QSettings>
 #include "core/module/my_treeview_delegate.h"
+#include "core/module/zip_view_model.h"
 #include <QSortFilterProxyModel>
 #include <QRubberBand>
 #include <QTimer>
 #include <QMenu>
 #include <QAction>
+#include <QLineEdit>
 
 #include <QLabel>
 #include <QStatusBar>
@@ -20,14 +22,7 @@
 
 #include "core/tools/trans_action.h"
 
-class Zip_TreeView_ProxyModel : public QSortFilterProxyModel
-{
-    Q_OBJECT
-public:
-    explicit Zip_TreeView_ProxyModel(QObject *parent = nullptr);
-protected:
-    bool lessThan(const QModelIndex &left, const QModelIndex &right) const override;
-};
+#include "core/module/zip_treeview_proxymodel.h"
 
 class Zip_TreeView : public QTreeView
 {
@@ -46,6 +41,10 @@ public:
     void setupTar(const QFileInfo &info);
     void clear();
     static void buildTreeModelFromPaths(QStandardItemModel *model, const QList<Paths_File_Info> &paths);
+    static void refreshTreeModel(QStandardItemModel *model, const QList<Paths_File_Info> &paths);
+    static void collectExistingItems(QStandardItem *parent, QMap<QString, QStandardItem *> &pathToItem);
+    static void createPathInModel(QStandardItemModel *model, const QString &path, const QMap<QString, const Paths_File_Info *> &pathToInfo, QMap<QString, QStandardItem *> &existingPathToItem);
+    static void updateNodeData(QStandardItemModel *model, QStandardItem *item, const QString &path, const QMap<QString, const Paths_File_Info *> &pathToInfo);
     void load(QSettings *settings, QString Token);
     void save(QSettings *settings, QString Token);
     static QString formatSize(qint64 bytes);
@@ -64,6 +63,7 @@ private:
     QStandardItemModel *m_model = nullptr;
     QPointer<QProcess> m_currentProcess = nullptr;
     QString m_currentArchivePath = "";
+public:
     Zip_TreeView_ProxyModel *proxyModel = new Zip_TreeView_ProxyModel(this);
 private:
     QModelIndex proposed_action_index;
@@ -110,6 +110,7 @@ private:
     QPoint origin_pos = QPoint();
     bool setup_rubber = false;
     char my_padding[7];
+    QList<Paths_File_Info> save_info_list;
 public:
     QStatusBar *m_statusBar = new QStatusBar(this);
     QLabel *statusLabel = new QLabel(this);
@@ -117,6 +118,7 @@ public:
     void updateStatusBar_style();
     void updateStatusBar();
     void set_icon(QString checked_icon_path);
+    void set_tree_view_style();
 protected:
     virtual void resizeEvent(QResizeEvent *event) override;
 };
@@ -139,6 +141,10 @@ private:
     virtual void resizeEvent(QResizeEvent *event) override;
 private:
     Zip_TreeView *m_zip_treeview = new Zip_TreeView(this);
+private:
+    QLineEdit *m_searchEdit = new QLineEdit(this);
+    QAction *m_searchImgAction = new QAction(QIcon(":/base/search.svg"), QString(), this);
+    QAction *m_searchDelAction = new QAction(QIcon(":/base/del.svg"), QString(), this);
 };
 
 #endif // ZIP_TREEVIEW_H

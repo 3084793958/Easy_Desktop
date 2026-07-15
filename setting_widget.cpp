@@ -1,6 +1,7 @@
 #include "setting_widget.h"
 #include <QComboBox>
 #include "core/tools/my_x11_libs.h"
+#include "core/tools/trans_sender.h"
 Setting_Widget::Setting_Widget(QWidget *parent)
     :QWidget(parent)
 {
@@ -355,12 +356,37 @@ Setting_Widget::Setting_Widget(QWidget *parent)
     {
         background_path->plugin_settings_event();
     });
+    connect(Trans_Sender::instance(), &Trans_Sender::Trans_sig, this, [=]
+    {
+        Trans_update();
+    });
     table_widget->viewport()->installEventFilter(this);//eventFilter需要注册
 }
 void Setting_Widget::Trans_update()
 {
     setWindowTitle(tr("壁纸设置"));
     table_widget->setHorizontalHeaderLabels({tr("ID"),tr("名称"),tr("显示方式"),tr("路径"),tr("缩放方式"),tr("居中"),tr("鼠标效果"),tr("鼠标效果宽度系数"),tr("鼠标效果高度系数"),tr("X轴偏移量"),tr("Y轴偏移量"),tr("抗锯齿"),tr("鼠标控制类型"),tr("自定宽"),tr("自定高")});
+    for (int i = 0; i < name_box_list.count(); ++i)//相信自己
+    {
+        name_box_list[i]->setPlaceholderText(tr("输入名称:"));
+        image_box_list[i]->setItemText(0, tr("图像"));
+        image_box_list[i]->setItemText(1, tr("视频"));
+        path_box_list[i]->setPlaceholderText(tr("输入路径:"));
+        scale_box_list[i]->setItemText(0, tr("不缩放"));
+        scale_box_list[i]->setItemText(1, tr("全缩放"));
+        scale_box_list[i]->setItemText(2, tr("宽基准"));
+        scale_box_list[i]->setItemText(3, tr("高基准"));
+        scale_box_list[i]->setItemText(4, tr("短基准"));
+        scale_box_list[i]->setItemText(5, tr("长基准"));
+        scale_box_list[i]->setItemText(6, tr("饱满"));
+        scale_box_list[i]->setItemText(7, tr("自定义宽高"));
+        center_box_list[i]->setItemText(0, tr("是"));
+        center_box_list[i]->setItemText(1, tr("否"));
+        mouse_effect_box_list[i]->setItemText(0, tr("是"));
+        mouse_effect_box_list[i]->setItemText(1, tr("否"));
+        mouse_control_type_box_list[i]->setItemText(0, tr("跟随桌面"));
+        mouse_control_type_box_list[i]->setItemText(1, tr("跟随壁纸"));
+    }
 }
 void Setting_Widget::resizeEvent(QResizeEvent *event)
 {

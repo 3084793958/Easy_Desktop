@@ -14,4 +14,16 @@ public:
     QModelIndex *proposed_action_index = nullptr;
 };
 
+class My_TableView_Delegate : public QStyledItemDelegate
+{
+public:
+    using QStyledItemDelegate::QStyledItemDelegate;
+    explicit My_TableView_Delegate(QObject *parent, QColor *m_hover_color = nullptr, QColor *m_select_color = nullptr, int *m_radius = nullptr);
+    void paint(QPainter *painter, const QStyleOptionViewItem &option, const QModelIndex &index) const override;
+private:
+    QColor *hover_color = nullptr;
+    QColor *select_color = nullptr;
+    int *radius = nullptr;
+};
+
 #endif // MY_TREEVIEW_DELEGATE_H

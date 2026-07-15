@@ -1,5 +1,6 @@
 #include "experimental_settings.h"
 #include "core/tools/my_x11_libs.h"
+#include "core/tools/trans_sender.h"
 Experimental_Settings::Experimental_Settings(QWidget *parent)
     :QWidget(parent)
 {
@@ -110,6 +111,10 @@ Experimental_Settings::Experimental_Settings(QWidget *parent)
         }
     });
     connect(set_theme_dialog, &Theme_Set_Dialog::Call_X11_Raise, this, [=]{My_X11_Libs::X11_Raise();});
+    connect(Trans_Sender::instance(), &Trans_Sender::Trans_sig, this, [=]
+    {
+        this->setWindowTitle(tr("实验设置"));
+    });
 }
 void Experimental_Settings::resizeEvent(QResizeEvent *event)
 {
